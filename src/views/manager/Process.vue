@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入项目名称查询"></el-input>
+      <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+        placeholder="请输入项目名称查询"></el-input>
       <el-button type="info" plain @click="load">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
@@ -17,30 +18,29 @@
         <el-table-column prop="projectCode" label="项目编号" />
         <el-table-column prop="teacherName" label="教师姓名" />
         <el-table-column prop="time" label="报告日期" />
-        <el-table-column prop="content" label="工作内容" show-overflow-tooltip/>
-        <el-table-column prop="question" label="遇到的问题" show-overflow-tooltip/>
-        <el-table-column prop="solution" label="解决方案" show-overflow-tooltip/>
+        <el-table-column prop="content" label="工作内容" show-overflow-tooltip />
+        <el-table-column prop="question" label="遇到的问题" show-overflow-tooltip />
+        <el-table-column prop="solution" label="解决方案" show-overflow-tooltip />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'TEACHER'" type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button v-if="data.user.role === 'TEACHER'" type="primary" circle :icon="Edit"
+              @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle :icon="Delete"
+              @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
     <div class="card" v-if="data.total">
-      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
+      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize"
+        v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
     <el-dialog title="科研过程" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="85px" style="padding: 20px">
         <el-form-item prop="projectId" label="科研项目">
           <el-select v-model="data.form.projectId" placeholder="请选择科研项目">
-            <el-option
-                v-for="item in data.projectData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id">
+            <el-option v-for="item in data.projectData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -54,7 +54,8 @@
           <el-input type="textarea" :rows="4" v-model="data.form.solution" placeholder="请输入解决方案"></el-input>
         </el-form-item>
         <el-form-item prop="time" label="报告日期">
-          <el-date-picker style="width: 100%" v-model="data.form.time" value-format="YYYY-MM-DD" type="date" placeholder="请选择日期"></el-date-picker>
+          <el-date-picker style="width: 100%" v-model="data.form.time" value-format="YYYY-MM-DD" type="date"
+            placeholder="请选择日期"></el-date-picker>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -69,10 +70,10 @@
 
 <script setup>
 
-import {reactive, ref} from "vue";
+import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete, Edit } from "@element-plus/icons-vue";
 
 
 const data = reactive({
@@ -91,13 +92,13 @@ const data = reactive({
 const formRef = ref()
 const rules = reactive({
   projectId: [
-    {required: true, message: '请选择科研项目', trigger: 'blur'},
+    { required: true, message: '请选择科研项目', trigger: 'blur' },
   ],
   content: [
-    {required: true, message: '请输入工作内容', trigger: 'blur'},
+    { required: true, message: '请输入工作内容', trigger: 'blur' },
   ],
   time: [
-    {required: true, message: '请选择报告日期', trigger: 'blur'},
+    { required: true, message: '请选择报告日期', trigger: 'blur' },
   ],
 })
 
@@ -183,7 +184,7 @@ const delBatch = () => {
     return
   }
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
-    request.delete("/process/delete/batch", {data: data.ids}).then(res => {
+    request.delete("/process/delete/batch", { data: data.ids }).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         load()

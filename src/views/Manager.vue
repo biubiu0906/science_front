@@ -3,7 +3,7 @@
     <div class="manager-header">
       <div class="manager-header-left">
         <img src="@/assets/imgs/logo.png" alt="">
-        <div class="title">高校科研管理系统</div>
+        <div class="title">科研管理系统</div>
       </div>
       <div class="manager-header-center">
         <el-breadcrumb separator="/">
@@ -30,39 +30,47 @@
     <!-- 下面部分开始 -->
     <div style="display: flex">
       <div class="manager-main-left">
-        <el-menu :default-active="router.currentRoute.value.path"
-                 :default-openeds="['1', '2']"
-                 router
-        >
+        <el-menu :default-active="router.currentRoute.value.path" :default-openeds="['1', '2']" router>
           <el-menu-item index="/manager/home">
-            <el-icon><HomeFilled /></el-icon>
+            <el-icon>
+              <HomeFilled />
+            </el-icon>
             <span>系统首页</span>
           </el-menu-item>
           <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN'">
-            <el-icon><Odometer /></el-icon>
+            <el-icon>
+              <Odometer />
+            </el-icon>
             <span>数据统计</span>
           </el-menu-item>
           <el-sub-menu index="1">
             <template #title>
-              <el-icon><Menu /></el-icon>
+              <el-icon>
+                <Menu />
+              </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/project">科研项目管理</el-menu-item>
-            <el-menu-item index="/manager/process">科研过程管理</el-menu-item>
+            <el-menu-item index="/manager/lab" v-if="data.user.role === 'NORMAL_LABORATORY'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目管理</el-menu-item>
+            <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程管理</el-menu-item>
             <el-menu-item index="/manager/type" v-if="data.user.role === 'ADMIN'">成果类型管理</el-menu-item>
-            <el-menu-item index="/manager/achievement">科研成果管理</el-menu-item>
+            <el-menu-item index="/manager/achievement"
+              v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果管理</el-menu-item>
             <el-menu-item index="/manager/teacherFeedback" v-if="data.user.role === 'TEACHER'">教师反馈提交</el-menu-item>
             <el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>
             <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
             <el-menu-item index="/manager/teacherActivity" v-if="data.user.role === 'TEACHER'">学术活动报名</el-menu-item>
-            <el-menu-item index="/manager/apply" v-if="data.user.role === 'TEACHER'">我的活动申请</el-menu-item>
+            <el-menu-item index="/manager/apply"
+              v-if="data.user.role === 'TEACHER' || data.user.role === 'ADMIN'">我的活动申请</el-menu-item>
             <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item>
             <el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">系统公告</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2" v-if="data.user.role === 'ADMIN'">
             <template #title>
-              <el-icon><Menu /></el-icon>
+              <el-icon>
+                <Menu />
+              </el-icon>
               <span>用户管理</span>
             </template>
             <el-menu-item index="/manager/admin">管理员信息</el-menu-item>
@@ -83,7 +91,7 @@
 <script setup>
 import { reactive } from "vue";
 import router from "@/router/index.js";
-import {ElMessage} from "element-plus";
+import { ElMessage } from "element-plus";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}')
@@ -95,7 +103,7 @@ const logout = () => {
 }
 
 const updateUser = () => {
-  data.user =  JSON.parse(localStorage.getItem('xm-user') || '{}')
+  data.user = JSON.parse(localStorage.getItem('xm-user') || '{}')
 }
 
 if (!data.user.id) {
