@@ -267,7 +267,7 @@
                                 <el-table-column label="负责人" prop="leader">
                                     <template #default="scope">
                                         <el-form-item>
-                                            <el-input v-model="scope.row.description" placeholder="请输入相关负责人"></el-input>
+                                            <el-input v-model="scope.row.leader" placeholder="请输入相关负责人"></el-input>
                                         </el-form-item>
                                     </template>
                                 </el-table-column>
@@ -300,11 +300,13 @@
 
                 <div v-if="activeTab === 'attachments'">
                     <h3>申请材料</h3>
-                    <el-upload ref="upload" class="upload-demo" :file-list="formData.attachments.fileList"
-                        :on-change="handleChange" :auto-upload="false" :on-remove="handleRemove">
+                    <el-upload ac ref="uploadRef" class="upload-demo" :file-list="fileList"
+                        :action="baseUrl + '/files/upload'" :on-success="handleFileUpload" :on-change="handleChange"
+                        :on-remove="handleRemove" multiple>
                         <el-button type="primary">点击上传</el-button>
                     </el-upload>
                 </div>
+
 
                 <div v-if="activeTab === 'review'">
                     <h3>审核意见</h3>
@@ -318,254 +320,160 @@
                         @click="nextTab(basicForm)">下一页</el-button>
                     <!-- 添加的时候 -->
                     <el-button v-if="activeTab === 'attachments' && pageStatus === 'add'" type="success"
-                        @click="submitForm(basicForm)">提交</el-button>
+                        @click="submitForm">提交</el-button>
                 </div>
             </div>
         </div>
     </el-card>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, reactive } from 'vue';
+<script setup>
+import { ref, reactive, toRaw, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding } from '@element-plus/icons-vue';
-import type { ComponentSize, FormInstance, FormRules } from 'element-plus'
 import request from "@/utils/request.js";
 
-export default defineComponent({
-    name: 'ProjectApplication',
-    components: {
-        Document,
-        User,
-        Grid,
-        Money,
-        Paperclip,
-        Check
+// 读取环境变量
+const baseUrl = import.meta.env?.VITE_BASE_URL || '';
+
+const basicForm = ref();
+
+// 页面状态
+const pageStatus = ref('add');
+const activeTab = ref('basic');
+
+const ruleFormRef = ref(null); // 绑定 el-form
+const uploadRef = ref(null);
+
+const fileList = ref([]);
+
+const rules = reactive({
+    basic: {
+        institutionName: [{ required: true, message: '机构名称不能为空', trigger: 'blur' }],
+        establishmentDate: [{ required: true, message: '成立时间不能为空', trigger: 'blur' }],
+        totalStaff: [{ required: true, message: '人员总数不能为空', trigger: 'blur' }],
+        fullTimeStaff: [{ required: true, message: '专职人员总数不能为空', trigger: 'blur' }],
+        isEntity: [{ required: true, message: '是否实体不能为空', trigger: 'blur' }],
+        totalArea: [{ required: true, message: '总面积不能为空', trigger: 'blur' }],
+        labArea: [{ required: true, message: '实验室面积不能为空', trigger: 'blur' }],
+        averageFunding: [{ required: true, message: '近3年年均经费不能为空', trigger: 'blur' }],
+        mainFundingSource: [{ required: true, message: '主要经费来源不能为空', trigger: 'blur' }]
     },
-    setup() {
-
-        // 代表当前页面的状态(新增、修改、查看)
-        const pageStatus = ref('add'); // 默认激活的标签
-
-        const basicForm = ref<FormInstance>();
-
-        const memberForm = ref<FormInstance>();
-
-        const data = reactive({
-            user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
-            formVisible: false,
-            checkVisible: false,
-            form: {},
-            tableData: [],
-            pageNum: 1,
-            pageSize: 10,
-            total: 0,
-            code: null,
-            name: null,
-        })
-
-        const activeTab = ref('basic'); // 默认激活的标签
-
-        const formData = ref({
-            basic: {
-                institutionName: '', // 机构名称
-                establishmentDate: '', // 成立时间
-                totalStaff: '', // 人员总数
-                fullTimeStaff: '', // 专职人员总数
-                isEntity: '', // 是否实体
-                totalArea: '', // 总面积（平米）
-                labArea: '', // 实验室面积（平米）
-                averageFunding: '', // 近3年年均经费（万元）
-                mainFundingSource: '' // 主要经费来源
-            },
-            direction: {
-                // 依托学科
-                disciplines: [
-                    { name: '', description: '' } // 默认一行
-                ],
-                // 研究方向
-                researches: [
-                    { name: '' } // 默认一行
-                ],
-            },
-            members: {
-                leader: {
-                    name: '', // 实验室负责人姓名
-                    birthDate: '', // 出生年月
-                    title: '', // 职称
-                    position: '', // 职务
-                    academicPartTime: '', // 学术兼职
-                    phone: '', // 手机
-                    researchDirection: '' // 专业及研究方向
-                },
-                labContact: {
-                    name: '', // 实验室联系人姓名
-                    landline: '', // 固话
-                    phone: '' // 手机
-                },
-                schoolContact: {
-                    name: '', // 学校管理部门联系人姓名
-                    landline: '', // 固话
-                    phone: '' // 手机
-                }
-            },
-            buildings: {
-                // 下属子机构
-                construacts: [
-                    { name: '', leader: '', position: '' } // 默认一行
-                ],
-            },
-            attachments: {
-                fileList: []
-            },
-
-        });
-
-        // 校验规则
-        const rules = reactive({
-            basic: {
-                institutionName: [{ required: true, message: '机构名称不能为空', trigger: 'blur' }],
-                establishmentDate: [{ required: true, message: '成立时间不能为空', trigger: 'blur' }],
-                totalStaff: [{ required: true, message: '人员总数不能为空', trigger: 'blur' }],
-                fullTimeStaff: [{ required: true, message: '专职人员总数不能为空', trigger: 'blur' }],
-                isEntity: [{ required: true, message: '是否实体不能为空', trigger: 'blur' }],
-                totalArea: [{ required: true, message: '总面积不能为空', trigger: 'blur' }],
-                labArea: [{ required: true, message: '实验室面积不能为空', trigger: 'blur' }],
-                averageFunding: [{ required: true, message: '近3年年均经费不能为空', trigger: 'blur' }],
-                mainFundingSource: [{ required: true, message: '主要经费来源不能为空', trigger: 'blur' }]
-            },
-        });
-
-        // 添加一行
-        const addRow = (type) => {
-            var limit = 5;
-            if (type === '1') {
-                if (formData.value.direction.disciplines.length < limit) {
-                    formData.value.direction.disciplines.push({ name: '', description: '' });
-                } else {
-                    ElMessage.warning('依托学科最多只能添加' + limit + '行');
-                }
-            }
-            else if (type == '2') {
-                if (formData.value.direction.researches.length < limit) {
-                    formData.value.direction.researches.push({ name: '' });
-                } else {
-                    ElMessage.warning('主要研究方向最多只能添加' + limit + '行');
-                }
-
-            }
-            else {
-                if (formData.value.buildings.construacts.length < limit) {
-                    formData.value.buildings.construacts.push({ name: '' });
-                } else {
-                    ElMessage.warning('下属子机构最多只能添加' + limit + '行');
-                }
-
-            }
-        };
-
-        // 删除一行
-        const removeRow = (type, index: number) => {
-            if (type === '1') {
-                formData.value.direction.disciplines.splice(index, 1);
-            }
-            else if (type === '2') {
-                formData.value.direction.researches.splice(index, 1);
-            }
-            else {
-                formData.value.buildings.construacts.splice(index, 1);
-            }
-
-        };
-
-
-        // 切换到下一个页面
-        const nextTab = (ruleFormRef) => {
-            ruleFormRef.validate((valid) => {
-                if (valid) {
-                    console.log('test', formData.value.attachments.fileList);
-                    const tabs = ['basic', 'direction', 'members', 'attachments', 'review'];
-                    const currentIndex = tabs.indexOf(activeTab.value);
-                    if (currentIndex < tabs.length - 1) {
-                        activeTab.value = tabs[currentIndex + 1];
-                    }
-                } else {
-                    ElMessage.error('表单校验失败，请检查输入内容');
-                }
-            });
-        };
-
-        // 切换到上一个页面
-        const prevTab = (ruleFormRef) => {
-            ruleFormRef.validate((valid) => {
-                if (valid) {
-                    console.log('test', formData.value.attachments.fileList);
-                    const tabs = ['basic', 'direction', 'members', 'attachments', 'review'];
-                    const currentIndex = tabs.indexOf(activeTab.value);
-                    if (currentIndex > 0) {
-                        activeTab.value = tabs[currentIndex - 1];
-                    }
-                } else {
-                    ElMessage.error('表单校验失败，请检查输入内容');
-                }
-            });
-
-        };
-
-        // 提交表单
-        const submitForm = (ruleFormRef) => {
-            request.post('/login', formData.value).then(res => {
-                console.log('表单提交', res.code);
-                if (res.code === '200') {
-                    ElMessage.success('登录成功')
-                    // 存储用户信息到浏览器的缓存
-                    localStorage.setItem('xm-user', JSON.stringify(res.data))
-                    setTimeout(() => {
-                        location.href = '/manager/home'
-                    }, 500)
-                } else {
-                    ElMessage.error(res.msg)
-                }
-            })
-        };
-
-        // 通过侧边栏切换标签
-        const handleTabSelect = (index: string) => {
-            activeTab.value = index;
-        };
-
-        const handleChange = (rawFile) => {
-
-            formData.value.attachments.fileList.push(rawFile.raw);
-            console.log('handleChange', formData.value.attachments.fileList);
-        }
-
-        const handleRemove = (rawFile) => {
-            console.log('handleRemove', rawFile);
-            let tempuid = rawFile.raw.uid;
-            formData.value.attachments.fileList =
-                formData.value.attachments.fileList.filter((item) => item.uid !== tempuid);
-        }
-
-        return {
-            activeTab,
-            formData,
-            pageStatus,
-            rules,
-            basicForm,
-            memberForm,
-            nextTab,
-            prevTab,
-            submitForm,
-            handleTabSelect,
-            addRow,
-            removeRow,
-            handleChange,
-            handleRemove,
-        };
-    }
 });
+
+// 数据对象
+const formData = ref({
+    basic: { institutionName: '', establishmentDate: '', totalStaff: '', fullTimeStaff: '', isEntity: '', totalArea: '', labArea: '', averageFunding: '', mainFundingSource: '' },
+    direction: { disciplines: [{ name: '', description: '' }], researches: [{ name: '' }] },
+    members: { leader: { name: '', birthDate: '', title: '', position: '', academicPartTime: '', phone: '', researchDirection: '' }, labContact: { name: '', landline: '', phone: '' }, schoolContact: { name: '', landline: '', phone: '' } },
+    buildings: { construacts: [{ name: '', leader: '', position: '' }] },
+    attachments: { files: [] }
+});
+
+// 添加一行
+const addRow = (type) => {
+    var limit = 5;
+    if (type === '1') {
+        if (formData.value.direction.disciplines.length < limit) {
+            formData.value.direction.disciplines.push({ name: '', description: '' });
+        } else {
+            ElMessage.warning('依托学科最多只能添加' + limit + '行');
+        }
+    }
+    else if (type == '2') {
+        if (formData.value.direction.researches.length < limit) {
+            formData.value.direction.researches.push({ name: '' });
+        } else {
+            ElMessage.warning('主要研究方向最多只能添加' + limit + '行');
+        }
+
+    }
+    else {
+        if (formData.value.buildings.construacts.length < limit) {
+            formData.value.buildings.construacts.push({ name: '' });
+        } else {
+            ElMessage.warning('下属子机构最多只能添加' + limit + '行');
+        }
+
+    }
+};
+
+// 删除一行
+const removeRow = (type, index) => {
+    if (type === '1') {
+        formData.value.direction.disciplines.splice(index, 1);
+    }
+    else if (type === '2') {
+        formData.value.direction.researches.splice(index, 1);
+    }
+    else {
+        formData.value.buildings.construacts.splice(index, 1);
+    }
+
+};
+
+
+// 切换 Tab
+const nextTab = () => {
+    if (!ruleFormRef.value) return;
+    ruleFormRef.value.validate((valid) => {
+        if (valid) {
+            console.log('文件列表:', toRaw(formData.value.attachments.files));
+            const tabs = ['basic', 'direction', 'members', 'attachments', 'review'];
+            const currentIndex = tabs.indexOf(activeTab.value);
+            if (currentIndex < tabs.length - 1) activeTab.value = tabs[currentIndex + 1];
+        } else {
+            ElMessage.error('表单校验失败');
+        }
+    });
+};
+
+const prevTab = () => {
+    const tabs = ['basic', 'direction', 'members', 'attachments', 'review'];
+    const currentIndex = tabs.indexOf(activeTab.value);
+    if (currentIndex > 0) activeTab.value = tabs[currentIndex - 1];
+};
+
+// **文件上传成功**
+const handleFileUpload = (res, file) => {
+    if (res.code === "200") {
+        const url = res.data;
+        console.log(url);
+        if (!formData.value.attachments.files.includes(url)) {
+            formData.value.attachments.files.push(url);
+        }
+
+        // 直接更新 fileList
+        fileList.value.push({
+            name: url.split("-").pop(),
+            url
+        });
+    } else {
+        ElMessage.error("文件上传失败");
+    }
+};
+
+// **删除文件**
+const handleRemove = (file) => {
+    formData.value.attachments.files = formData.value.attachments.files.filter(url => url !== file.url);
+    fileList.value = fileList.value.filter(item => item.url !== file.url);
+};
+
+// **Tab 切换**
+const handleTabSelect = (index) => {
+    console.log('handleTabSelect', fileList.value);
+    activeTab.value = index;
+};
+
+
+
+const submitForm = () => {
+    request.post('/login', formData.value).then(res => {
+
+    })
+}
 </script>
+
 
 <style scoped>
 .main-card {
