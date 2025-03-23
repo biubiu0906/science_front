@@ -1,24 +1,26 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.projectCode" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入项目编号查询"></el-input>
-      <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入项目名称查询"></el-input>
+      <el-input v-model="data.projectCode" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+        placeholder="请输入项目编号查询"></el-input>
+      <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+        placeholder="请输入项目名称查询"></el-input>
       <el-button type="info" plain @click="load">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px">
-      <el-button v-if="data.user.role === 'TEACHER'" type="primary" plain @click="handleAdd">新增</el-button>
+      <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain @click="handleAdd">新增</el-button>
       <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain @click="delBatch">批量删除</el-button>
     </div>
 
     <div class="card" style="margin-bottom: 5px">
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="projectName" label="项目名称" show-overflow-tooltip/>
-        <el-table-column prop="projectCode" label="项目编号" show-overflow-tooltip/>
-        <el-table-column prop="typeName" label="成果类型" show-overflow-tooltip/>
-        <el-table-column prop="name" label="成果名称" show-overflow-tooltip/>
-        <el-table-column prop="description" label="成果描述" show-overflow-tooltip/>
+        <el-table-column prop="projectName" label="项目名称" show-overflow-tooltip />
+        <el-table-column prop="projectCode" label="项目编号" show-overflow-tooltip />
+        <el-table-column prop="typeName" label="成果类型" show-overflow-tooltip />
+        <el-table-column prop="name" label="成果名称" show-overflow-tooltip />
+        <el-table-column prop="description" label="成果描述" show-overflow-tooltip />
         <el-table-column prop="teacherName" label="教师" />
         <el-table-column prop="process" label="科研过程" width="100">
           <template v-slot="scope">
@@ -47,64 +49,50 @@
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip/>
-        <el-table-column prop="time" label="审核时间" show-overflow-tooltip/>
+        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip />
+        <el-table-column prop="time" label="审核时间" show-overflow-tooltip />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View" @click="handleCheck(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
+              :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View"
+              @click="handleCheck(scope.row)"></el-button>
             <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
     <div class="card" v-if="data.total">
-      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
+      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize"
+        v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
     <el-dialog title="科研成果提交" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="openFile" label="立项文件">
-          <el-upload
-              :action="baseUrl + '/files/upload'"
-              :on-success="handleOpenFileUpload"
-          >
+          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
             <el-button type="primary">点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="closeFile" label="结项文件">
-          <el-upload
-              :action="baseUrl + '/files/upload'"
-              :on-success="handleCloseFileUpload"
-          >
+          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleCloseFileUpload">
             <el-button type="primary">点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="file" label="附件">
-          <el-upload
-              :action="baseUrl + '/files/upload'"
-              :on-success="handleFileUpload"
-          >
+          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload">
             <el-button type="primary">点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="projectId" label="科研项目">
           <el-select v-model="data.form.projectId" placeholder="请选择科研项目">
-            <el-option
-                v-for="item in data.projectData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id">
+            <el-option v-for="item in data.projectData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
         <el-form-item prop="typeId" label="成果类型">
           <el-select v-model="data.form.typeId" placeholder="请选择成果类型">
-            <el-option
-                v-for="item in data.typeData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id">
+            <el-option v-for="item in data.typeData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -147,10 +135,10 @@
 
 <script setup>
 
-import {reactive, ref} from "vue";
+import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit, View} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete, Edit, View } from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
@@ -172,16 +160,16 @@ const data = reactive({
 
 const rules = reactive({
   openFile: [
-    {required: true, message: '请上传立项文件', trigger: 'blur'},
+    { required: true, message: '请上传立项文件', trigger: 'blur' },
   ],
   name: [
-    {required: true, message: '请输入项目名称', trigger: 'blur'},
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
   ],
   closeFile: [
-    {required: true, message: '请上传结项文件', trigger: 'blur'},
+    { required: true, message: '请上传结项文件', trigger: 'blur' },
   ],
   projectId: [
-    {required: true, message: '请选择科研项目', trigger: 'blur'},
+    { required: true, message: '请选择科研项目', trigger: 'blur' },
   ],
 })
 const navTo = (url) => {
@@ -261,7 +249,7 @@ const update = () => {
 
 const save = () => {
   formRef.value.validate(valid => {
-    if (valid){
+    if (valid) {
       data.form.id ? update() : add()
     }
   })
@@ -299,7 +287,7 @@ const delBatch = () => {
     return
   }
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
-    request.delete("/achievement/delete/batch", {data: data.ids}).then(res => {
+    request.delete("/achievement/delete/batch", { data: data.ids }).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         load()

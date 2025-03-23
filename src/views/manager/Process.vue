@@ -7,7 +7,7 @@
       <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px">
-      <el-button v-if="data.user.role === 'TEACHER'" type="primary" plain @click="handleAdd">新增</el-button>
+      <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain @click="handleAdd">新增</el-button>
       <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain @click="delBatch">批量删除</el-button>
     </div>
 
@@ -23,7 +23,7 @@
         <el-table-column prop="solution" label="解决方案" show-overflow-tooltip />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'TEACHER'" type="primary" circle :icon="Edit"
+            <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" circle :icon="Edit"
               @click="handleEdit(scope.row)"></el-button>
             <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle :icon="Delete"
               @click="del(scope.row.id)"></el-button>

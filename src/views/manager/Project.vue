@@ -1,12 +1,14 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.code" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入项目编号查询"></el-input>
-      <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入项目名称查询"></el-input>
+      <el-input v-model="data.code" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+        placeholder="请输入项目编号查询"></el-input>
+      <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+        placeholder="请输入项目名称查询"></el-input>
       <el-button type="info" plain @click="load">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
-    <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'TEACHER'">
+    <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'KEY_LABORATORY'">
       <el-button type="primary" plain @click="handleAdd">新增</el-button>
     </div>
 
@@ -33,28 +35,28 @@
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip/>
-        <el-table-column prop="time" label="审核时间" show-overflow-tooltip/>
+        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip />
+        <el-table-column prop="time" label="审核时间" show-overflow-tooltip />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View" @click="handleCheck(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
+              :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View"
+              @click="handleCheck(scope.row)"></el-button>
             <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
     <div class="card" v-if="data.total">
-      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
+      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize"
+        v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
     <el-dialog title="科研项目提交" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="file" label="申请材料">
-          <el-upload
-              :action="baseUrl + '/files/upload'"
-              :on-success="handleFileUpload"
-          >
+          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload">
             <el-button type="primary">点击上传</el-button>
           </el-upload>
         </el-form-item>
@@ -75,10 +77,12 @@
           <el-input v-model="data.form.subject" placeholder="请输入申请学科"></el-input>
         </el-form-item>
         <el-form-item prop="start" label="开始日期">
-          <el-date-picker style="width: 100%" v-model="data.form.start" value-format="YYYY-MM-DD" type="date" placeholder="请选择日期"></el-date-picker>
+          <el-date-picker style="width: 100%" v-model="data.form.start" value-format="YYYY-MM-DD" type="date"
+            placeholder="请选择日期"></el-date-picker>
         </el-form-item>
         <el-form-item prop="end" label="结束日期">
-          <el-date-picker style="width: 100%" v-model="data.form.end" value-format="YYYY-MM-DD" type="date" placeholder="请选择日期"></el-date-picker>
+          <el-date-picker style="width: 100%" v-model="data.form.end" value-format="YYYY-MM-DD" type="date"
+            placeholder="请选择日期"></el-date-picker>
         </el-form-item>
         <el-form-item prop="price" label="项目预算">
           <el-input-number v-model="data.form.price" :min="1" :max="1000000" label="label"></el-input-number>
@@ -116,10 +120,10 @@
 
 <script setup>
 
-import {reactive, ref} from "vue";
+import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit, View} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Delete, Edit, View } from "@element-plus/icons-vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
 const data = reactive({
@@ -137,22 +141,22 @@ const data = reactive({
 
 const rules = reactive({
   source: [
-    {required: true, message: '请输入项目来源', trigger: 'blur'},
+    { required: true, message: '请输入项目来源', trigger: 'blur' },
   ],
   name: [
-    {required: true, message: '请输入项目名称', trigger: 'blur'},
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
   ],
   level: [
-    {required: true, message: '请选择项目等级', trigger: 'blur'},
+    { required: true, message: '请选择项目等级', trigger: 'blur' },
   ],
   subject: [
-    {required: true, message: '请输入申请学科', trigger: 'blur'},
+    { required: true, message: '请输入申请学科', trigger: 'blur' },
   ],
   start: [
-    {required: true, message: '请选择开始日期', trigger: 'blur'},
+    { required: true, message: '请选择开始日期', trigger: 'blur' },
   ],
   end: [
-    {required: true, message: '请选择结束日期', trigger: 'blur'},
+    { required: true, message: '请选择结束日期', trigger: 'blur' },
   ],
 })
 
@@ -207,7 +211,7 @@ const update = () => {
 
 const save = () => {
   formRef.value.validate(valid => {
-    if (valid){
+    if (valid) {
       data.form.id ? update() : add()
     }
   })

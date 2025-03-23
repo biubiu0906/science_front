@@ -50,18 +50,25 @@
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/lab" v-if="data.user.role === 'NORMAL_LABORATORY'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labApply">重点实验室申请</el-menu-item>
+            <!-- 先测试 -->
+            <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
+
+
+            <!-- 泪飙 -->
             <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目管理</el-menu-item>
             <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程管理</el-menu-item>
             <el-menu-item index="/manager/type" v-if="data.user.role === 'ADMIN'">成果类型管理</el-menu-item>
             <el-menu-item index="/manager/achievement"
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果管理</el-menu-item>
-            <el-menu-item index="/manager/teacherFeedback" v-if="data.user.role === 'TEACHER'">教师反馈提交</el-menu-item>
+            <el-menu-item index="/manager/teacherFeedback"
+              v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>
             <el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>
             <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
-            <el-menu-item index="/manager/teacherActivity" v-if="data.user.role === 'TEACHER'">学术活动报名</el-menu-item>
-            <el-menu-item index="/manager/apply"
-              v-if="data.user.role === 'TEACHER' || data.user.role === 'ADMIN'">我的活动申请</el-menu-item>
+            <el-menu-item index="/manager/teacherActivity"
+              v-if="data.user.role === 'KEY_LABORATORY'">学术活动报名</el-menu-item>
+            <!-- 老师才能看到活动申请管理 -->
+            <el-menu-item index="/manager/apply" v-if="data.user.role === 'KEY_LABORATORY'">我的活动申请</el-menu-item>
             <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item>
             <el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">系统公告</el-menu-item>
