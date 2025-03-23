@@ -64,11 +64,13 @@
             <el-menu-item index="/manager/teacherFeedback"
               v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>
             <el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>
-            <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
+            <!-- 先修改 -->
+            <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
             <el-menu-item index="/manager/teacherActivity"
               v-if="data.user.role === 'KEY_LABORATORY'">学术活动报名</el-menu-item>
-            <!-- 老师才能看到活动申请管理 -->
-            <el-menu-item index="/manager/apply" v-if="data.user.role === 'KEY_LABORATORY'">我的活动申请</el-menu-item>
+            <el-menu-item index="/manager/apply" v-if="data.user.role === 'KEY_LABORATORY'">我的活动申请</el-menu-item> -->
+
+
             <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item>
             <el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">系统公告</el-menu-item>
