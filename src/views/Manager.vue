@@ -50,10 +50,10 @@
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role !== 'ADMIN'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labMember" v-if="data.user.role !== 'ADMIN'">实验室成员管理</el-menu-item>
             <!-- 先测试 -->
             <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
-
 
             <!-- 泪飙 -->
             <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目管理</el-menu-item>

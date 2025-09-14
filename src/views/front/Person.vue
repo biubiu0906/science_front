@@ -2,14 +2,12 @@
   <div style="width: 40%; margin: 5px auto" class="card">
     <el-form ref="user" :model="data.user" label-width="60px" style="padding: 20px">
       <div style="text-align: center; margin-bottom: 20px">
-        <el-upload
-            :action="baseUrl + '/files/upload'"
-            :on-success="handleFileUpload"
-            :show-file-list="false"
-            class="avatar-uploader"
-        >
+        <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload" :show-file-list="false"
+          class="avatar-uploader">
           <img v-if="data.user.avatar" :src="data.user.avatar" class="avatar" />
-          <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          <el-icon v-else class="avatar-uploader-icon">
+            <Plus />
+          </el-icon>
         </el-upload>
       </div>
       <el-form-item prop="username" label="用户名">
@@ -34,7 +32,7 @@
 <script setup>
 import { reactive } from "vue";
 import request from "@/utils/request.js";
-import {ElMessage} from "element-plus";
+import { ElMessage } from "element-plus";
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 
@@ -66,11 +64,13 @@ const update = () => {
 .avatar-uploader {
   height: 120px;
 }
+
 .avatar-uploader .avatar {
   width: 120px;
   height: 120px;
   display: block;
 }
+
 .avatar-uploader .el-upload {
   border: 1px dashed var(--el-border-color);
   border-radius: 50%;

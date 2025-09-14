@@ -17,6 +17,7 @@ const router = createRouter({
         { path: 'project', meta: { name: '科研项目' }, component: () => import('@/views/manager/Project.vue'), },
         // 新增实验室申请
         { path: 'labApply', meta: { name: '重点实验室申请' }, component: () => import('@/views/manager/LabApply.vue'), },
+        { path: 'labMember', meta: { name: '实验室成员管理' }, component: () => import('@/views/manager/LabMember.vue'), },
         { path: 'labSelect', meta: { name: '重点实验室审核' }, component: () => import('@/views/manager/LabSelect.vue'), },
         { path: 'process', meta: { name: '科研过程' }, component: () => import('@/views/manager/Process.vue'), },
         { path: 'type', meta: { name: '成果分类' }, component: () => import('@/views/manager/Type.vue'), },

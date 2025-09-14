@@ -11,15 +11,6 @@
           <el-input show-password :prefix-icon="Lock" size="large" v-model="data.form.password"
             placeholder="请输入密码"></el-input>
         </el-form-item>
-        <!-- 删除角色类型的设置 -->
-        <!-- <el-form-item prop="role">
-          <el-select size="large" v-model="data.form.role">
-            <el-option value="ADMIN" label="管理员"></el-option>
-            <el-option value="TEACHER" label="教师"></el-option>
-          </el-select>
-        </el-form-item> -->
-
-
         <el-form-item>
           <el-button size="large" type="primary" style="width: 100%" @click="login">登 录</el-button>
         </el-form-item>

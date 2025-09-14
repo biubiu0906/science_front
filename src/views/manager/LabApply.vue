@@ -325,7 +325,7 @@ const uploadRef = ref(null); // 上传组件引用
 const selectedApplicationId = ref(null); // 定义 selectedApplicationId
 
 // 页面状态
-const pageStatus = ref('add');
+const pageStatus = ref('');
 const activeStep = ref(0);
 
 const fileList = ref([]);
@@ -660,6 +660,15 @@ const fetchApplicationDetails = async (id) => {
 
 
 const labAddHandle = () => {
+    // 这里做个check，判断是否已经是重点实验室
+    if (data.user.role === 'KEY_LABORATORY') {
+        ElMessage({
+            message: '你已经是重点实验室，无需再次提交！',
+            type: 'warning',
+            duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
+        });
+        return;
+    }
     // 刷新 + 清空
     pageStatus.value = 'add';
     activeStep.value = 0;
