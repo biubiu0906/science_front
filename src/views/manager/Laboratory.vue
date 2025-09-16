@@ -13,10 +13,19 @@
     <div class="card" style="margin-bottom: 5px">
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="labName" label="实验室名称" />
-        <el-table-column prop="level" label="级别" />
-        <el-table-column prop="totalStaff" label="人数" />
-        <el-table-column prop="establishmentDate" label="成立时间" />
+        <el-table-column prop="laboratoryName" label="实验室名称" />
+        <el-table-column prop="laboratoryDescription" label="实验室描述" />
+        <el-table-column prop="laboratoryAddress" label="实验室地址" />
+        <el-table-column prop="type" label="实验室类别">
+          <template v-slot="scope">
+            <el-tag 
+              :type="scope.row.type == 1 ? 'info' : 'success'" 
+              class="lab-type-tag"
+            >
+              {{ scope.row.type == 1 ? '普通实验室' : '重点实验室' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="username" label="账号" />
         <el-table-column prop="password" label="密码">
           <template #header>
@@ -57,17 +66,14 @@
         <el-form-item prop="password" label="密码">
           <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
-        <el-form-item prop="labName" label="实验室名称">
-          <el-input v-model="data.form.labName" placeholder="请输入实验室名称"></el-input>
+        <el-form-item prop="laboratoryName" label="实验室名称">
+          <el-input v-model="data.form.laboratoryName" placeholder="请输入实验室名称"></el-input>
         </el-form-item>
-        <el-form-item prop="level" label="级别">
-          <el-input v-model="data.form.level" placeholder="请输入实验室级别"></el-input>
+        <el-form-item prop="laboratoryDescription" label="实验室描述">
+          <el-input v-model="data.form.laboratoryDescription" placeholder="请输入实验室描述"></el-input>
         </el-form-item>
-        <el-form-item prop="totalStaff" label="人数">
-          <el-input v-model="data.form.totalStaff" placeholder="请输入实验室人数"></el-input>
-        </el-form-item>
-        <el-form-item prop="establishmentDate" label="成立时间">
-          <el-input v-model="data.form.establishmentDate" placeholder="请输入实验室成立时间"></el-input>
+        <el-form-item prop="laboratoryAddress" label="实验室地址">
+          <el-input v-model="data.form.laboratoryAddress" placeholder="请输入实验室地址"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -100,13 +106,12 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   ids: [],
-  labName: null,
-  level: null,
-  totalStaff: null,
-  establishmentDate: null,
+  laboratoryName: null,
   username: null,
   password: null,
-  showPassword: false // 控制密码显示状态
+  showPassword: false,
+  laboratoryDescription: null,
+  laboratoryAddress: null
 })
 
 // 表单验证规则
@@ -119,7 +124,7 @@ const rules = reactive({
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
   ],
-  labName: [
+  laboratoryName: [
     { required: true, message: '请输入实验室名称', trigger: 'blur' },
     { min: 2, max: 50, message: '实验室名称长度在 2 到 50 个字符', trigger: 'blur' }
   ],
@@ -240,3 +245,27 @@ const togglePasswordVisibility = () => {
 
 load()
 </script>
+
+<style scoped>
+/* 实验室类别标签样式 */
+.lab-type-tag {
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* 普通实验室标签样式 */
+.lab-type-tag.el-tag--info {
+  background-color: #f4f4f5;
+  border-color: #e9e9eb;
+  color: #909399;
+}
+
+/* 重点实验室标签样式 */
+.lab-type-tag.el-tag--success {
+  background-color: #f0f9ff;
+  border-color: #c6f6d5;
+  color: #38a169;
+}
+</style>
