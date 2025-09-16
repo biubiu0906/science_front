@@ -46,7 +46,7 @@
                 <el-table-column label="操作" width="180">
                     <template v-slot="scope">
                         <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
-                        <el-button @click="reviewApply(scope.row.id)" size="small" type="primary">审核</el-button>
+                        <el-button @click="reviewApply(scope.row.id)" size="small" type="primary" v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0">审核</el-button>
                     </template>
                 </el-table-column>
             </el-table>

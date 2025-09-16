@@ -105,6 +105,7 @@ const formRef = ref(null)
 const baseUrl = import.meta.env.VITE_BASE_URL
 
 const data = reactive({
+  user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   formVisible: false,
   form: {},
   tableData: [],
@@ -134,18 +135,33 @@ const rules = reactive({
 })
 
 const load = () => {
-  request.get('/teacher/selectPage', {
-    params: {
-      pageNum: data.pageNum,
-      pageSize: data.pageSize,
-      name: data.name
-    }
-  }).then(res => {
-    if (res.code === '200') {
-      data.tableData = res.data?.list || []
-      data.total = res.data?.total
-    }
-  })
+  if(data.user.role === 'ADMIN'){
+    request.get('/teacher/selectTeachers', {
+      params: {
+        pageNum: data.pageNum,
+        pageSize: data.pageSize,
+        name: data.name
+      }
+    }).then(res => {
+      if (res.code === '200') {
+        data.tableData = res.data?.list || []
+        data.total = res.data?.total
+      }
+    })
+  }else{
+    request.get('/teacher/selectPage', {
+      params: {
+        pageNum: data.pageNum,
+        pageSize: data.pageSize,
+        name: data.name
+      }
+    }).then(res => {
+      if (res.code === '200') {
+        data.tableData = res.data?.list || []
+        data.total = res.data?.total
+      }
+    })
+  }
 }
 const handleAdd = () => {
   data.form = {}
