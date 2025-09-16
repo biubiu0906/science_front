@@ -126,7 +126,7 @@ const rules = reactive({
 })
 
 const load = () => {
-  request.get('/lab/selectPage', {
+  request.get('/laboratory/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
@@ -148,7 +148,7 @@ const handleEdit = (row) => {
   data.formVisible = true
 }
 const add = () => {
-  request.post('/lab/add', data.form).then(res => {
+  request.post('/laboratory/add', data.form).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -160,7 +160,7 @@ const add = () => {
 }
 
 const update = () => {
-  request.put('/lab/update', data.form).then(res => {
+  request.put('/laboratory/update', data.form).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -190,7 +190,7 @@ const save = () => {
 
 const del = (id) => {
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
-    request.delete('/lab/delete/' + id).then(res => {
+    request.delete('/laboratory/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
         load()
@@ -208,7 +208,7 @@ const delBatch = () => {
     return
   }
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
-    request.delete("/lab/delete/batch", {data: data.ids}).then(res => {
+    request.delete("/laboratory/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         load()
