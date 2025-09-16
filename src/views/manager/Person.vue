@@ -5,7 +5,9 @@
         <el-upload
             :action="baseUrl + '/files/upload'"
             :on-success="handleFileUpload"
+            :before-upload="beforeAvatarUpload"
             :show-file-list="false"
+            accept="image/jpeg,image/jpg,image/png"
             class="avatar-uploader"
         >
           <img v-if="data.user.avatar" :src="data.user.avatar" class="avatar" />
@@ -41,6 +43,25 @@ const baseUrl = import.meta.env.VITE_BASE_URL
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}')
 })
+
+// 头像上传前的验证函数
+const beforeAvatarUpload = (file) => {
+  // 检查文件类型
+  const isImage = ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)
+  if (!isImage) {
+    ElMessage.error('头像只能是JPG、PNG格式的图片!')
+    return false
+  }
+  
+  // 检查文件大小（限制为5MB）
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('头像图片大小不能超过5MB!')
+    return false
+  }
+  
+  return true
+}
 
 const handleFileUpload = (res) => {
   data.user.avatar = res.data

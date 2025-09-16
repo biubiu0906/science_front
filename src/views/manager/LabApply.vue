@@ -1,6 +1,6 @@
 <template>
     <el-card class="main-card">
-        <el-button type="primary" @click="labAddHandle">新增</el-button>
+        <el-button type="primary" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'">新增</el-button>
         <div class="card" style="margin-top: 15px">
             <el-table stripe :data="labApplyList">
                 <el-table-column prop="id" label="申请编号" />
@@ -759,7 +759,7 @@ const getFileName = (fileUrl) => {
 }
 
 /* 确保表单控件占满宽度 */
-/deep/ .el-card__body {
+:deep(.el-card__body) {
     width: 100%;
     /* 表单控件占满剩余宽度 */
 }

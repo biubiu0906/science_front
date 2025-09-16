@@ -2,7 +2,7 @@
   <div>
     <div class="card" style="margin-bottom: 5px">您好！{{ data.user?.name }}，欢迎使用本系统！</div>
     <div style="display: flex">
-      <div class="card" style="flex: 50%; height: 350px">
+      <div class="card" style="flex: 50%; min-height: 200px">
         <div style="font-weight: bold; font-size: 18px; padding: 10px 0 30px 10px">系统公告</div>
         <el-timeline style="max-width: 600px">
           <el-timeline-item

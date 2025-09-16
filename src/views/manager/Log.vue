@@ -17,12 +17,6 @@
         <el-table-column prop="location" label="地址" />
         <el-table-column prop="username" label="操作人" />
         <el-table-column prop="time" label="操作时间" />
-        <el-table-column label="操作" width="100" fixed="right">
-          <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
-          </template>
-        </el-table-column>
       </el-table>
     </div>
     <div class="card" v-if="data.total">
@@ -36,7 +30,6 @@
 import {reactive} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit} from "@element-plus/icons-vue";
 
 
 const data = reactive({

@@ -12,6 +12,15 @@
       </div>
       <div style="flex: 1; margin: 0 5px; display: flex; height: 120px; align-items: center" class="card">
         <div style="flex: 1; text-align: center">
+          <img src="@/assets/imgs/活动.png" alt="" style="width: 70px; height: 60px">
+        </div>
+        <div style="flex: 1">
+          <div style="font-size: 20px">科研成果总数</div>
+          <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.achievement }}</div>
+        </div>
+      </div>
+      <div style="flex: 1; margin: 0 5px; display: flex; height: 120px; align-items: center" class="card">
+        <div style="flex: 1; text-align: center">
           <img src="@/assets/imgs/反馈.png" alt="" style="width: 70px; height: 60px">
         </div>
         <div style="flex: 1">
@@ -19,15 +28,7 @@
           <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.feedback }}</div>
         </div>
       </div>
-      <div style="flex: 1; margin: 0 5px; display: flex; height: 120px; align-items: center" class="card">
-        <div style="flex: 1; text-align: center">
-          <img src="@/assets/imgs/活动.png" alt="" style="width: 70px; height: 60px">
-        </div>
-        <div style="flex: 1">
-          <div style="font-size: 20px">活动总数</div>
-          <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.activity }}</div>
-        </div>
-      </div>
+      
       <div style="flex: 1; margin-left: 5px; display: flex; height: 120px; align-items: center" class="card">
         <div style="flex: 1; text-align: center">
           <img src="@/assets/imgs/教师.png" alt="" style="width: 70px; height: 60px">

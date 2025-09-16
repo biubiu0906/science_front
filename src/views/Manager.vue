@@ -37,7 +37,7 @@
             </el-icon>
             <span>系统首页</span>
           </el-menu-item>
-          <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN'">
+          <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY'">
             <el-icon>
               <Odometer />
             </el-icon>
@@ -51,7 +51,6 @@
               <span>信息管理</span>
             </template>
             <el-menu-item index="/manager/labApply" v-if="data.user.role !== 'ADMIN'">重点实验室申请</el-menu-item>
-            <el-menu-item index="/manager/labMember" v-if="data.user.role !== 'ADMIN'">实验室成员管理</el-menu-item>
             <!-- 先测试 -->
             <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
 
@@ -83,6 +82,16 @@
               <span>用户管理</span>
             </template>
             <el-menu-item index="/manager/admin">管理员信息</el-menu-item>
+            <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
+            <el-menu-item index="/manager/laboratory">实验室信息</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="2" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
+            <template #title>
+              <el-icon>
+                <Menu />
+              </el-icon>
+              <span>用户管理</span>
+            </template>
             <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
           </el-sub-menu>
         </el-menu>

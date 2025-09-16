@@ -329,7 +329,7 @@ watch(() => props.id, (newId) => {
 }
 
 /* 确保表单控件占满宽度 */
-/deep/ .el-card__body {
+:deep(.el-card__body) {
     width: 100%;
     /* 表单控件占满剩余宽度 */
 }
