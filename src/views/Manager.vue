@@ -60,8 +60,8 @@
             <el-menu-item index="/manager/type" v-if="data.user.role === 'ADMIN'">成果类型管理</el-menu-item>
             <el-menu-item index="/manager/achievement"
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果管理</el-menu-item>
-            <el-menu-item index="/manager/teacherFeedback"
-              v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>
+            <!--<el-menu-item index="/manager/teacherFeedback"
+              v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>-->
             <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>-->
             <!-- 先修改 -->
             <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
