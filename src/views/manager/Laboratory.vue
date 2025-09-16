@@ -50,7 +50,7 @@
     </div>
 
     <el-dialog title="实验室信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="90px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px">
         <el-form-item prop="username" label="账号">
           <el-input v-model="data.form.username" placeholder="请输入实验室账号"></el-input>
         </el-form-item>
@@ -123,16 +123,6 @@ const rules = reactive({
     { required: true, message: '请输入实验室名称', trigger: 'blur' },
     { min: 2, max: 50, message: '实验室名称长度在 2 到 50 个字符', trigger: 'blur' }
   ],
-  level: [
-    { required: true, message: '请输入实验室级别', trigger: 'blur' }
-  ],
-  totalStaff: [
-    { required: true, message: '请输入实验室人数', trigger: 'blur' },
-    { pattern: /^\d+$/, message: '人数必须为正整数', trigger: 'blur' }
-  ],
-  establishmentDate: [
-    { required: true, message: '请输入成立时间', trigger: 'blur' }
-  ]
 })
 
 const load = () => {
