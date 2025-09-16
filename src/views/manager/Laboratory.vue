@@ -17,6 +17,26 @@
         <el-table-column prop="level" label="级别" />
         <el-table-column prop="totalStaff" label="人数" />
         <el-table-column prop="establishmentDate" label="成立时间" />
+        <el-table-column prop="username" label="账号" />
+        <el-table-column prop="password" label="密码">
+          <template #header>
+            <span>密码</span>
+            <el-button 
+              :icon="data.showPassword ? View : Hide" 
+              @click="togglePasswordVisibility" 
+              size="small" 
+              text 
+              style="margin-left: 8px"
+              :title="data.showPassword ? '隐藏密码' : '显示密码'"
+            >
+              {{ data.showPassword ? '隐藏' : '显示' }}
+            </el-button>
+          </template>
+          <template v-slot="scope">
+            <span v-if="data.showPassword">{{ scope.row.password }}</span>
+            <span v-else>******</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
@@ -30,8 +50,14 @@
     </div>
 
     <el-dialog title="实验室信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="form" :model="data.form" label-width="70px" style="padding: 20px">
-        <el-form-item prop="labName" label="实验室">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="90px" style="padding: 20px">
+        <el-form-item prop="username" label="账号">
+          <el-input v-model="data.form.username" placeholder="请输入实验室账号"></el-input>
+        </el-form-item>
+        <el-form-item prop="password" label="密码">
+          <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
+        </el-form-item>
+        <el-form-item prop="labName" label="实验室名称">
           <el-input v-model="data.form.labName" placeholder="请输入实验室名称"></el-input>
         </el-form-item>
         <el-form-item prop="level" label="级别">
@@ -56,10 +82,13 @@
 
 <script setup>
 
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit} from "@element-plus/icons-vue";
+import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
+
+// 表单引用
+const formRef = ref(null)
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 
@@ -74,7 +103,36 @@ const data = reactive({
   labName: null,
   level: null,
   totalStaff: null,
-  establishmentDate: null
+  establishmentDate: null,
+  username: null,
+  password: null,
+  showPassword: false // 控制密码显示状态
+})
+
+// 表单验证规则
+const rules = reactive({
+  username: [
+    { required: true, message: '请输入实验室账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '账号长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  labName: [
+    { required: true, message: '请输入实验室名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '实验室名称长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  level: [
+    { required: true, message: '请输入实验室级别', trigger: 'blur' }
+  ],
+  totalStaff: [
+    { required: true, message: '请输入实验室人数', trigger: 'blur' },
+    { pattern: /^\d+$/, message: '人数必须为正整数', trigger: 'blur' }
+  ],
+  establishmentDate: [
+    { required: true, message: '请输入成立时间', trigger: 'blur' }
+  ]
 })
 
 const load = () => {
@@ -122,7 +180,22 @@ const update = () => {
 }
 
 const save = () => {
-  data.form.id ? update() : add()
+  // 表单验证
+  if (!formRef.value) {
+    ElMessage.error('表单引用未找到')
+    return
+  }
+  
+  formRef.value.validate((valid) => {
+    if (valid) {
+      // 验证通过，执行保存操作
+      data.form.id ? update() : add()
+    } else {
+      // 验证失败，显示错误信息
+      ElMessage.error('请填写完整的必填信息')
+      return false
+    }
+  })
 }
 
 const del = (id) => {
@@ -169,6 +242,11 @@ const reset = () => {
   data.labName = null
   load()
 }
+
+const togglePasswordVisibility = () => {
+  data.showPassword = !data.showPassword
+}
+
 
 load()
 </script>

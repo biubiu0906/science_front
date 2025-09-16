@@ -13,7 +13,6 @@
     <div class="card" style="margin-bottom: 5px">
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="username" label="账号" />
         <el-table-column prop="avatar" label="头像">
           <template v-slot="scope">
             <el-image style="width: 40px; height: 40px; border-radius: 50%; display: block" v-if="scope.row.avatar"
@@ -21,9 +20,28 @@
           </template>
         </el-table-column>
         <el-table-column prop="name" label="姓名" />
-        <el-table-column prop="role" label="角色" />
         <el-table-column prop="phone" label="电话" />
         <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="password" label="密码">
+          <template #header>
+            <span>密码</span>
+            <el-button 
+              :icon="data.showPassword ? View : Hide" 
+              @click="togglePasswordVisibility" 
+              size="small" 
+              text 
+              style="margin-left: 8px"
+              :title="data.showPassword ? '隐藏密码' : '显示密码'"
+            >
+              {{ data.showPassword ? '隐藏' : '显示' }}
+            </el-button>
+          </template>
+          <template v-slot="scope">
+            <span v-if="data.showPassword">{{ scope.row.password }}</span>
+            <span v-else>******</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
@@ -37,9 +55,15 @@
     </div>
 
     <el-dialog title="管理员信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="form" :model="data.form" label-width="70px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="70px" style="padding: 20px">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
+        </el-form-item>
+        <el-form-item prop="password" label="密码">
+          <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
+        </el-form-item>
+        <el-form-item prop="name" label="姓名">
+          <el-input v-model="data.form.name" placeholder="请输入姓名"></el-input>
         </el-form-item>
         <el-form-item prop="avatar" label="头像">
           <el-upload
@@ -49,9 +73,6 @@
               >
             <el-button type="primary">点击上传</el-button>
           </el-upload>
-        </el-form-item>
-        <el-form-item prop="name" label="姓名">
-          <el-input v-model="data.form.name" placeholder="请输入姓名"></el-input>
         </el-form-item>
         <el-form-item prop="phone" label="电话">
           <el-input v-model="data.form.phone" placeholder="请输入电话"></el-input>
@@ -72,10 +93,14 @@
 
 <script setup>
 
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit} from "@element-plus/icons-vue";
+import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
+import Password from "./Password.vue";
+
+// 表单引用
+const formRef = ref(null)
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 
@@ -87,7 +112,25 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   name: null,
-  ids: []
+  ids: [],
+  Password: null,
+  showPassword: false
+})
+
+// 表单验证规则
+const rules = reactive({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
+  ]
 })
 
 const load = () => {
@@ -134,8 +177,20 @@ const update = () => {
   })
 }
 
+// 保存教师信息（包含表单验证）
 const save = () => {
-  data.form.id ? update() : add()
+  if (!formRef.value) return
+  
+  formRef.value.validate((valid) => {
+    if (valid) {
+      // 验证通过，执行保存操作
+      data.form.id ? update() : add()
+    } else {
+      // 验证失败，显示错误信息
+      ElMessage.error('请填写完整的必填信息')
+      return false
+    }
+  })
 }
 
 const del = (id) => {
@@ -181,6 +236,10 @@ const handleFileUpload = (res) => {
 const reset = () => {
   data.name = null
   load()
+}
+
+const togglePasswordVisibility = () => {
+  data.showPassword = !data.showPassword
 }
 
 load()
