@@ -9,7 +9,7 @@
       <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px">
-      <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain @click="handleAdd">新增</el-button>
+      <el-button v-if="data.laboratoryLevel === 2" type="primary" plain @click="handleAdd">新增</el-button>
       <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain @click="delBatch">批量删除</el-button>
     </div>
 
@@ -135,7 +135,7 @@
 
 <script setup>
 
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Delete, Edit, View } from "@element-plus/icons-vue";
@@ -155,7 +155,8 @@ const data = reactive({
   projectName: null,
   projectData: [],
   typeData: [],
-  ids: []
+  ids: [],
+  laboratoryLevel: null
 })
 
 const rules = reactive({
@@ -320,6 +321,31 @@ const handleCloseFileUpload = (res) => {
 const down = (url) => {
   window.open(url)
 }
+
+const getLaboratoryLevel = () => {
+  // 检查用户是否有实验室ID
+  if (!data.user.laboratoryId) {
+    return
+  }
+  
+  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
+    if (res.code === '200') {
+      data.laboratoryLevel = res.data.type
+    } else {
+      ElMessage.error(res.msg)
+    }
+  }).catch(error => {
+    console.error('获取实验室级别失败:', error)
+    ElMessage.error('获取实验室信息失败')
+  })
+}
+
+
+onMounted(() => {
+  if (data.user.id) {
+    getLaboratoryLevel()
+  }
+})
 
 load()
 loadProject()

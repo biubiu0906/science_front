@@ -43,14 +43,14 @@
             </el-icon>
             <span>数据统计</span>
           </el-menu-item>
-          <el-sub-menu index="1">
+          <el-sub-menu index="1" v-if="data.laboratoryLevel !== 1">
             <template #title>
               <el-icon>
                 <Menu />
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply" v-if="data.user.role !== 'ADMIN'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role !== 'ADMIN' && data.laboratoryLevel !== 2">重点实验室申请</el-menu-item>
             <!-- 先测试 -->
             <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
 
@@ -62,7 +62,7 @@
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果管理</el-menu-item>
             <el-menu-item index="/manager/teacherFeedback"
               v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>
-            <el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>
+            <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>-->
             <!-- 先修改 -->
             <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
             <el-menu-item index="/manager/teacherActivity"
@@ -71,7 +71,7 @@
 
 
             <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item> -->
-            <el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>
+            <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">系统公告</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2" v-if="data.user.role === 'ADMIN'">
@@ -107,12 +107,14 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
 import router from "@/router/index.js";
 import { ElMessage } from "element-plus";
+import request from "@/utils/request.js";
 
 const data = reactive({
-  user: JSON.parse(localStorage.getItem('xm-user') || '{}')
+  user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+  laboratoryLevel: null
 })
 
 const logout = () => {
@@ -120,9 +122,34 @@ const logout = () => {
   router.push('/login')
 }
 
+
+const getLaboratoryLevel = () => {
+  // 检查用户是否有实验室ID
+  if (!data.user.laboratoryId) {
+    return
+  }
+  
+  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
+    if (res.code === '200') {
+      data.laboratoryLevel = res.data.type
+    } else {
+      ElMessage.error(res.msg)
+    }
+  }).catch(error => {
+    console.error('获取实验室级别失败:', error)
+    ElMessage.error('获取实验室信息失败')
+  })
+}
+
 const updateUser = () => {
   data.user = JSON.parse(localStorage.getItem('xm-user') || '{}')
 }
+
+onMounted(() => {
+  if (data.user.id) {
+    getLaboratoryLevel()
+  }
+})
 
 if (!data.user.id) {
   logout()

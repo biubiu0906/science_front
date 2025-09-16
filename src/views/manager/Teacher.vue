@@ -54,7 +54,7 @@
       <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="管理员信息" v-model="data.formVisible" width="40%" destroy-on-close>
+    <el-dialog title="教师信息" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="rules" label-width="70px" style="padding: 20px">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>

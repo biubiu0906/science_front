@@ -21,13 +21,14 @@
 
 <script setup>
 
-import {reactive} from "vue";
+import {reactive, onMounted} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "element-plus";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
-  noticeData: []
+  noticeData: [],
+  laboratoryLevel: null
 })
 
 const loadNotice = () => {
@@ -39,5 +40,38 @@ const loadNotice = () => {
     }
   })
 }
+
+const getLaboratoryLevel = () => {
+  // 检查用户是否有实验室ID
+  if (!data.user.laboratoryId) {
+    return
+  }
+  
+  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
+    if (res.code === '200') {
+      data.laboratoryLevel = res.data.type
+      
+      if (data.laboratoryLevel === 1) {
+        ElMessage({
+          message: '您所在的实验室还不是重点实验室，请联系实验室管理员申请为重点实验室',
+          type: 'warning',
+          duration: 10000,
+        })
+      }
+    } else {
+      ElMessage.error(res.msg)
+    }
+  }).catch(error => {
+    console.error('获取实验室级别失败:', error)
+    ElMessage.error('获取实验室信息失败')
+  })
+}
+
+
+onMounted(() => {
+  if (data.user.id) {
+    getLaboratoryLevel()
+  }
+})
 loadNotice()
 </script>
