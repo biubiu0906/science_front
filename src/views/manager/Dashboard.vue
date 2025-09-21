@@ -161,8 +161,8 @@ let pieOptions = {
 // 柱状图1数据结构
 let bar1Options = {
   title: {
-    text: '系统中教师申请的学术活动数量', // 主标题
-    subtext: '统计维度：活动名称', // 副标题
+    text: '系统中不同老师的科研项目数量', // 主标题
+    subtext: '统计维度：老师', // 副标题
     left: 'center'
   },
   xAxis: {
