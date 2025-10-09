@@ -3,33 +3,90 @@
     min-height: 100vh;
 }
 
+/* 整体布局容器 */
+.layout-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 侧边栏样式 - 占满屏幕高度，独立滚动 */
+.manager-main-left {
+    width: 200px;
+    background-color: #1b3555;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 2px 0 4px rgba(0, 21, 41, .08);
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 隐藏滚动条 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 和 Edge */
+    transition: width 0.3s ease;
+}
+
+/* 侧边栏折叠状态 */
+.manager-main-left.collapsed {
+    width: 64px;
+}
+
+/* 隐藏 Webkit 浏览器的滚动条 */
+.manager-main-left::-webkit-scrollbar {
+    display: none;
+}
+
+/* 右侧内容区域 - 独立滚动 */
+.manager-main-right {
+    flex: 1;
+    margin-left: 200px; /* 为侧边栏留出空间 */
+    background-color: #f8f8ff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 隐藏滚动条 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 和 Edge */
+    transition: margin-left 0.3s ease;
+}
+
+/* 侧边栏折叠时右侧内容区的样式 */
+.manager-main-right.sidebar-collapsed {
+    margin-left: 64px;
+}
+
+/* 隐藏 Webkit 浏览器的滚动条 */
+.manager-main-right::-webkit-scrollbar {
+    display: none;
+}
+
+/* 头部样式 - 现在在右侧内容区内 */
 .manager-header {
-    height: 50px;
-    background-color: white;
+    height: 59px;
+    background-color: #1b3555;
     display: flex;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
+    margin-bottom: 0;
 }
 
+/* 折叠按钮样式 */
 .manager-header-left {
-    background-color: white;
-    width: 220px;
-    height: 100%;
-    padding-left: 10px;
+    width: 50px;
+    height: 50px;
     display: flex;
-    align-items: center
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: color 0.3s ease;
 }
 
-.manager-header-left img {
-    width: 30px;
-    height: 30px;
-}
-
-.manager-header-left .title {
-    font-weight: bold;
-    font-size: 20px;
-    margin-left: 10px;
-    color: #423f3f;
+.manager-header-left:hover {
+    color: #e6f7ff;
 }
 
 .manager-header-center {
@@ -37,71 +94,130 @@
     padding-left: 20px;
 }
 
-.manager-main-left {
-    width: 200px;
-    background-color: #fff;
-    min-height: calc(100vh - 60px);
+.manager-header-left .el-icon{
+    font-size: 18px;
+    color: #fff;
+    margin-top: 6px;
 }
 
-.manager-main-right {
+.manager-header-center {
     flex: 1;
-    width: 0;
-    background-color: #f8f8ff;
+    padding-left: 20px;
+}
+
+/* 主要内容区域 */
+.content-area {
+    flex: 1;
     padding: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 隐藏滚动条 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 和 Edge */
+    background-color: #e9edf2;
+}
+
+/* 隐藏 Webkit 浏览器的滚动条 */
+.content-area::-webkit-scrollbar {
+    display: none;
+}
+
+/* 菜单头部样式 */
+.menu-header {
+    background-color: #13263d;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #e6e6e6;
+    transition: justify-content 0.3s ease;
+}
+
+/* 折叠时菜单头部居中 */
+.manager-main-left.collapsed .menu-header {
+    justify-content: center;
+    padding: 0;
+}
+
+.menu-header img {
+    width: 30px;
+    height: 30px;
+}
+
+.menu-header .title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-left: 10px;
+    color: #fff;
+    transition: none; /* 移除过渡动画 */
+}
+
+/* 折叠时标题立即隐藏 */
+.manager-main-left.collapsed .menu-header .title {
+    display: none;
 }
 
 
 /* ElementUI */
 .el-menu {
     border: none;
-    background-color: white;
+    background-color: #1b3555;
 }
 
 .el-tooltip__trigger {
     outline: none;
 }
 
-/deep/.el-sub-menu__title {
-    color: #666 !important;
+:deep(.el-sub-menu__title) {
+    color: #fff !important;
     height: 50px;
     line-height: 50px;
-    background-color: #fff !important;
+    background-color: #1b3555 !important;
 }
 
 .el-sub-menu__title:hover {
-    background-color: #fff; /* 必须加上这个背景色，否则鼠标移入会出现白色 */
-    color: #fff;
+    background-color: #0f1f33 !important; /* 悬浮时稍微深一点的蓝色 */
+    color: #fff !important;
 }
 
 .el-menu-item {
-    color: #666;
+    color: #fff;
     height: 50px;
     line-height: 50px;
-    background-color: #fff !important; /* 必须加上这个背景色，否则鼠标离开会出现白色 */
+    background-color: #1b3555 !important; /* 必须加上这个背景色，否则鼠标离开会出现白色 */
+    margin-left: 0;
+}
+
+.el-sub-menu {
+    margin-left: 0;
+}
+
+/* 折叠时菜单项图标居中 */
+.manager-main-left.collapsed .el-menu-item,
+.manager-main-left.collapsed .el-sub-menu {
+    margin-left: 0;
 }
 
 .el-menu--inline .el-menu-item {
-    background-color: #fff !important;
+    background-color: #1b3555 !important;
 }
 
 .el-menu-item.is-active {
-    color: #3399ff;
-}
-
-.el-menu-item:not(.is-active):hover {
-    color: #fff;
-}
-.el-menu-item:hover {
-    background-color: white !important;
     color: #3399ff !important;
+    background-color: #fff !important;
 }
 
-/deep/.el-breadcrumb__inner {
-    color: #423f3f !important;
+.el-menu-item:hover {
+    background-color: #0f1f33 !important;
+    color: #fff !important;
 }
 
-/deep/.manager-header-right span {
-    color: #423f3f;
+:deep(.el-breadcrumb__inner) {
+    color: #fff !important;
+}
+
+:deep(.manager-header-right span) {
+    color: #fff;
 }
 
 th.el-table__cell {

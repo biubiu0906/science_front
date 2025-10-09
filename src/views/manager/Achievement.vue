@@ -5,59 +5,78 @@
         placeholder="请输入项目编号查询"></el-input>
       <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-    </div>
-    <div class="card" style="margin-bottom: 5px">
-      <el-button v-if="data.laboratoryLevel === 2" type="primary" plain @click="handleAdd">新增</el-button>
-      <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain @click="delBatch">批量删除</el-button>
+      <el-button size="small" type="info" plain @click="load">查询</el-button>
+      <el-button size="small" type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="projectName" label="项目名称" show-overflow-tooltip />
-        <el-table-column prop="projectCode" label="项目编号" show-overflow-tooltip />
-        <el-table-column prop="typeName" label="成果类型" show-overflow-tooltip />
-        <el-table-column prop="name" label="成果名称" show-overflow-tooltip />
-        <el-table-column prop="description" label="成果描述" show-overflow-tooltip />
-        <el-table-column prop="teacherName" label="教师" />
-        <el-table-column prop="process" label="科研过程" width="100">
+      <div style="margin-bottom: 10px; margin-left: 10px;">
+        <el-button v-if="data.laboratoryLevel === 2" type="primary" plain size="small" @click="handleAdd">新增</el-button>
+        <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
+        <el-table-column prop="projectName" label="项目名称" min-width="150"show-overflow-tooltip sortable />
+        <el-table-column prop="code" label="立项编号" min-width="120" show-overflow-tooltip sortable />
+        <el-table-column prop="typeName" label="成果类型" min-width="110" show-overflow-tooltip sortable />
+        <el-table-column prop="name" label="成果名称" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" @click="navTo('/manager/processLine?id=' + scope.row.projectId)">查看</el-button>
+            <div :class="getContentAlignClass(scope.row.name)">
+              {{ scope.row.name }}
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="openFile" label="立项文件" width="120">
+        <el-table-column prop="description" label="成果描述" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" @click="down(scope.row.openFile)">下载文件</el-button>
+            <div :class="getContentAlignClass(scope.row.description)">
+              {{ scope.row.description }}
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="closeFile" label="结项文件" width="120">
+        <el-table-column prop="teacherName" label="教师" min-width="100" sortable />
+        <el-table-column prop="process" label="科研过程" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" @click="down(scope.row.closeFile)">下载文件</el-button>
+            <el-button type="primary" size="small" @click="navTo('/manager/processLine?id=' + scope.row.projectId)">查看</el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="file" label="附件" width="120">
+        <el-table-column prop="openFile" label="立项文件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-button type="primary" @click="down(scope.row.file)">下载文件</el-button>
+            <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="审核状态" width="120">
+        <el-table-column prop="closeFile" label="结项文件" min-width="120" sortable>
+          <template v-slot="scope">
+            <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="file" label="附件" min-width="120" sortable>
+          <template v-slot="scope">
+            <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="审核状态" min-width="120" sortable>
           <template v-slot="scope">
             <el-tag v-if="scope.row.status === '审核通过'" type="success">{{ scope.row.status }}</el-tag>
             <el-tag v-if="scope.row.status === '待审核'" type="warning">{{ scope.row.status }}</el-tag>
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip />
-        <el-table-column prop="time" label="审核时间" show-overflow-tooltip />
+        <el-table-column prop="reason" label="审核原因" min-width="110" sortable>
+          <template v-slot="scope">
+            <div :class="getContentAlignClass(scope.row.reason)">
+              {{ scope.row.reason }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="time" label="审核时间" min-width="110" show-overflow-tooltip sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
-              :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View"
+              :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle size="small" :icon="View"
               @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -71,17 +90,17 @@
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="openFile" label="立项文件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
-            <el-button type="primary">点击上传</el-button>
+            <el-button type="primary" size="small" >点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="closeFile" label="结项文件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleCloseFileUpload">
-            <el-button type="primary">点击上传</el-button>
+            <el-button type="primary" size="small" >点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="file" label="附件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload">
-            <el-button type="primary">点击上传</el-button>
+            <el-button type="primary" size="small" >点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="projectId" label="科研项目">
@@ -105,8 +124,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button @click="data.formVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="save" size="small">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -125,8 +144,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.checkVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submit">提 交</el-button>
+          <el-button @click="data.checkVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="submit" size="small">提 交</el-button>
         </span>
       </template>
     </el-dialog>
@@ -341,6 +360,31 @@ const getLaboratoryLevel = () => {
 }
 
 
+// 根据内容是否会换行动态设置文本对齐方式
+const getContentAlignClass = (content) => {
+  if (!content) return 'content-center'
+  
+  // 如果内容包含换行符，直接判断为多行
+  if (content.includes('\n')) {
+    return 'content-justify'
+  }
+  
+  // 估算内容在表格列中是否会换行
+  // 考虑中文字符宽度约为英文字符的2倍，表格列宽度约为110px
+  // 一般情况下，超过15-20个中文字符或30-40个英文字符会换行
+  const chineseCharCount = (content.match(/[\u4e00-\u9fa5]/g) || []).length
+  const otherCharCount = content.length - chineseCharCount
+  const estimatedWidth = chineseCharCount * 2 + otherCharCount
+  
+  // 如果估算宽度超过阈值，认为会换行，使用两端对齐
+  if (estimatedWidth > 25) {
+    return 'content-justify'
+  }
+  
+  // 否则使用居中对齐
+  return 'content-center'
+}
+
 onMounted(() => {
   if (data.user.id) {
     getLaboratoryLevel()
@@ -351,3 +395,16 @@ load()
 loadProject()
 loadType()
 </script>
+
+<style scoped>
+/* 条件文本对齐样式 */
+.content-center {
+  text-align: center;
+}
+
+.content-justify {
+  text-align: justify;
+  text-justify: inter-ideograph;
+  line-height: 1.5;
+}
+</style>

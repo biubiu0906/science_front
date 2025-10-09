@@ -2,28 +2,32 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
+      <el-button type="info" plain @click="load" size="small">查询</el-button>
+      <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>
-    <div class="card" style="margin-bottom: 5px">
-      <el-button type="primary" plain @click="handleAdd">新增</el-button>
-      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
-    </div>
+    
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <div style="margin-bottom: 10px; margin-left: 10px;">
+        <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
+        <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="avatar" label="头像">
+        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column prop="avatar" label="头像" align="center">
           <template v-slot="scope">
-            <el-image style="width: 40px; height: 40px; border-radius: 50%; display: block" v-if="scope.row.avatar"
-                      :src="scope.row.avatar" :preview-src-list="[scope.row.avatar]" preview-teleported></el-image>
+            <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
+                      :src="scope.row.avatar || '/src/assets/imgs/头像.jpeg'" 
+                      :preview-src-list="[scope.row.avatar || '/src/assets/imgs/头像.jpeg']" 
+                      preview-teleported></el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="姓名" />
-        <el-table-column prop="phone" label="电话" />
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="password" label="密码">
+        <el-table-column prop="name" label="姓名" sortable />
+        <el-table-column prop="phone" label="电话" sortable />
+        <el-table-column prop="email" label="邮箱" sortable />
+        <el-table-column prop="username" label="用户名" sortable />
+        <el-table-column prop="password" label="密码" min-width="150" sortable>
           <template #header>
             <span>密码</span>
             <el-button 
@@ -44,8 +48,8 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)" size="small"></el-button>
+            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -71,7 +75,7 @@
               :on-success="handleFileUpload"
               list-type="picture"
               >
-            <el-button type="primary">点击上传</el-button>
+            <el-button type="primary" size="small">点击上传</el-button>
           </el-upload>
         </el-form-item>
         <el-form-item prop="phone" label="电话">
@@ -83,8 +87,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button @click="data.formVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="save" size="small">确 定</el-button>
         </span>
       </template>
     </el-dialog>

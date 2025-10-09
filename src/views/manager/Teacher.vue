@@ -2,28 +2,47 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入姓名查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-    </div>
-    <div class="card" style="margin-bottom: 5px">
-      <el-button type="primary" plain @click="handleAdd">新增</el-button>
-      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
-    </div>
+      <el-button type="info" plain size="small" @click="load">查询</el-button>
+        <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
+      </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <div style="margin-bottom: 10px; margin-left: 10px;">
+        <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
+        <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="avatar" label="头像">
+        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column prop="avatar" label="头像" align="center">
           <template v-slot="scope">
-            <el-image style="width: 40px; height: 40px; border-radius: 50%; display: block" v-if="scope.row.avatar"
-                      :src="scope.row.avatar" :preview-src-list="[scope.row.avatar]" preview-teleported></el-image>
+            <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
+                      :src="scope.row.avatar || '/src/assets/imgs/头像.jpeg'" 
+                      :preview-src-list="[scope.row.avatar || '/src/assets/imgs/头像.jpeg']" 
+                      preview-teleported></el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="姓名" />
-        <el-table-column prop="phone" label="电话" />
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="password" label="密码">
+        <el-table-column prop="name" label="姓名" min-width="100" sortable />
+        <el-table-column prop="gender" label="性别" sortable>
+          <template v-slot="scope">
+            {{ scope.row.gender === 'boy' ? '男' : scope.row.gender === 'girl' ? '女' : scope.row.gender === 'Male' ? '男' : scope.row.gender === 'Female' ? '女' : scope.row.gender }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="电话" min-width="120" sortable />
+        <el-table-column prop="email" label="邮箱" min-width="120" sortable />
+        <el-table-column prop="unit" label="单位" min-width="120" sortable />
+        <el-table-column prop="employmentType" label="全职/非全职" min-width="130" sortable>
+          <template v-slot="scope">
+            <el-tag 
+              :type="scope.row.employmentType === 'FULL_TIME' ? 'success' : 'primary'" 
+              class="teacher-type-tag"
+            >
+              {{ scope.row.employmentType === 'FULL_TIME' ? '全职' : '非全职' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" sortable />
+        <el-table-column prop="password" label="密码" min-width="150" sortable>
           <template #header>
             <span>密码</span>
             <el-button 
@@ -44,8 +63,8 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -55,7 +74,7 @@
     </div>
 
     <el-dialog title="教师信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="70px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
         </el-form-item>
@@ -65,26 +84,41 @@
         <el-form-item prop="name" label="姓名">
           <el-input v-model="data.form.name" placeholder="请输入姓名"></el-input>
         </el-form-item>
-        <el-form-item prop="avatar" label="头像">
-          <el-upload
-              :action="baseUrl + '/files/upload'"
-              :on-success="handleFileUpload"
-              list-type="picture"
-              >
-            <el-button type="primary">点击上传</el-button>
-          </el-upload>
-        </el-form-item>
         <el-form-item prop="phone" label="电话">
           <el-input v-model="data.form.phone" placeholder="请输入电话"></el-input>
         </el-form-item>
         <el-form-item prop="email" label="邮箱">
           <el-input v-model="data.form.email" placeholder="请输入邮箱"></el-input>
         </el-form-item>
+        <el-form-item prop="unit" label="单位">
+          <el-input v-model="data.form.unit" placeholder="请输入单位"></el-input>
+        </el-form-item>
+        <el-form-item prop="gender" label="性别">
+          <el-radio-group v-model="data.form.gender">
+            <el-radio value="boy">男</el-radio>
+            <el-radio value="girl">女</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="employmentType" label="全职/非全职">
+          <el-radio-group v-model="data.form.employmentType">
+            <el-radio value="FULL_TIME">全职</el-radio>
+            <el-radio value="PART_TIME">非全职</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="avatar" label="头像">
+          <el-upload
+              :action="baseUrl + '/files/upload'"
+              :on-success="handleFileUpload"
+              list-type="picture"
+              >
+            <el-button type="primary" size="small">点击上传</el-button>
+          </el-upload>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button size="small" @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="save">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -122,16 +156,29 @@ const data = reactive({
 const rules = reactive({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
-    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
-  ]
+  ],
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
+  ],
+  phone: [
+    { required: true, message: '请输入电话', trigger: 'blur' },
+    { min: 11, max: 11, message: '请检查是否正确', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+  ],
+  employmentType: [
+    { required: true, message: '请选择全职/非全职', trigger: 'change' }
+  ],
+  unit: [
+    { required: true, message: '请输入单位', trigger: 'blur' },
+  ],
 })
 
 const load = () => {
@@ -260,3 +307,25 @@ const togglePasswordVisibility = () => {
 
 load()
 </script>
+
+
+<style scoped>
+.teacher-type-tag {
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.teacher-type-tag.el-tag--info {
+  background-color: #f4f4f5;
+  border-color: #e9e9eb;
+  color: #909399;
+}
+
+.teacher-type-tag.el-tag--success {
+  background-color: #f0f9ff;
+  border-color: #c6f6d5;
+  color: #38a169;
+}
+</style>

@@ -4,31 +4,34 @@
       <div style="font-weight: bold; font-size: 20px; margin-bottom: 10px">留下您的反馈信息：</div>
       <el-input type="textarea" :rows="5" v-model="data.content" placeholder="请输入反馈内容"></el-input>
       <div style="margin-top: 10px; text-align: right">
-        <el-button type="primary" @click="submit">提交</el-button>
+        <el-button type="primary" size="small" @click="submit">提交</el-button>
       </div>
     </div>
-    <div class="card" style="margin-top: 20px; padding: 20px">
-      <div style="font-size: 18px; color: #ce7b37; font-weight: bold; margin-bottom: 20px">看看其他教师提出的反馈内容 ({{ data.feedBackData.length }})</div>
-      <div v-for="item in data.feedBackData" style="margin-bottom: 20px">
-        <div style="display: flex; align-items: center">
-          <div style="display: flex; align-items: center">
-            <img :src="item.teacherAvatar" alt="" style="width: 40px; height: 40px; border-radius: 50%">
-            <div style="margin-left: 10px">{{ item.teacherName }}</div>
+    <div class="card feedback-container" style="margin-top: 20px; padding: 20px;">
+      <div style="font-size: 18px; color: #ce7b37; font-weight: bold; margin-bottom: 20px; color:#409EFF">看看其他教师提出的反馈内容 ({{ data.feedBackData.length }})</div>
+      <div class="feedback-list">
+        <div v-for="item in data.feedBackData" style="margin-bottom: 20px">
+        <div style="display: flex; align-items: flex-start">
+          <div style="display: flex;">
+            <img :src="item.teacherAvatar || '/src/assets/imgs/头像.jpeg'" alt="" style="width: 30px; height: 30px; border-radius: 50%">
+            <div style="margin-left: 10px; color: #409EFF; font-weight: 600;">{{ item.teacherName }} :</div>
           </div>
-          <div style="flex: 1; margin: 0 40px; line-height: 25px; text-align: justify">{{ item.content }}</div>
-          <div style="width: 200px; display: flex; align-items: center">
+          <div style="flex: 1; margin-left: 10px; margin-right: 20px; text-align: justify; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; overflow-wrap: break-word; min-width: 0;">{{ item.content }}</div>
+          <div style="width: 200px; display: flex;">
             <div style="flex: 1">{{ item.time }}</div>
             <el-icon style="width: 50px; color: red; cursor: pointer" v-if="data.user.id === item.teacherId" @click="del(item.id)"><Delete /></el-icon>
           </div>
         </div>
-        <div style="display: flex; margin-top: 5px" v-if="item.replyContent">
-          <div style="width: 200px"></div>
-          <div style="flex: 1; color: #d48957">
-            {{ item.replyName }} 回复：{{ item.replyContent }}
+        <div style="display: flex; margin-top: 5px; align-items: flex-start;" v-if="item.replyContent">
+          <div style="width: 200px;"></div>
+          <div style="color: #E6A23C; font-weight: 600; text-align: justify;">
+            {{ item.replyName }}
           </div>
-          <div style="width: 200px; color: #d48957">回复时间 {{ item.replyTime }}</div>
+          <div style="flex: 1; margin-left: 10px; margin-right: 20px; align-items: center; color: #E6A23C; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; overflow-wrap: break-word; min-width: 0;">回复：{{ item.replyContent }}</div>
+          <div style="width: 200px; color: #E6A23C">回复时间 {{ item.replyTime }}</div>
         </div>
       </div>
+    </div>
 
     </div>
   </div>
@@ -59,6 +62,11 @@ const load = () => {
   })
 }
 const submit = () => {
+  if (!data.content) {
+    ElMessage.error('请输入反馈内容')
+    return
+  }
+
   let submitData = {
     content: data.content
   }
@@ -89,3 +97,35 @@ const del = (id) => {
 load()
 
 </script>
+
+<style scoped>
+
+.feedback-container {
+  max-height: 600px;
+}
+
+.feedback-list {
+  max-height: 500px; 
+  overflow-y: auto;
+  padding-right: 10px; 
+}
+
+/* 美化滚动条样式 */
+.feedback-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.feedback-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.feedback-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.feedback-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>

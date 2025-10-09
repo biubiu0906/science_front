@@ -14,13 +14,13 @@
       </div>
       <div class="front-header-right">
         <div v-if="!data.user.id">
-          <el-button @click="router.push('/login')">登录</el-button>
-          <el-button @click="router.push('/register')">注册</el-button>
+          <el-button size="small" @click="router.push('/login')">登录</el-button>
+          <el-button size="small" @click="router.push('/register')">注册</el-button>
         </div>
         <div v-else>
           <el-dropdown style="cursor: pointer; height: 60px">
             <div style="display: flex; align-items: center">
-              <img style="width: 40px; height: 40px; border-radius: 50%;" :src="data.user.avatar" alt="">
+              <img style="width: 30px; height: 30px; border-radius: 50%;" :src="data.user.avatar || '/src/assets/imgs/头像.jpeg'" alt="">
               <span style="margin-left: 5px;">{{ data.user.name }}</span><el-icon><arrow-down /></el-icon>
             </div>
             <template #dropdown>

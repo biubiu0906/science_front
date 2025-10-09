@@ -2,12 +2,13 @@
     <el-card class="main-card">
         <h3>重点实验室审核</h3>
         <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList">
-                <el-table-column prop="id" label="申请编号" />
-                <el-table-column prop="institutionName" label="实验室名称" />
-                <el-table-column prop="establishmentDate" label="成立日期" width="120" />
-                <el-table-column prop="totalStaff" label="人员总数" width="120" />
-                <el-table-column label="附件">
+            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+                <el-table-column type="index" label="序号" width="80" />
+                <el-table-column prop="id" label="申请编号" width="150" sortable />
+                <el-table-column prop="institutionName" label="实验室名称" width="150" sortable />
+                <el-table-column prop="establishmentDate" label="成立日期" width="110" sortable />
+                <el-table-column prop="totalStaff" label="人数" width="80" sortable />
+                <el-table-column label="附件" sortable>
                     <template v-slot="scope">
                         <div v-if="scope.row.attachments?.files?.length">
                             <div v-for="(fileUrl, index) in scope.row.attachments.files" :key="index">
@@ -20,9 +21,9 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column prop="createTime" label="申请时间" width="120" />
+                <el-table-column prop="createTime" label="申请时间" min-width="120" sortable />
 
-                <el-table-column label="审核状态" width="100">
+                <el-table-column label="审核状态" width="110" sortable>
                     <template v-slot="scope">
                         <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0" type="warning">
                             待审核
@@ -36,14 +37,16 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="审核意见">
+                <el-table-column label="审核意见" width="200" sortable>
                     <template v-slot="scope">
-                        <div>{{ scope.row.applicationRecordList?.[0]?.reviewComments }}</div>
+                        <div :class="getContentAlignClass(scope.row.applicationRecordList?.[0]?.reviewComments)">
+                            {{ scope.row.applicationRecordList?.[0]?.reviewComments }}
+                        </div>
                     </template>
                 </el-table-column>
 
                 <!-- 操作列 -->
-                <el-table-column label="操作" width="180">
+                <el-table-column label="操作" width="80" fixed="right">
                     <template v-slot="scope">
                         <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
                         <el-button @click="reviewApply(scope.row.id)" size="small" type="primary" v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0">审核</el-button>
@@ -68,8 +71,8 @@
         </el-form>
         <template #footer>
             <span class="dialog-footer">
-                <el-button @click="formVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitReview">提 交</el-button>
+                <el-button @click="formVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="submitReview" size="small">提 交</el-button>
             </span>
         </template>
     </el-dialog>
@@ -169,8 +172,13 @@ const submitReview = () => {
     });
 }
 
-
-
+// 根据内容长度判断对齐方式的方法
+const getContentAlignClass = (content) => {
+  if (!content) return 'content-center'
+  // 判断内容是否超过一行（这里以50个字符为基准，可根据实际情况调整）
+  const isMultiLine = content.length > 50 || content.includes('\n')
+  return isMultiLine ? 'content-justify' : 'content-center'
+}
 
 </script>
 
@@ -241,5 +249,17 @@ const submitReview = () => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+/* 内容居中对齐 */
+.content-center {
+    text-align: center;
+}
+
+/* 内容两端对齐 */
+.content-justify {
+    text-align: justify;
+    text-justify: inter-ideograph; /* 中文字符间对齐 */
+    line-height: 1.5;
 }
 </style>

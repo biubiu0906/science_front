@@ -2,32 +2,33 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.labName" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入实验室名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-    </div>
-    <div class="card" style="margin-bottom: 5px">
-      <el-button type="primary" plain @click="handleAdd">新增</el-button>
-      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
-    </div>
+      <el-button type="info" plain size="small" @click="load">查询</el-button>
+        <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
+      </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <div style="margin-bottom: 10px; margin-left: 10px;">
+        <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
+        <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="laboratoryName" label="实验室名称" />
-        <el-table-column prop="laboratoryDescription" label="实验室描述" />
-        <el-table-column prop="laboratoryAddress" label="实验室地址" />
-        <el-table-column prop="type" label="实验室类别">
+        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column prop="name" label="实验室名称" sortable />
+        <el-table-column prop="laboratoryDescription" label="实验室描述" sortable />
+        <el-table-column prop="laboratoryAddress" label="实验室地址" sortable />
+        <el-table-column prop="type" label="实验室类别" sortable>
           <template v-slot="scope">
             <el-tag 
-              :type="scope.row.type == 1 ? 'info' : 'success'" 
+              :type="scope.row.type == 1 ? 'primary' : 'success'" 
               class="lab-type-tag"
             >
               {{ scope.row.type == 1 ? '普通实验室' : '重点实验室' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="账号" />
-        <el-table-column prop="password" label="密码">
+        <el-table-column prop="username" label="账号" sortable />
+        <el-table-column prop="password" label="密码" width="150" sortable>
           <template #header>
             <span>密码</span>
             <el-button 
@@ -48,8 +49,8 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -78,8 +79,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button size="small" @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="save">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -247,7 +248,6 @@ load()
 </script>
 
 <style scoped>
-/* 实验室类别标签样式 */
 .lab-type-tag {
   font-weight: 500;
   border-radius: 4px;
@@ -255,14 +255,12 @@ load()
   font-size: 12px;
 }
 
-/* 普通实验室标签样式 */
 .lab-type-tag.el-tag--info {
   background-color: #f4f4f5;
   border-color: #e9e9eb;
   color: #909399;
 }
 
-/* 重点实验室标签样式 */
 .lab-type-tag.el-tag--success {
   background-color: #f0f9ff;
   border-color: #c6f6d5;

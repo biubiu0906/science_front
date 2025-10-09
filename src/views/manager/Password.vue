@@ -11,7 +11,7 @@
         <el-input v-model="data.user.confirmPassword" placeholder="请确认新密码" show-password></el-input>
       </el-form-item>
       <div style="text-align: center">
-        <el-button type="primary" @click="updatePassword">保 存</el-button>
+        <el-button type="primary" @click="updatePassword" size="small">保 存</el-button>
       </div>
     </el-form>
   </div>

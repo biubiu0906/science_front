@@ -1,8 +1,8 @@
 <template>
     <el-card class="main-card">
-        <el-button type="primary" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'">新增</el-button>
+        <el-button type="primary" size="small" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'">新增</el-button>
         <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList">
+            <el-table stripe :data="labApplyList" class="table-center">
                 <el-table-column prop="id" label="申请编号" />
                 <el-table-column prop="institutionName" label="实验室名称" />
                 <el-table-column prop="establishmentDate" label="成立日期" width="120" />
@@ -271,7 +271,7 @@
                         <el-upload ac ref="uploadRef" class="upload-demo" :file-list="fileList"
                             :action="baseUrl + '/files/upload'" :on-success="handleFileUpload" :on-change="handleChange"
                             :on-remove="handleRemove" multiple>
-                            <el-button type="primary">点击上传</el-button>
+                            <el-button type="primary" size="small">点击上传</el-button>
                         </el-upload>
                     </div>
 
@@ -285,13 +285,13 @@
                     <!-- 页面底部的导航按钮 -->
                     <div class="navigation-buttons">
                         <el-button :style="{ opacity: activeStep === 0 || activeStep === 5 ? 0 : 1 }"
-                            @click="prevTab(basicForm)">
+                            @click="prevTab(basicForm)" size="small">
                             上一页
                         </el-button>
                         <el-button v-if="activeStep !== 4 && activeStep !== 5" type="primary"
-                            @click="nextTab(basicForm)">下一页</el-button>
+                            @click="nextTab(basicForm)" size="small">下一页</el-button>
                         <!-- 添加的时候 -->
-                        <el-button v-if="activeStep === 4" type="success" @click="submitForm">提交</el-button>
+                        <el-button v-if="activeStep === 4" type="success" @click="submitForm" size="small">提交</el-button>
                     </div>
                 </div>
 

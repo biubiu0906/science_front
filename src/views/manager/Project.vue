@@ -1,49 +1,55 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.code" prefix-icon="Search" style="width: 240px; margin-right: 10px"
-        placeholder="请输入项目编号查询"></el-input>
-      <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+      <el-input v-model="data.code" prefix-icon="Search" style="width: 200px; margin-right: 10px"
+        placeholder="请输入立项编号查询"></el-input>
+      <el-input v-model="data.name" prefix-icon="Search" style="width: 200px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-    </div>
-    <div class="card" style="margin-bottom: 5px" v-if="data.laboratoryLevel === 2">
-      <el-button type="primary" plain @click="handleAdd">新增</el-button>
+      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData">
-        <el-table-column prop="code" label="项目编号" />
-        <el-table-column prop="name" label="项目名称" />
-        <el-table-column prop="source" label="项目来源" />
-        <el-table-column prop="level" label="项目等级" />
-        <el-table-column prop="subject" label="学科" />
-        <el-table-column prop="price" label="项目预算" />
-        <el-table-column prop="start" label="开始时间" />
-        <el-table-column prop="end" label="结束时间" />
-        <el-table-column prop="file" label="申请材料" width="120">
+      <div style="margin-bottom: 10px; margin-left: 10px;" v-if="data.laboratoryLevel === 2">
+        <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+        <el-table-column label="序号" type="index" :index="indexMethod" width="80"/>
+        <el-table-column prop="name" label="项目名称" min-width="150" sortable />
+        <el-table-column prop="code" label="立项编号" min-width="140" sortable />
+        <el-table-column prop="researchType" label="研究类型" min-width="120" sortable />
+        <el-table-column prop="subjectCategory" label="学科" min-width="100" sortable />
+        <el-table-column prop="projectCategory" label="项目类别" min-width="150" sortable />
+        <el-table-column prop="projectStatus" label="项目状态" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" @click="down(scope.row.file)">下载材料</el-button>
+            <el-tag v-if="scope.row.projectStatus === '0'" type="primary">在研</el-tag>
+            <el-tag v-if="scope.row.projectStatus === '1'" type="success">结项</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="teacherName" label="申请教师" />
-        <el-table-column prop="status" label="审核状态" width="120">
+        <el-table-column prop="teacherName" label="申请教师" min-width="110" sortable />
+        <el-table-column prop="status" label="审核状态" min-width="110" sortable>
           <template v-slot="scope">
             <el-tag v-if="scope.row.status === '审核通过'" type="success">{{ scope.row.status }}</el-tag>
             <el-tag v-if="scope.row.status === '待审核'" type="warning">{{ scope.row.status }}</el-tag>
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" show-overflow-tooltip />
-        <el-table-column prop="time" label="审核时间" show-overflow-tooltip />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column prop="reason" label="审核原因" min-width="110" show-overflow-tooltip sortable>
           <template v-slot="scope">
+            <div :class="getContentAlignClass(scope.row.reason)">
+              {{ scope.row.reason }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="time" label="审核时间" min-width="160" show-overflow-tooltip sortable />
+        <el-table-column label="操作" width="120" fixed="right">
+          <template v-slot="scope">
+            <el-button type="primary" circle :icon="Search" size="small" @click="() => { console.log('查询按钮点击', scope.row); handleQuery(scope.row); }" title="查看详情"></el-button>
             <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
-              :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle :icon="View"
+              :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="warning" circle :icon="View" size="small"
               @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="danger" circle :icon="Delete" size="small" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -53,68 +59,389 @@
         v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="科研项目提交" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
-        <el-form-item prop="file" label="申请材料">
-          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload">
-            <el-button type="primary">点击上传</el-button>
-          </el-upload>
+    <!-- 科研项目新增/查看抽屉 -->
+    <el-drawer 
+      v-model="data.formVisible" 
+      direction="rtl" 
+      size="65%" 
+      destroy-on-close
+      @close="handleDrawerClose"
+      :before-close="handleBeforeClose">
+      <template #header>
+        <div style="font-size: 18px; color: #303133; font-weight: 500;">
+          {{ data.isViewMode ? '科研项目详情' : '科研项目新增' }}
+        </div>
+      </template>
+      <div style="display: flex; height: 100%;">
+        <!-- 左侧标签页 -->
+        <div>
+          <el-tabs 
+            v-model="data.activeTab" 
+            tab-position="left" 
+            style="height: 100%;"
+            @tab-change="handleTabChange">
+            <el-tab-pane label="项目信息" name="projectInfo"></el-tab-pane>
+            <el-tab-pane label="团队成员" name="teamMembers"></el-tab-pane>
+            <el-tab-pane label="合作研究单位" name="cooperativeUnits"></el-tab-pane>
+            <el-tab-pane label="立项/结项信息" name="projectStatus"></el-tab-pane>
+            <el-tab-pane label="项目经费预算" name="budgetInfo"></el-tab-pane>
+            <el-tab-pane label="附件材料" name="attachments"></el-tab-pane>
+          </el-tabs>
+        </div>
+        
+        <!-- 右侧内容区域 -->
+        <div class="tab-content-wrapper" style="flex: 1; padding-left: 20px; overflow-y: auto;">
+          <!-- 项目信息标签页内容 -->
+          <div v-show="data.activeTab === 'projectInfo'" :key="'projectInfo'">
+            <el-form ref="formRef" :rules="data.isViewMode ? {} : rules" :model="data.form" label-width="120px">
+              <el-form-item prop="name" label="项目名称" :required="!data.isViewMode">
+                <el-input v-model="data.form.name" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.name ? '暂无信息' : '请输入项目名称'" style="width: 70%;"></el-input>
+              </el-form-item>
+              <el-form-item prop="code" label="立项编号" :required="!data.isViewMode">
+                <el-input v-model="data.form.code" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.code ? '暂无信息' : '请输入立项编号'" style="width: 70%;"></el-input>
+              </el-form-item>
+              <el-form-item prop="researchType" label="研究类型" :required="!data.isViewMode">
+                <el-select v-model="data.form.researchType" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.researchType ? '暂无信息' : '请选择研究类型'" style="width: 70%;">
+                  <el-option label="基础研究" value="基础研究"></el-option>
+                  <el-option label="应用研究" value="应用研究"></el-option>
+                  <el-option label="开发研究" value="开发研究"></el-option>
+                  <el-option label="其他" value="其他"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item prop="subjectCategory" label="学科分类" :required="!data.isViewMode">
+                <el-select v-model="data.form.subjectCategory" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.subjectCategory ? '暂无信息' : '请选择学科分类'" style="width: 70%;">
+                  <el-option label="哲学" value="哲学"></el-option>
+                  <el-option label="经济学" value="经济学"></el-option>
+                  <el-option label="法学" value="法学"></el-option>
+                  <el-option label="教育学" value="教育学"></el-option>
+                  <el-option label="文学" value="文学"></el-option>
+                  <el-option label="历史学" value="历史学"></el-option>
+                  <el-option label="理学" value="理学"></el-option>
+                  <el-option label="工学" value="工学"></el-option>
+                  <el-option label="农学" value="农学"></el-option>
+                  <el-option label="医学" value="医学"></el-option>
+                  <el-option label="军事学" value="军事学"></el-option>
+                  <el-option label="管理学" value="管理学"></el-option>
+                  <el-option label="艺术学" value="艺术学"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item prop="projectCategory" label="项目类别" :required="!data.isViewMode">
+                <el-input v-model="data.form.projectCategory" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectCategory ? '暂无信息' : '请输入项目类别'" style="width: 70%;"></el-input>
+              </el-form-item>
+              <el-form-item prop="expectedResults" label="预期成果">
+                <el-input v-model="data.form.expectedResults" :disabled="data.isViewMode" type="textarea" :rows="4" :placeholder="data.isViewMode && !data.form.expectedResults ? '暂无信息' : '请输入预期成果描述'" style="width: 70%;"></el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+          
+
+          
+          <!-- 团队成员标签页内容 -->
+          <div v-show="data.activeTab === 'teamMembers'" :key="'teamMembers'">
+            <div v-if="!data.isViewMode" style="margin-bottom: 20px; text-align: right;">
+              <el-button type="primary" size="small" @click="data.showTeamMemberDialog = true">
+                新增
+              </el-button>
+            </div>
+            
+            <!-- 团队成员表格 -->
+            <el-table :data="data.form.teamMembers" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+              <el-table-column prop="name" label="姓名" width="80"></el-table-column>
+              <el-table-column prop="role" label="参与角色" width="95"></el-table-column>
+              <el-table-column prop="affiliation" label="署名/代表单位" min-width="200"></el-table-column>
+              <el-table-column v-if="!data.isViewMode" label="操作" width="60">
+                <template #default="{ $index }">
+                  <el-button type="danger" circle :icon="Delete" size="small" @click="removeTeamMember($index)"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            
+            <div v-if="data.form.teamMembers.length === 0" style="text-align: center; color: #999; padding: 40px;">
+              暂无团队成员信息
+            </div>
+          </div>
+          
+          <!-- 合作研究单位标签页内容 -->
+          <div v-show="data.activeTab === 'cooperativeUnits'" :key="'cooperativeUnits'">
+            <div v-if="!data.isViewMode" style="margin-bottom: 20px; text-align: right;">
+              <el-button type="primary" size="small" @click="data.showCooperativeUnitDialog = true">
+                新增
+              </el-button>
+            </div>
+            
+            <!-- 合作研究单位表格 -->
+            <el-table :data="data.form.cooperativeUnits" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+              <el-table-column prop="unitName" label="单位名称" width="370"></el-table-column>
+              <el-table-column prop="completionUnit" label="完成单位" min-width="200"></el-table-column>
+              <el-table-column v-if="!data.isViewMode" label="操作" width="60">
+                <template #default="{ $index }">
+                  <el-button type="danger" circle :icon="Delete" size="small" @click="removeCooperativeUnit($index)"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            
+            <div v-if="data.form.cooperativeUnits.length === 0" style="text-align: center; color: #999; padding: 40px;">
+              暂无合作研究单位信息
+            </div>
+          </div>
+          
+          <!-- 立项/结项信息标签页内容 -->
+          <div v-show="data.activeTab === 'projectStatus'" :key="'projectStatus'">
+            <el-form ref="formRef" :rules="data.isViewMode ? {} : rules" :model="data.form" label-width="120px">
+              <el-form-item prop="establishmentTime" label="立项时间" :required="!data.isViewMode">
+                <el-date-picker 
+                  v-model="data.form.establishmentTime" 
+                  :disabled="data.isViewMode"
+                  type="date" 
+                  :placeholder="data.isViewMode && !data.form.establishmentTime ? '暂无信息' : '请选择立项时间'"
+                  value-format="YYYY-MM-DD"
+                  style="width: 70%;">
+                </el-date-picker>
+              </el-form-item>
+              <el-form-item prop="midCheckTime" label="中检时间">
+                <el-date-picker 
+                  v-model="data.form.midCheckTime" 
+                  :disabled="data.isViewMode"
+                  type="date" 
+                  :placeholder="data.isViewMode && !data.form.midCheckTime ? '暂无信息' : '请选择中检时间'"
+                  value-format="YYYY-MM-DD"
+                  style="width: 70%;">
+                </el-date-picker>
+              </el-form-item>
+              <el-form-item prop="projectStatus" label="项目当前状态" :required="!data.isViewMode">
+                <template v-if="data.isViewMode && (data.form.projectStatus === null || data.form.projectStatus === undefined || data.form.projectStatus === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-radio-group v-else v-model="data.form.projectStatus" :disabled="data.isViewMode" style="width: 70%;">
+                  <el-radio value="0">在研</el-radio>
+                  <el-radio value="1">结项</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item prop="completionAppraisal" label="结项鉴定情况">
+                <el-select v-model="data.form.completionAppraisal" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.completionAppraisal ? '暂无信息' : '请选择结项鉴定情况'" style="width: 70%;">
+                  <el-option label="未鉴定" value="未鉴定"></el-option>
+                  <el-option label="合格" value="合格"></el-option>
+                  <el-option label="不合格" value="不合格"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item prop="plannedCompletionTime" label="计划完成时间" :required="!data.isViewMode">
+                <el-date-picker 
+                  v-model="data.form.plannedCompletionTime" 
+                  :disabled="data.isViewMode"
+                  type="date" 
+                  :placeholder="data.isViewMode && !data.form.plannedCompletionTime ? '暂无信息' : '请选择计划完成时间'"
+                  value-format="YYYY-MM-DD"
+                  style="width: 70%;">
+                </el-date-picker>
+              </el-form-item>
+              <el-form-item prop="actualCompletionTime" label="实际结项时间">
+                <el-date-picker 
+                  v-model="data.form.actualCompletionTime" 
+                  :disabled="data.isViewMode"
+                  type="date" 
+                  :placeholder="data.isViewMode && !data.form.actualCompletionTime ? '暂无信息' : '请选择实际结项时间'"
+                  value-format="YYYY-MM-DD"
+                  style="width: 70%;">
+                </el-date-picker>
+              </el-form-item>
+            </el-form>
+          </div>
+          
+          <!-- 项目经费预算标签页内容 -->
+          <div v-show="data.activeTab === 'budgetInfo'" :key="'budgetInfo'">
+            <el-form ref="formRef" :rules="data.isViewMode ? {} : rules" :model="data.form" label-width="120px">
+              <el-form-item prop="approvedFunding" label="批准经费(万元)" :required="!data.isViewMode">
+                <template v-if="data.isViewMode && (data.form.approvedFunding === null || data.form.approvedFunding === undefined || data.form.approvedFunding === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-input-number 
+                  v-else
+                  v-model="data.form.approvedFunding" 
+                  :disabled="data.isViewMode"
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入批准经费"
+                  style="width: 70%;">
+                  <template #append>万元</template>
+                </el-input-number>
+              </el-form-item>
+              <el-form-item prop="projectFinanceAccount" label="项目财务账号">
+                <el-input v-model="data.form.projectFinanceAccount" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectFinanceAccount ? '暂无信息' : '请输入项目财务账号'" style="width: 70%;"></el-input>
+              </el-form-item>
+              <el-form-item prop="matchingFunding" label="配套经费(万元)">
+                <template v-if="data.isViewMode && (data.form.matchingFunding === null || data.form.matchingFunding === undefined || data.form.matchingFunding === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-input-number 
+                  v-else
+                  v-model="data.form.matchingFunding" 
+                  :disabled="data.isViewMode"
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入配套经费"
+                  style="width: 70%;">
+                  <template #append>万元</template>
+                </el-input-number>
+              </el-form-item>
+            </el-form>
+          </div>
+
+
+          
+          <!-- 附件材料标签页内容 -->
+          <div v-show="data.activeTab === 'attachments'" :key="'attachments'">
+            <div v-if="!data.isViewMode" style="margin-bottom: 20px; text-align: right;">
+              <el-button type="primary" size="small" @click="data.showAttachmentDialog = true">
+                新增
+              </el-button>
+            </div>
+            
+            <!-- 附件材料表格 -->
+            <el-table :data="data.form.attachments" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+              <el-table-column label="文件名" min-width="120">
+                <template #default="scope">
+                  {{ getDisplayFileName(scope.row.fileName) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="fileCategory" label="文件类别" min-width="120"></el-table-column>
+              <el-table-column prop="fileDescription" label="文件简介" min-width="150"></el-table-column>
+              <el-table-column label="操作" width="90" v-if="!data.isViewMode">
+                <template #default="scope">
+                  <el-button type="primary" circle size="small" @click="previewFile(scope.row)">
+                    <el-icon><Postcard /></el-icon>
+                  </el-button>
+                  <el-button v-if="!data.isViewMode" type="danger" circle :icon="Delete" size="small" @click="removeAttachment(scope.$index)"></el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            
+            <div v-if="data.form.attachments.length === 0" style="text-align: center; color: #999; padding: 40px;">
+              暂无附件材料信息
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 抽屉底部操作按钮 -->
+      <template #footer>
+        <div style="text-align: center;">
+          <template v-if="!data.isViewMode">
+            <el-button size="small" @click="resetCurrentTab">重 置</el-button>
+            <el-button v-if="data.activeTab !== 'attachments'" type="primary" size="small" @click="saveCurrentTab">保 存</el-button>
+            <el-button v-else type="primary" size="small" @click="submitForm">提 交</el-button>
+          </template>
+        </div>
+      </template>
+    </el-drawer>
+
+    <!-- 新增团队成员对话框 -->
+    <el-dialog v-model="data.showTeamMemberDialog" title="新增团队成员" width="500px">
+      <el-form :model="data.tempTeamMember" label-width="120px">
+        <el-form-item label="姓名" required>
+          <el-input v-model="data.tempTeamMember.name" placeholder="请输入姓名"></el-input>
         </el-form-item>
-        <el-form-item prop="source" label="项目来源">
-          <el-input v-model="data.form.source" placeholder="请输入项目来源"></el-input>
-        </el-form-item>
-        <el-form-item prop="name" label="项目名称">
-          <el-input v-model="data.form.name" placeholder="请输入项目名称"></el-input>
-        </el-form-item>
-        <el-form-item prop="level" label="项目等级">
-          <el-select v-model="data.form.level" placeholder="请选择项目等级">
-            <el-option label="一级" value="一级"></el-option>
-            <el-option label="二级" value="二级"></el-option>
-            <el-option label="三级" value="三级"></el-option>
+        <el-form-item label="参与角色" required>
+          <el-select v-model="data.tempTeamMember.role" placeholder="请选择参与角色" style="width: 100%;">
+            <el-option label="项目负责人" value="项目负责人"></el-option>
+            <el-option label="主要参与者" value="主要参与者"></el-option>
+            <el-option label="一般参与者" value="一般参与者"></el-option>
+            <el-option label="其他" value="其他"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item prop="subject" label="申请学科">
-          <el-input v-model="data.form.subject" placeholder="请输入申请学科"></el-input>
-        </el-form-item>
-        <el-form-item prop="start" label="开始日期">
-          <el-date-picker style="width: 100%" v-model="data.form.start" value-format="YYYY-MM-DD" type="date"
-            placeholder="请选择日期"></el-date-picker>
-        </el-form-item>
-        <el-form-item prop="end" label="结束日期">
-          <el-date-picker style="width: 100%" v-model="data.form.end" value-format="YYYY-MM-DD" type="date"
-            placeholder="请选择日期"></el-date-picker>
-        </el-form-item>
-        <el-form-item prop="price" label="项目预算">
-          <el-input-number v-model="data.form.price" :min="1" :max="1000000" label="label"></el-input-number>
+        <el-form-item label="署名/代表单位">
+          <el-input v-model="data.tempTeamMember.affiliation" placeholder="请输入署名/代表单位"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button size="small" @click="data.showTeamMemberDialog = false">取 消</el-button>
+          <el-button type="primary" size="small" @click="addTeamMember">确 定</el-button>
         </span>
       </template>
     </el-dialog>
-    <el-dialog title="科研项目审核" v-model="data.checkVisible" width="40%" destroy-on-close>
-      <el-form :model="data.form" label-width="70px" style="padding: 20px">
-        <el-form-item prop="status" label="提交状态">
-          <el-select v-model="data.form.status" placeholder="请选择审核结果">
-            <el-option label="待审核" value="待审核"></el-option>
-            <el-option label="审核通过" value="审核通过"></el-option>
-            <el-option label="不通过" value="不通过"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item prop="reason" label="审核理由">
-          <el-input v-model="data.form.reason" placeholder="请输入审核理由"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="data.checkVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submit">提 交</el-button>
-        </span>
-      </template>
-    </el-dialog>
+
+     <!-- 新增合作研究单位对话框 -->
+     <el-dialog v-model="data.showCooperativeUnitDialog" title="新增合作研究单位" width="500px">
+       <el-form :model="data.tempCooperativeUnit" label-width="120px">
+         <el-form-item label="单位名称">
+           <el-input v-model="data.tempCooperativeUnit.unitName" placeholder="请输入单位名称"></el-input>
+         </el-form-item>
+         <el-form-item label="完成单位">
+           <el-select v-model="data.tempCooperativeUnit.completionUnit" placeholder="请选择完成单位" style="width: 100%;">
+             <el-option label="第一完成单位" value="第一完成单位"></el-option>
+             <el-option label="第二完成单位" value="第二完成单位"></el-option>
+             <el-option label="第三完成单位" value="第三完成单位"></el-option>
+           </el-select>
+         </el-form-item>
+       </el-form>
+       <template #footer>
+         <span class="dialog-footer">
+           <el-button size="small" @click="data.showCooperativeUnitDialog = false">取 消</el-button>
+           <el-button type="primary" size="small" @click="addCooperativeUnit">确 定</el-button>
+         </span>
+       </template>
+     </el-dialog>
+
+     <!-- 新增附件材料对话框 -->
+     <el-dialog v-model="data.showAttachmentDialog" title="新增附件材料" width="500px">
+       <el-form :model="data.tempAttachment" label-width="120px">
+         <el-form-item label="文件类别" required>
+           <el-select v-model="data.tempAttachment.fileCategory" placeholder="请选择文件类别" style="width: 100%;">
+             <el-option label="成果原件/扫描件" value="成果原件/扫描件"></el-option>
+             <el-option label="立/结项证明" value="立/结项证明"></el-option>
+           </el-select>
+         </el-form-item>
+         <el-form-item label="文件简介">
+           <el-input v-model="data.tempAttachment.fileDescription" type="textarea" :rows="3" placeholder="请输入文件简介"></el-input>
+         </el-form-item>
+         <el-form-item label="上传文件" required>
+           <el-upload 
+             :action="baseUrl + '/files/upload'" 
+             :on-success="handleAttachmentUpload"
+             :before-upload="beforeAttachmentUpload"
+             :limit="1"
+             :file-list="data.tempAttachment.fileList || []"
+             accept=".pdf,.jpg,.jpeg,.png">
+             <el-button type="primary" size="small">点击上传</el-button>
+             <template #tip>
+               <div class="el-upload__tip">
+                 支持上传PDF、JPG、JPEG、PNG格式文件，大小不超过5MB
+               </div>
+             </template>
+           </el-upload>
+         </el-form-item>
+       </el-form>
+       <template #footer>
+         <span class="dialog-footer">
+           <el-button size="small" @click="data.showAttachmentDialog = false">取 消</el-button>
+           <el-button type="primary" size="small" @click="addAttachment">确 定</el-button>
+         </span>
+       </template>
+     </el-dialog>
+
+     <!-- 查询详情对话框 -->
+      <el-dialog v-model="data.checkVisible" title="审核项目" width="500px">
+          <el-form :model="data.form" label-width="70px" style="padding: 20px">
+          <el-form-item prop="status" label="提交状态">
+            <el-select v-model="data.form.status" placeholder="请选择审核结果">
+              <el-option label="待审核" value="待审核"></el-option>
+              <el-option label="审核通过" value="审核通过"></el-option>
+              <el-option label="不通过" value="不通过"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item prop="reason" label="审核理由">
+            <el-input v-model="data.form.reason" placeholder="请输入审核理由"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button size="small" @click="data.checkVisible = false">取 消</el-button>
+            <el-button type="primary" size="small" @click="submit">提 交</el-button>
+          </span>
+        </template>
+      </el-dialog>
+    
+
   </div>
 </template>
 
@@ -123,14 +450,47 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, Edit, View } from "@element-plus/icons-vue";
+import { Delete, Edit, View, Search, Postcard } from "@element-plus/icons-vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   formVisible: false,
   checkVisible: false,
-  form: {},
+  isViewMode: false, // 是否为查看模式
+  activeTab: 'projectInfo', // 默认激活项目信息标签页
+  // 控制各种弹窗显示
+  showTeamMemberDialog: false,
+  showCooperativeUnitDialog: false,
+  showAttachmentDialog: false,
+  // 临时编辑数据
+  tempTeamMember: {},
+  tempCooperativeUnit: {},
+  tempAttachment: {},
+  form: {
+    // 项目信息
+    name: '',
+    code: '',
+    researchType: '',
+    subjectCategory: '',
+    projectCategory: '',
+    expectedResults: '',
+    // 立项/结项信息
+    establishmentTime: '',
+    midCheckTime: '',
+    projectStatus: '',
+    completionAppraisal: '',
+    plannedCompletionTime: '',
+    actualCompletionTime: '',
+    // 项目经费预算
+    approvedFunding: null,
+    projectFinanceAccount: '',
+    matchingFunding: null,
+    // 数组字段
+    teamMembers: [], // 团队成员
+    cooperativeUnits: [], // 合作研究单位
+    attachments: [], // 附件材料
+  },
   tableData: [],
   pageNum: 1,
   pageSize: 10,
@@ -138,30 +498,56 @@ const data = reactive({
   code: null,
   name: null,
   laboratoryLevel: null,
+  savedTabData: {}, // 临时保存的标签页数据
 })
 
 const rules = reactive({
-  source: [
-    { required: true, message: '请输入项目来源', trigger: 'blur' },
-  ],
+  // 项目信息验证规则
   name: [
     { required: true, message: '请输入项目名称', trigger: 'blur' },
   ],
-  level: [
-    { required: true, message: '请选择项目等级', trigger: 'blur' },
+  code: [
+    { required: true, message: '请输入立项编号', trigger: 'blur' },
   ],
-  subject: [
-    { required: true, message: '请输入申请学科', trigger: 'blur' },
+  researchType: [
+    { required: true, message: '请选择研究类型', trigger: 'change' },
   ],
-  start: [
-    { required: true, message: '请选择开始日期', trigger: 'blur' },
+  subjectCategory: [
+    { required: true, message: '请选择学科分类', trigger: 'change' },
   ],
-  end: [
-    { required: true, message: '请选择结束日期', trigger: 'blur' },
+  projectCategory: [
+    { required: true, message: '请选择项目类别', trigger: 'change' },
+  ],
+  // 立项/结项信息验证规则
+  establishmentTime: [
+    { required: true, message: '请选择立项时间', trigger: 'change' },
+  ],
+  projectStatus: [
+    { required: true, message: '请选择项目当前状态', trigger: 'change' },
+  ],
+  plannedCompletionTime: [
+    { required: true, message: '请选择计划完成时间', trigger: 'change' },
+  ],
+  // 项目经费预算验证规则
+  approvedFunding: [
+    { required: true, message: '请输入批准经费', trigger: 'blur' },
   ],
 })
 
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
+
+// 处理文件名显示，去掉时间戳前缀
+const getDisplayFileName = (fileName) => {
+  if (!fileName) return ''
+  // 匹配时间戳模式：数字-文件名
+  const match = fileName.match(/^\d+-(.+)$/)
+  return match ? match[1] : fileName
+}
+
 const load = () => {
+  console.log('load 函数被调用')
   request.get('/project/selectPage', {
     params: {
       pageNum: data.pageNum,
@@ -170,25 +556,102 @@ const load = () => {
       name: data.name
     }
   }).then(res => {
+    console.log('load 响应数据:', res)
     if (res.code === '200') {
       data.tableData = res.data?.list || []
       data.total = res.data?.total
+      console.log('表格数据已加载:', data.tableData)
+      console.log('数据总数:', data.total)
     }
   })
 }
 const handleAdd = () => {
-  data.form = {}
-  data.formVisible = true
+  console.log('handleAdd 被调用')
+  console.log('当前 formVisible 状态:', data.formVisible)
+  console.log('当前 laboratoryLevel:', data.laboratoryLevel)
+  
+  // 确保先关闭抽屉，然后重新打开
+  data.formVisible = false
+  
+  // 使用 nextTick 确保状态更新完成
+  setTimeout(() => {
+    // 重置表单数据
+    data.form = {
+      // 项目信息
+      name: '',
+      code: '',
+      researchType: '',
+      subjectCategory: '',
+      projectCategory: '',
+      expectedResults: '',
+      // 立项/结项信息
+      establishmentTime: '',
+      midCheckTime: '',
+      projectStatus: '',
+      completionAppraisal: '',
+      plannedCompletionTime: '',
+      actualCompletionTime: '',
+      // 项目经费预算
+      approvedFunding: null,
+      projectFinanceAccount: '',
+      matchingFunding: null,
+      // 数组字段
+      teamMembers: [],
+      cooperativeUnits: [],
+      attachments: [],
+    }
+    data.isViewMode = false // 设置为编辑模式
+    data.activeTab = 'projectInfo' // 重置到项目信息标签页
+    data.formVisible = true
+    console.log('新增抽屉应该已打开，formVisible:', data.formVisible)
+  }, 10)
 }
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
+  // 确保数组字段存在
+  if (!data.form.teamMembers) data.form.teamMembers = []
+  if (!data.form.cooperativeUnits) data.form.cooperativeUnits = []
+  if (!data.form.attachments) data.form.attachments = []
+  data.isViewMode = false // 设置为编辑模式
+  data.activeTab = 'projectInfo' // 重置到第一个标签页
   data.formVisible = true
 }
 const handleCheck = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
+  // 确保数组字段存在
+  if (!data.form.teamMembers) data.form.teamMembers = []
+  if (!data.form.cooperativeUnits) data.form.cooperativeUnits = []
+  if (!data.form.attachments) data.form.attachments = []
   data.checkVisible = true
 }
+const handleQuery = (row) => {
+  console.log('handleQuery 被调用', row)
+  console.log('当前 formVisible 状态:', data.formVisible)
+  console.log('当前 laboratoryLevel:', data.laboratoryLevel)
+  
+  // 确保先关闭抽屉，然后重新打开
+  data.formVisible = false
+  
+  // 使用 setTimeout 确保状态更新完成
+  setTimeout(() => {
+    // 深拷贝行数据到表单，用于显示详情
+    data.form = JSON.parse(JSON.stringify(row))
+    // 确保数组字段存在
+    if (!data.form.teamMembers) data.form.teamMembers = []
+    if (!data.form.cooperativeUnits) data.form.cooperativeUnits = []
+    if (!data.form.attachments) data.form.attachments = []
+    data.isViewMode = true  // 设置为查看模式
+    data.activeTab = 'projectInfo'  // 重置到第一个标签页
+    data.formVisible = true  // 使用统一的抽屉显示
+    console.log('查询抽屉应该已打开，formVisible:', data.formVisible)
+  }, 10)
+}
 const add = () => {
+  // 打印传给后端的表单数据
+  console.log('=== 新增项目提交数据 ===')
+  console.log('完整表单数据:', JSON.stringify(data.form, null, 2))
+  console.log('========================')
+  
   request.post('/project/add', data.form).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
@@ -251,6 +714,126 @@ const reset = () => {
   load()
 }
 
+// 团队成员相关方法
+const addTeamMember = () => {
+  // 验证必填字段
+  if (!data.tempTeamMember.name || !data.tempTeamMember.role) {
+    ElMessage.warning('请填写姓名和参与角色')
+    return
+  }
+  
+  // 添加到团队成员列表
+  data.form.teamMembers.push({
+    name: data.tempTeamMember.name,
+    role: data.tempTeamMember.role,
+    affiliation: data.tempTeamMember.affiliation || ''
+  })
+  
+  // 重置临时数据并关闭对话框
+  data.tempTeamMember = { name: '', role: '', affiliation: '' }
+  data.showTeamMemberDialog = false
+  ElMessage.success('团队成员添加成功')
+}
+
+const removeTeamMember = (index) => {
+  ElMessageBox.confirm('确定要删除该团队成员吗？', '删除确认', { type: 'warning' }).then(() => {
+    data.form.teamMembers.splice(index, 1)
+    ElMessage.success('删除成功')
+  }).catch(() => {
+    // 用户取消删除
+  })
+}
+
+// 合作研究单位相关方法
+ const addCooperativeUnit = () => {
+   // 添加到合作研究单位列表（字段均为非必填）
+   data.form.cooperativeUnits.push({
+     unitName: data.tempCooperativeUnit.unitName || '',
+     completionUnit: data.tempCooperativeUnit.completionUnit || ''
+   })
+   
+   // 重置临时数据并关闭对话框
+   data.tempCooperativeUnit = { unitName: '', completionUnit: '' }
+   data.showCooperativeUnitDialog = false
+   ElMessage.success('合作研究单位添加成功')
+ }
+
+
+
+// 附件材料相关方法
+const addAttachment = () => {
+  // 验证必填字段
+  if (!data.tempAttachment.fileCategory || !data.tempAttachment.fileName || !data.tempAttachment.fileUrl) {
+    ElMessage.warning('请选择文件类别并上传文件')
+    return
+  }
+  
+  // 添加到附件材料列表
+  data.form.attachments.push({
+    fileName: data.tempAttachment.fileName,
+    fileCategory: data.tempAttachment.fileCategory,
+    fileDescription: data.tempAttachment.fileDescription || '',
+    fileUrl: data.tempAttachment.fileUrl
+  })
+  
+  // 重置临时数据并关闭对话框
+  data.tempAttachment = { fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] }
+  data.showAttachmentDialog = false
+  ElMessage.success('附件材料添加成功')
+}
+
+const removeAttachment = (index) => {
+  ElMessageBox.confirm('确定要删除该附件材料吗？', '删除确认', { type: 'warning' }).then(() => {
+    data.form.attachments.splice(index, 1)
+    ElMessage.success('删除成功')
+  }).catch(() => {
+    // 用户取消删除
+  })
+}
+
+const handleAttachmentUpload = (res) => {
+  if (res.code === '200') {
+    data.tempAttachment.fileName = res.data.split('/').pop() // 从URL中提取文件名
+    data.tempAttachment.fileUrl = res.data
+    ElMessage.success('文件上传成功')
+  } else {
+    ElMessage.error('文件上传失败')
+  }
+}
+
+const beforeAttachmentUpload = (file) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+  const isAllowedType = allowedTypes.includes(file.type)
+  const isLt10M = file.size / 1024 / 1024 < 10
+
+  if (!isAllowedType) {
+    ElMessage.error('只能上传 PDF、JPG、PNG 格式的文件!')
+    return false
+  }
+  if (!isLt10M) {
+    ElMessage.error('上传文件大小不能超过 10MB!')
+    return false
+  }
+  return true
+}
+
+const previewFile = (attachment) => {
+  if (attachment.fileUrl) {
+    window.open(attachment.fileUrl, '_blank')
+  } else {
+    ElMessage.warning('文件链接不存在')
+  }
+}
+
+const removeCooperativeUnit = (index) => {
+  ElMessageBox.confirm('确定要删除该合作研究单位吗？', '删除确认', { type: 'warning' }).then(() => {
+    data.form.cooperativeUnits.splice(index, 1)
+    ElMessage.success('删除成功')
+  }).catch(() => {
+    // 用户取消删除
+  })
+}
+
 const handleFileUpload = (res) => {
   data.form.file = res.data
 }
@@ -258,15 +841,295 @@ const down = (url) => {
   window.open(url)
 }
 
+// 重置当前标签页的数据
+const resetCurrentTab = () => {
+  ElMessageBox.confirm('确定要重置当前标签页的数据吗？', '重置确认', { type: 'warning' }).then(() => {
+    switch (data.activeTab) {
+      case 'projectInfo':
+        // 重置项目信息
+        data.form.name = ''
+        data.form.code = ''
+        data.form.researchType = ''
+        data.form.subjectCategory = ''
+        data.form.projectCategory = ''
+        data.form.expectedResults = ''
+        break
+      case 'teamMembers':
+        // 重置团队成员
+        data.form.teamMembers = []
+        break
+      case 'cooperativeUnits':
+        // 重置合作研究单位
+        data.form.cooperativeUnits = []
+        break
+      case 'projectStatus':
+        // 重置立项/结项信息
+        data.form.establishmentTime = ''
+        data.form.midCheckTime = ''
+        data.form.projectStatus = ''
+        data.form.completionAppraisal = ''
+        data.form.plannedCompletionTime = ''
+        data.form.actualCompletionTime = ''
+        break
+      case 'budgetInfo':
+        // 重置项目经费预算
+        data.form.approvedFunding = null
+        data.form.projectFinanceAccount = ''
+        data.form.matchingFunding = null
+        break
+      case 'attachments':
+        // 重置附件材料
+        data.form.attachments = []
+        break
+    }
+    ElMessage.success('重置成功')
+  }).catch(() => {
+    // 用户取消重置
+  })
+}
+
+// 保存当前标签页的数据（验证必填项）
+const saveCurrentTab = () => {
+  let isValid = true
+  let errorMessage = ''
+  
+  switch (data.activeTab) {
+    case 'projectInfo':
+      // 验证项目信息必填项
+      if (!data.form.name) {
+        isValid = false
+        errorMessage = '请输入项目名称'
+      } else if (!data.form.code) {
+        isValid = false
+        errorMessage = '请输入立项编号'
+      } else if (!data.form.researchType) {
+        isValid = false
+        errorMessage = '请选择研究类型'
+      } else if (!data.form.subjectCategory) {
+        isValid = false
+        errorMessage = '请选择学科分类'
+      } else if (!data.form.projectCategory) {
+        isValid = false
+        errorMessage = '请输入项目类别'
+      }
+      break
+    case 'teamMembers':
+      // 团队成员没有必填项验证，直接保存
+      break
+    case 'cooperativeUnits':
+      // 合作研究单位没有必填项验证，直接保存
+      break
+    case 'projectStatus':
+      // 验证立项/结项信息必填项
+      if (!data.form.establishmentTime) {
+        isValid = false
+        errorMessage = '请选择立项时间'
+      } else if (!data.form.projectStatus) {
+        isValid = false
+        errorMessage = '请选择项目当前状态'
+      } else if (!data.form.plannedCompletionTime) {
+        isValid = false
+        errorMessage = '请选择计划完成时间'
+      }
+      break
+    case 'budgetInfo':
+      // 验证项目经费预算必填项
+      if (!data.form.approvedFunding) {
+        isValid = false
+        errorMessage = '请输入批准经费'
+      }
+      break
+  }
+  
+  if (!isValid) {
+    ElMessage.warning(errorMessage)
+    return
+  }
+  
+  // 保存当前标签页数据到临时存储
+  const tabData = {}
+  switch (data.activeTab) {
+    case 'projectInfo':
+      tabData.projectInfo = {
+        name: data.form.name,
+        code: data.form.code,
+        researchType: data.form.researchType,
+        subjectCategory: data.form.subjectCategory,
+        projectCategory: data.form.projectCategory,
+        expectedResults: data.form.expectedResults
+      }
+      break
+    case 'teamMembers':
+      tabData.teamMembers = [...data.form.teamMembers]
+      break
+    case 'cooperativeUnits':
+      tabData.cooperativeUnits = [...data.form.cooperativeUnits]
+      break
+    case 'projectStatus':
+      tabData.projectStatus = {
+        establishmentTime: data.form.establishmentTime,
+        midCheckTime: data.form.midCheckTime,
+        projectStatus: data.form.projectStatus,
+        completionAppraisal: data.form.completionAppraisal,
+        plannedCompletionTime: data.form.plannedCompletionTime,
+        actualCompletionTime: data.form.actualCompletionTime
+      }
+      break
+    case 'budgetInfo':
+      tabData.budgetInfo = {
+        approvedFunding: data.form.approvedFunding,
+        projectFinanceAccount: data.form.projectFinanceAccount,
+        matchingFunding: data.form.matchingFunding
+      }
+      break
+  }
+  
+  // 将数据保存到localStorage或者data中的临时字段
+  if (!data.savedTabData) {
+    data.savedTabData = {}
+  }
+  data.savedTabData[data.activeTab] = tabData[data.activeTab]
+  
+  ElMessage.success('保存成功')
+}
+
+// 提交整个表单
+const submitForm = () => {
+  // 验证所有必填项
+  let isValid = true
+  let errorMessage = ''
+  
+  // 验证项目信息
+  if (!data.form.name) {
+    isValid = false
+    errorMessage = '请输入项目名称'
+  } else if (!data.form.code) {
+    isValid = false
+    errorMessage = '请输入立项编号'
+  } else if (!data.form.researchType) {
+    isValid = false
+    errorMessage = '请选择研究类型'
+  } else if (!data.form.subjectCategory) {
+    isValid = false
+    errorMessage = '请选择学科分类'
+  } else if (!data.form.projectCategory) {
+    isValid = false
+    errorMessage = '请输入项目类别'
+  }
+  // 验证立项/结项信息
+  else if (!data.form.establishmentTime) {
+    isValid = false
+    errorMessage = '请选择立项时间'
+  } else if (!data.form.projectStatus) {
+    isValid = false
+    errorMessage = '请选择项目当前状态'
+  } else if (!data.form.plannedCompletionTime) {
+    isValid = false
+    errorMessage = '请选择计划完成时间'
+  }
+  // 验证项目经费预算
+  else if (!data.form.approvedFunding) {
+    isValid = false
+    errorMessage = '请输入批准经费'
+  }
+  
+  if (!isValid) {
+    ElMessage.warning(errorMessage)
+    return
+  }
+  
+  // 合并保存的标签页数据
+  if (data.savedTabData) {
+    Object.keys(data.savedTabData).forEach(tabKey => {
+      if (tabKey === 'projectInfo') {
+        Object.assign(data.form, data.savedTabData[tabKey])
+      } else if (tabKey === 'teamMembers') {
+        data.form.teamMembers = data.savedTabData[tabKey]
+      } else if (tabKey === 'cooperativeUnits') {
+        data.form.cooperativeUnits = data.savedTabData[tabKey]
+      } else if (tabKey === 'projectStatus') {
+        Object.assign(data.form, data.savedTabData[tabKey])
+      } else if (tabKey === 'budgetInfo') {
+        Object.assign(data.form, data.savedTabData[tabKey])
+      }
+    })
+  }
+  
+  // 提交数据到后端
+  if (data.form.id) {
+    update()
+  } else {
+    add()
+  }
+  
+  // 清空临时保存的数据
+  data.savedTabData = {}
+}
+
+// 抽屉关闭事件处理
+const handleDrawerClose = () => {
+  console.log('抽屉关闭事件被触发')
+  // 确保抽屉状态正确关闭
+  data.formVisible = false
+  // 重置表单状态
+  data.activeTab = 'projectInfo'
+  data.isViewMode = false
+  data.savedTabData = {}
+  // 清空临时数据
+  data.tempTeamMember = {}
+  data.tempCooperativeUnit = {}
+  data.tempAttachment = {}
+  // 关闭所有子对话框
+  data.showTeamMemberDialog = false
+  data.showCooperativeUnitDialog = false
+  data.showAttachmentDialog = false
+}
+
+// 抽屉关闭前的处理
+const handleBeforeClose = (done) => {
+  // 直接关闭，不做额外验证
+  done()
+}
+
+// 标签页切换处理（防抖优化）
+let tabChangeTimer = null
+const handleTabChange = (tabName) => {
+  // 清除之前的定时器
+  if (tabChangeTimer) {
+    clearTimeout(tabChangeTimer)
+  }
+  
+  // 设置防抖延迟
+  tabChangeTimer = setTimeout(() => {
+    // 确保标签页状态正确更新
+    data.activeTab = tabName
+    
+    // 关闭所有子对话框，避免状态冲突
+    data.showTeamMemberDialog = false
+    data.showCooperativeUnitDialog = false
+    data.showAttachmentDialog = false
+    
+    // 清空临时编辑数据
+    data.tempTeamMember = {}
+    data.tempCooperativeUnit = {}
+    data.tempAttachment = {}
+  }, 50) // 50ms防抖延迟
+}
+
 const getLaboratoryLevel = () => {
+  console.log('getLaboratoryLevel 被调用')
+  console.log('用户信息:', data.user)
   // 检查用户是否有实验室ID
   if (!data.user.laboratoryId) {
+    console.log('用户没有实验室ID')
     return
   }
   
   request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
+    console.log('获取实验室级别响应:', res)
     if (res.code === '200') {
       data.laboratoryLevel = res.data.type
+      console.log('设置 laboratoryLevel 为:', data.laboratoryLevel)
     } else {
       ElMessage.error(res.msg)
     }
@@ -276,11 +1139,73 @@ const getLaboratoryLevel = () => {
   })
 }
 
+// 根据内容长度判断对齐方式的方法
+const getContentAlignClass = (content) => {
+  if (!content) return 'content-center'
+  // 判断内容是否超过一行（这里以50个字符为基准，可根据实际情况调整）
+  const isMultiLine = content.length > 50 || content.includes('\n')
+  return isMultiLine ? 'content-justify' : 'content-center'
+}
+
 onMounted(() => {
   if (data.user.id) {
     getLaboratoryLevel()
   }
+  load()
 })
-
-load()
 </script>
+
+<style scoped>
+/* 标签页容器优化 */
+.el-tabs {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 标签页内容区域优化 */
+.el-tabs__content {
+  overflow: hidden;
+}
+
+/* 标签页面板优化 */
+.el-tab-pane {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* 抽屉内容区域优化 */
+.el-drawer__body {
+  overflow: hidden;
+}
+
+/* 表单容器优化 */
+.el-form {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 表格容器优化 */
+.el-table {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 防止内容闪烁 */
+[v-show] {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* 标签页切换时的平滑过渡 */
+.tab-content-wrapper {
+  min-height: 400px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 内容居中对齐 */
+.content-center {
+  text-align: center;
+}
+
+/* 内容两端对齐 */
+.content-justify {
+  text-align: justify;
+  text-justify: inter-ideograph; /* 中文字符间对齐 */
+  line-height: 1.5;
+}
+</style>

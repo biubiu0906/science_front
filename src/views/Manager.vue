@@ -1,47 +1,30 @@
 <template>
   <div class="manager-container">
-    <div class="manager-header">
-      <div class="manager-header-left">
-        <img src="@/assets/imgs/logo.png" alt="">
-        <div class="title">科研管理系统</div>
-      </div>
-      <div class="manager-header-center">
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/manager/home' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
-        </el-breadcrumb>
-      </div>
-      <div class="manager-header-right">
-        <el-dropdown style="cursor: pointer">
-          <div style="padding-right: 20px; display: flex; align-items: center">
-            <img style="width: 40px; height: 40px; border-radius: 50%;" :src="data.user.avatar" alt="">
-            <span style="margin-left: 5px">{{ data.user.name }}</span><el-icon color="#fff"><arrow-down /></el-icon>
+    <!-- 整体布局：侧边栏 + 右侧内容区 -->
+    <div class="layout-wrapper">
+      <!-- 侧边栏：占满屏幕高度 -->
+      <div class="manager-main-left" :class="{ 'collapsed': isCollapse }">
+        <el-menu 
+          :default-active="router.currentRoute.value.path" 
+          :default-openeds="['1', '2']" 
+          :collapse="isCollapse"
+          router>
+          <!-- 菜单头部区域 -->
+          <div class="menu-header">
+            <img src="@/assets/imgs/logo.png" alt="">
+            <div class="title" v-show="!isCollapse">科研管理系统</div>
           </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="router.push('/manager/person')">个人资料</el-dropdown-item>
-              <el-dropdown-item @click="router.push('/manager/password')">修改密码</el-dropdown-item>
-              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </div>
-    <!-- 下面部分开始 -->
-    <div style="display: flex">
-      <div class="manager-main-left">
-        <el-menu :default-active="router.currentRoute.value.path" :default-openeds="['1', '2']" router>
-          <el-menu-item index="/manager/home">
-            <el-icon>
-              <HomeFilled />
-            </el-icon>
-            <span>系统首页</span>
-          </el-menu-item>
           <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY'">
             <el-icon>
               <Odometer />
             </el-icon>
             <span>数据统计</span>
+          </el-menu-item>
+          <el-menu-item index="/manager/home">
+            <el-icon>
+              <HomeFilled />
+            </el-icon>
+            <span>系统公告</span>
           </el-menu-item>
           <el-sub-menu index="1" v-if="data.laboratoryLevel !== 1">
             <template #title>
@@ -60,9 +43,9 @@
             <el-menu-item index="/manager/type" v-if="data.user.role === 'ADMIN'">成果类型管理</el-menu-item>
             <el-menu-item index="/manager/achievement"
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果管理</el-menu-item>
-            <!--<el-menu-item index="/manager/teacherFeedback"
-              v-if="data.user.role === 'KEY_LABORATORY'">教师反馈提交</el-menu-item>-->
-            <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>-->
+            <el-menu-item index="/manager/teacherFeedback"
+              v-if="data.laboratoryLevel === 2">教师反馈提交</el-menu-item>
+            <el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>
             <!-- 先修改 -->
             <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
             <el-menu-item index="/manager/teacherActivity"
@@ -96,18 +79,49 @@
           </el-sub-menu>
         </el-menu>
       </div>
-      <div class="manager-main-right">
-        <RouterView @updateUser="updateUser" />
+      <!-- 右侧内容区 -->
+      <div class="manager-main-right" :class="{ 'sidebar-collapsed': isCollapse }">
+        <!-- 头部区域 -->
+        <div class="manager-header">
+          <div class="manager-header-left" @click="isCollapse = !isCollapse">
+            <div v-if="isCollapse"><el-icon><Fold /></el-icon></div>
+            <div v-else><el-icon><Expand /></el-icon></div>
+          </div>
+          <div class="manager-header-center">
+            <el-breadcrumb separator="/">
+              <el-breadcrumb-item :to="{ path: '/manager/dashboard' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
+            </el-breadcrumb>
+          </div>
+          <div class="manager-header-right">
+            <el-dropdown style="cursor: pointer">
+              <div style="padding-right: 20px; display: flex; align-items: center">
+                <img style="width: 30px; height: 30px; border-radius: 50%;" :src="data.user.avatar || '/src/assets/imgs/头像.jpeg'" alt="">
+                <span style="margin-left: 5px">{{ data.user.name }}</span><el-icon color="#fff"><arrow-down /></el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="router.push('/manager/person')">个人资料</el-dropdown-item>
+                  <el-dropdown-item @click="router.push('/manager/password')">修改密码</el-dropdown-item>
+                  <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+        </div>
+        <!-- 主要内容区域 -->
+        <div class="content-area">
+          <RouterView @updateUser="updateUser" />
+        </div>
       </div>
     </div>
-    <!-- 下面部分结束 -->
 
 
   </div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from "vue";
+import { reactive, onMounted, ref } from "vue";
 import router from "@/router/index.js";
 import { ElMessage } from "element-plus";
 import request from "@/utils/request.js";
@@ -116,6 +130,9 @@ const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   laboratoryLevel: null
 })
+
+// 侧边栏折叠状态，初始为展开
+const isCollapse = ref(false)
 
 const logout = () => {
   localStorage.removeItem('xm-user')

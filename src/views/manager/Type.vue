@@ -2,23 +2,24 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入类型名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-    </div>
-    <div class="card" style="margin-bottom: 5px">
-      <el-button type="primary" plain @click="handleAdd">新增</el-button>
-      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
+      <el-button type="info" plain @click="load" size="small">查询</el-button>
+      <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <div style="margin-bottom: 10px; margin-left: 10px;">
+        <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
+        <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
+      </div>
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="name" label="类型名称" />
-        <el-table-column prop="description" label="类型描述" />
+        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column prop="name" label="类型名称" sortable />
+        <el-table-column prop="description" label="类型描述" sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)" size="small"></el-button>
+            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -38,8 +39,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button @click="data.formVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="save" size="small">确 定</el-button>
         </span>
       </template>
     </el-dialog>

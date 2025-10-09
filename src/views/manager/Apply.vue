@@ -3,15 +3,15 @@
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.teacherName" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入教师名称查询"></el-input>
       <el-input v-model="data.activityName" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入活动名称查询"></el-input>
-      <el-button type="info" plain @click="load">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
+      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'ADMIN'">
-      <el-button type="danger" plain @click="delBatch">批量删除</el-button>
+      <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" class="table-center">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="teacherName" label="教师姓名" />
         <el-table-column prop="activityName" label="活动名称" />
@@ -28,9 +28,9 @@
         <el-table-column prop="checkTime" label="审核时间" />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='TEACHER'" type="primary" circle :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='ADMIN'" type="primary" circle :icon="View" @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='TEACHER'" type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='ADMIN'" type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
+            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -47,8 +47,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="save">确 定</el-button>
+          <el-button size="small" @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="save">确 定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -67,8 +67,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.checkVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submit">提 交</el-button>
+          <el-button size="small" @click="data.checkVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="submit">提 交</el-button>
         </span>
       </template>
     </el-dialog>

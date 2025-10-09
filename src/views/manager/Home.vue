@@ -1,20 +1,19 @@
 <template>
-  <div>
-    <div class="card" style="margin-bottom: 5px">您好！{{ data.user?.name }}，欢迎使用本系统！</div>
-    <div style="display: flex">
-      <div class="card" style="flex: 50%; max-height: 600px; overflow-y: auto; ">
-        <div style="font-weight: bold; font-size: 18px; padding: 10px 0 30px 10px">系统公告</div>
-        <el-timeline style="max-width: 600px">
-          <el-timeline-item
-              v-for="(item, index) in data.noticeData"
-              :key="index"
-              :timestamp="item.time"
-          >
-            {{ item.content }}
-          </el-timeline-item>
-        </el-timeline>
-      </div>
-      <div style="flex: 50%"></div>
+  <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <div class="card" style="margin-bottom: 15px; margin-top: 15px; width: 80%; font-weight: bold; font-size: 18px;">您好！{{ data.user?.name }}，欢迎使用本系统！</div>
+    <div class="card" style="max-height: calc(100vh - 185px); width: 80%; overflow-y: auto;">
+      <div style="font-weight: bold; font-size: 18px; padding: 10px">系统公告</div>
+      <el-timeline style="margin-top: 16px; margin-right: 45px;">
+        <el-timeline-item
+            v-for="(item, index) in data.noticeData"
+            :key="index"
+            :timestamp="item.time"
+            :color="index < 2 ? '#FF0033' : '#D4D7DE'"
+        >
+          <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">{{ item.title }}</div>
+          <div style="font-size: 15px; line-height: 30px;">{{ item.content }}</div>
+        </el-timeline-item>
+      </el-timeline>
     </div>
   </div>
 </template>

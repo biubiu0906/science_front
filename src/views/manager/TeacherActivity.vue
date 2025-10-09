@@ -26,7 +26,7 @@
            <el-tag v-if="item.status === '已结束'" type="danger">{{ item.status }}</el-tag>
          </div>
          <div style="margin-top: 15px; text-align: center">
-           <el-button type="primary" style="padding: 18px 30px" :disabled="item.status !== '进行中'" @click="submitInit(item)">申请</el-button>
+           <el-button type="primary" style="padding: 18px 30px" :disabled="item.status !== '进行中'" @click="submitInit(item)" size="small">申请</el-button>
          </div>
        </div>
      </el-col>
@@ -40,8 +40,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="data.formVisible = false">取 消</el-button>
-          <el-button type="primary" @click="submit">确 定</el-button>
+          <el-button @click="data.formVisible = false" size="small">取 消</el-button>
+          <el-button type="primary" @click="submit" size="small">确 定</el-button>
         </span>
       </template>
     </el-dialog>

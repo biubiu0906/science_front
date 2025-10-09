@@ -3,12 +3,12 @@
         <div class="card" style="margin-bottom: 5px">
             <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px"
                 placeholder="请输入项目名称查询"></el-input>
-            <el-button type="info" plain @click="load">查询</el-button>
-            <el-button type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
-        </div>
-        <div class="card" style="margin-bottom: 5px">
-            <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain @click="handleAdd">新增</el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain @click="delBatch">批量删除</el-button>
+            <el-button type="info" plain size="small" @click="load">查询</el-button>
+        <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
+      </div>
+      <div style="margin-bottom: 10px">
+        <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain size="small" @click="handleAdd">新增</el-button>
+        <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
         </div>
 
         <div class="card" style="margin-bottom: 5px">
@@ -23,10 +23,10 @@
                 <el-table-column prop="solution" label="解决方案" show-overflow-tooltip />
                 <el-table-column label="操作" width="100" fixed="right">
                     <template v-slot="scope">
-                        <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" circle :icon="Edit"
-                            @click="handleEdit(scope.row)"></el-button>
-                        <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle :icon="Delete"
-                            @click="del(scope.row.id)"></el-button>
+                        <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" circle size="small" :icon="Edit"
+              @click="handleEdit(scope.row)"></el-button>
+            <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle size="small" :icon="Delete"
+              @click="del(scope.row.id)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -62,8 +62,8 @@
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="data.formVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="save">确 定</el-button>
+                    <el-button size="small" @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" size="small" @click="save">确 定</el-button>
                 </span>
             </template>
         </el-dialog>

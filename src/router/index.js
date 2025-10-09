@@ -8,7 +8,7 @@ const router = createRouter({
       path: '/manager',
       component: () => import('@/views/Manager.vue'),
       children: [
-        { path: 'home', meta: { name: '系统首页' }, component: () => import('@/views/manager/Home.vue'),  },
+        { path: 'home', meta: { name: '系统公告' }, component: () => import('@/views/manager/Home.vue'),  },
         { path: 'admin', meta: { name: '管理员信息' }, component: () => import('@/views/manager/Admin.vue'), },
         { path: 'notice', meta: { name: '系统公告' }, component: () => import('@/views/manager/Notice.vue'), },
         { path: 'person', meta: { name: '个人资料' }, component: () => import('@/views/manager/Person.vue'), },
