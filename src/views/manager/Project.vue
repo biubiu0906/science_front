@@ -44,10 +44,10 @@
         <el-table-column prop="time" label="审核时间" min-width="160" show-overflow-tooltip sortable />
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Search" size="small" @click="() => { console.log('查询按钮点击', scope.row); handleQuery(scope.row); }" title="查看详情"></el-button>
+            <el-button type="primary" circle :icon="View" size="small" @click="handleQuery(scope.row)" title="查看详情"></el-button>
             <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
               :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="warning" circle :icon="View" size="small"
+            <el-button v-if="data.user.role === 'ADMIN'" type="warning" circle :icon="Tickets" size="small"
               @click="handleCheck(scope.row)"></el-button>
             <el-button type="danger" circle :icon="Delete" size="small" @click="del(scope.row.id)"></el-button>
           </template>
@@ -305,12 +305,12 @@
               </el-table-column>
               <el-table-column prop="fileCategory" label="文件类别" min-width="120"></el-table-column>
               <el-table-column prop="fileDescription" label="文件简介" min-width="150"></el-table-column>
-              <el-table-column label="操作" width="90" v-if="!data.isViewMode">
+              <el-table-column label="操作" width="90">
                 <template #default="scope">
-                  <el-button type="primary" circle size="small" @click="previewFile(scope.row)">
-                    <el-icon><Postcard /></el-icon>
+                  <el-button type="primary" :icon="View" circle size="small" @click="previewFile(scope.row)">
                   </el-button>
                   <el-button v-if="!data.isViewMode" type="danger" circle :icon="Delete" size="small" @click="removeAttachment(scope.$index)"></el-button>
+                  
                 </template>
               </el-table-column>
             </el-table>
@@ -401,11 +401,11 @@
              :before-upload="beforeAttachmentUpload"
              :limit="1"
              :file-list="data.tempAttachment.fileList || []"
-             accept=".pdf,.jpg,.jpeg,.png">
+             accept=".pdf,.jpg,.jpeg,.png,.txt">
              <el-button type="primary" size="small">点击上传</el-button>
              <template #tip>
                <div class="el-upload__tip">
-                 支持上传PDF、JPG、JPEG、PNG格式文件，大小不超过5MB
+                 <span style="color: red;">*</span>支持PDF,JPG,JPEG,PNG,TXT文件格式，大小不超过5MB
                </div>
              </template>
            </el-upload>
@@ -440,7 +440,15 @@
           </span>
         </template>
       </el-dialog>
-    
+
+    <!-- 文件预览组件 -->
+    <FilePreviewCom 
+      v-model="data.showFilePreview"
+      :file-url="data.previewFileData.url"
+      :file-name="data.previewFileData.name"
+      :file-type="data.previewFileData.type"
+      @download="handleFileDownload"
+    />
 
   </div>
 </template>
@@ -450,7 +458,8 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, Edit, View, Search, Postcard } from "@element-plus/icons-vue";
+import { Delete, Edit, View, Tickets } from "@element-plus/icons-vue";
+import FilePreviewCom from "./componets/FilePreviewCom.vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
 const data = reactive({
@@ -463,6 +472,13 @@ const data = reactive({
   showTeamMemberDialog: false,
   showCooperativeUnitDialog: false,
   showAttachmentDialog: false,
+  // 文件预览相关
+  showFilePreview: false,
+  previewFileData: {
+    url: '',
+    name: '',
+    type: ''
+  },
   // 临时编辑数据
   tempTeamMember: {},
   tempCooperativeUnit: {},
@@ -802,12 +818,21 @@ const handleAttachmentUpload = (res) => {
 }
 
 const beforeAttachmentUpload = (file) => {
-  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+  // 根据FilePreviewCom组件支持的文件格式定义允许的文件类型
+  const allowedTypes = [
+    // PDF文件
+    'application/pdf',
+    // 图片文件
+    'image/jpeg', 'image/jpg', 'image/png',
+    // 文本文件
+    'text/plain',
+  ]
+  
   const isAllowedType = allowedTypes.includes(file.type)
   const isLt10M = file.size / 1024 / 1024 < 10
 
   if (!isAllowedType) {
-    ElMessage.error('只能上传 PDF、JPG、PNG 格式的文件!')
+    ElMessage.error('支持png,jpg,jpeg,txt,pdf文件格式')
     return false
   }
   if (!isLt10M) {
@@ -817,11 +842,106 @@ const beforeAttachmentUpload = (file) => {
   return true
 }
 
+/**
+ * 预览文件
+ * @param {Object} attachment 附件对象
+ */
 const previewFile = (attachment) => {
-  if (attachment.fileUrl) {
-    window.open(attachment.fileUrl, '_blank')
-  } else {
+  console.log('预览文件被点击，附件数据:', attachment)
+  
+  if (!attachment.fileUrl) {
     ElMessage.warning('文件链接不存在')
+    return
+  }
+  
+  // 清理文件URL，去除空格和特殊字符
+  let cleanFileUrl = attachment.fileUrl.toString()
+  // 去除前后空格
+  cleanFileUrl = cleanFileUrl.trim()
+  // 去除反引号、单引号、双引号
+  cleanFileUrl = cleanFileUrl.replace(/[`'"]/g, '')
+  // 再次去除可能残留的空格
+  cleanFileUrl = cleanFileUrl.trim()
+  
+  console.log('原始URL:', attachment.fileUrl)
+  console.log('清理后的文件URL:', cleanFileUrl)
+
+  // 获取文件扩展名
+  const fileName = attachment.fileName || ''
+  const fileExtension = fileName.toLowerCase().split('.').pop()
+  
+  // 根据文件扩展名确定文件类型
+  let fileType = 'unsupported'
+  
+  // 图片文件
+  if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
+    fileType = 'image'
+  }
+  // PDF文件
+  else if (fileExtension === 'pdf') {
+    fileType = 'pdf'
+  }
+  // Word文档
+  else if (['doc', 'docx'].includes(fileExtension)) {
+    fileType = 'word'
+  }
+  // 文本文件
+  else if (['txt', 'md', 'json', 'xml', 'csv'].includes(fileExtension)) {
+    fileType = 'text'
+  }
+
+  // 先清空预览数据
+  data.previewFileData = {
+    url: '',
+    name: '',
+    type: ''
+  }
+  
+  // 重新设置预览数据
+  data.previewFileData.url = cleanFileUrl
+  data.previewFileData.name = getDisplayFileName(fileName)
+  data.previewFileData.type = fileType
+  
+  console.log('设置预览数据:', {
+    url: data.previewFileData.url,
+    name: data.previewFileData.name,
+    type: data.previewFileData.type
+  })
+  console.log('文件类型判断结果:', fileType)
+  
+  // 显示预览对话框
+  data.showFilePreview = true
+  console.log('显示预览对话框:', data.showFilePreview)
+}
+
+/**
+ * 处理文件下载
+ * @param {Object} downloadData 下载数据对象，包含url和fileName
+ */
+const handleFileDownload = (downloadData) => {
+  if (!downloadData.url) {
+    ElMessage.error('下载链接不存在')
+    return
+  }
+  
+  try {
+    // 创建一个临时的a标签来触发下载
+    const link = document.createElement('a')
+    link.href = downloadData.url
+    link.download = downloadData.fileName || '下载文件'
+    link.target = '_blank'
+    
+    // 添加到DOM并触发点击
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理DOM
+    document.body.removeChild(link)
+    
+    ElMessage.success('文件下载已开始')
+  } catch (error) {
+    console.error('文件下载失败:', error)
+    ElMessage.error('文件下载失败，请重试')
   }
 }
 

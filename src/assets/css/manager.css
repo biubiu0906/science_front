@@ -12,7 +12,7 @@
 /* 侧边栏样式 - 占满屏幕高度，独立滚动 */
 .manager-main-left {
     width: 200px;
-    background-color: #1b3555;
+    background-color: #3969b2;
     height: 100vh;
     position: fixed;
     left: 0;
@@ -66,7 +66,7 @@
 /* 头部样式 - 现在在右侧内容区内 */
 .manager-header {
     height: 59px;
-    background-color: #1b3555;
+    background-color: #3969b2;
     display: flex;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
@@ -124,7 +124,7 @@
 
 /* 菜单头部样式 */
 .menu-header {
-    background-color: #13263d;
+    background-color: #2d5a9e;
     height: 60px;
     display: flex;
     align-items: center;
@@ -161,7 +161,7 @@
 /* ElementUI */
 .el-menu {
     border: none;
-    background-color: #1b3555;
+    background-color: #3969b2;
 }
 
 .el-tooltip__trigger {
@@ -172,11 +172,11 @@
     color: #fff !important;
     height: 50px;
     line-height: 50px;
-    background-color: #1b3555 !important;
+    background-color: #3969b2 !important;
 }
 
 .el-sub-menu__title:hover {
-    background-color: #0f1f33 !important; /* 悬浮时稍微深一点的蓝色 */
+    background-color: #2d5a9e !important; /* 悬浮时稍微深一点的蓝色 */
     color: #fff !important;
 }
 
@@ -184,7 +184,7 @@
     color: #fff;
     height: 50px;
     line-height: 50px;
-    background-color: #1b3555 !important; /* 必须加上这个背景色，否则鼠标离开会出现白色 */
+    background-color: #3969b2 !important; /* 必须加上这个背景色，否则鼠标离开会出现白色 */
     margin-left: 0;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .el-menu--inline .el-menu-item {
-    background-color: #1b3555 !important;
+    background-color: #3969b2 !important;
 }
 
 .el-menu-item.is-active {
@@ -208,7 +208,7 @@
 }
 
 .el-menu-item:hover {
-    background-color: #0f1f33 !important;
+    background-color: #2d5a9e !important;
     color: #fff !important;
 }
 

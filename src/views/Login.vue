@@ -1,7 +1,10 @@
 <template>
   <div class="login-container">
+    <div class="login-img">
+      <img src="@/assets/imgs/login.jpg" alt="">
+    </div>
     <div class="login-box">
-      <div style="font-weight: bold; font-size: 24px; text-align: center; margin-bottom: 30px; color: #409EFF">
+      <div style="font-weight: bold; font-size: 32px; text-align: center; margin-bottom: 40px; margin-top: 10px; color: #409EFF">
         欢迎登录科研管理系统</div>
       <el-form ref="formRef" :model="data.form" :rules="data.rules">
         <el-form-item prop="username">
@@ -12,7 +15,7 @@
             placeholder="请输入密码"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button size="large" type="primary" style="width: 100%" @click="login">登 录</el-button>
+          <el-button size="large" type="primary" style="width: 100%; margin-top: 20px;" @click="login">登 录</el-button>
         </el-form-item>
         <!-- <div style="text-align: right">
           还没有账号？请 <a href="/register">注册</a>
@@ -71,15 +74,48 @@ const login = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url("@/assets/imgs/bg.jpg");
+  background: linear-gradient(45deg, #c8ddf2, #7ab3d8, #4683d4, #2154a3);
   background-size: cover;
 }
 
+.login-img {
+  width: 400px;
+  height: 450px;
+}
+
+.login-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px 0 0 5px;
+}
+
 .login-box {
-  width: 350px;
-  padding: 30px;
-  border-radius: 5px;
+  width: 400px;
+  height: 450px;
+  padding: 40px;
+  border-radius: 0 5px 5px 0;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   background-color: rgb(255, 255, 255);
+}
+
+/* 表单项样式优化 */
+.login-box :deep(.el-form-item) {
+  margin-bottom: 30px; /* 增加表单项之间的间距 */
+}
+
+.login-box :deep(.el-input__wrapper) {
+  height: 50px;
+  padding: 0 15px;
+}
+
+.login-box :deep(.el-button--large) {
+  height: 50px;
+  font-size: 17px;
+  margin-top: 10px;
+}
+
+.login-box :deep(.el-input__inner) {
+  font-size: 15px;
 }
 </style>

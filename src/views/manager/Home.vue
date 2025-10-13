@@ -1,19 +1,64 @@
 <template>
-  <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <div class="card" style="margin-bottom: 15px; margin-top: 15px; width: 80%; font-weight: bold; font-size: 18px;">您好！{{ data.user?.name }}，欢迎使用本系统！</div>
-    <div class="card" style="max-height: calc(100vh - 185px); width: 80%; overflow-y: auto;">
-      <div style="font-weight: bold; font-size: 18px; padding: 10px">系统公告</div>
-      <el-timeline style="margin-top: 16px; margin-right: 45px;">
-        <el-timeline-item
-            v-for="(item, index) in data.noticeData"
-            :key="index"
-            :timestamp="item.time"
-            :color="index < 2 ? '#FF0033' : '#D4D7DE'"
-        >
-          <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">{{ item.title }}</div>
-          <div style="font-size: 15px; line-height: 30px;">{{ item.content }}</div>
-        </el-timeline-item>
-      </el-timeline>
+  <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;;">
+    <div class="card" style="margin-bottom: 10px; margin-top: 15px; width: 85%; font-weight: bold; font-size: 18px; display: flex; align-items: center; padding-top: 10px; padding-bottom: 10px; background-color: #78c8f4;">
+      <div style="
+        width: 35px; 
+        height: 35px; 
+        border-radius: 50%; 
+        background: linear-gradient(135deg, #ffebee, #ffcdd2);
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        margin-right: 15px;
+        margin-left: 11px;
+        box-shadow: 0 3px 8px rgba(244, 67, 54, 0.3);
+      ">
+        <el-icon size="18" color="#d32f2f">
+          <BellFilled />
+        </el-icon>
+      </div>
+      您好！{{ data.user?.name }}，欢迎使用本系统！
+    </div>
+    <div class="card notice-box">
+      <div class="notice-header">
+        <div style="display: flex; align-items: center;">
+          <div style="
+            width: 35px; 
+            height: 35px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin-right: 15px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            box-shadow: 0 3px 8px rgba(33, 150, 243, 0.3);
+          ">
+            <el-icon size="18" color="#1976d2">
+              <List />
+            </el-icon>
+          </div>
+          系统公告
+        </div>
+        <div style="color: #666; font-size: 13px; font-weight: normal;">
+          共 {{ data.noticeData.length }} 条公告
+        </div>
+      </div>
+      <div class="notice-content">
+        <el-timeline style="margin-top: 16px; margin-right: 45px; padding-bottom: 20px;">
+          <el-timeline-item
+              v-for="(item, index) in data.noticeData"
+              :key="index"
+              :timestamp="item.time"
+              :type="index < 2 ? 'error' : 'primary'"
+              :color="index < 2 ? '#f70303' : null"
+          >
+            <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">{{ item.title }}</div>
+            <div style="font-size: 14px; line-height: 22px;">{{ item.content }}</div>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
     </div>
   </div>
 </template>
@@ -23,17 +68,20 @@
 import {reactive, onMounted} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "element-plus";
+import {List, BellFilled, StarFilled} from "@element-plus/icons-vue";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   noticeData: [],
-  laboratoryLevel: null
+  laboratoryLevel: null,
+  totalNotice: null
 })
 
 const loadNotice = () => {
   request.get('/notice/selectAll').then(res => {
     if (res.code === '200') {
-      data.noticeData = res.data
+      data.noticeData = res.data.list
+      data.totalNotice = res.data.total
     } else {
       ElMessage.error(res.msg)
     }
@@ -74,3 +122,60 @@ onMounted(() => {
 })
 loadNotice()
 </script>
+
+<style scoped>
+.notice-box {
+  max-height: calc(100vh - 170px);
+  width: 85%; 
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url('@/assets/imgs/notice.png');
+}
+
+.notice-header {
+  flex-shrink: 0;
+  font-weight: bold; 
+  font-size: 18px; 
+  margin-left: 10px;
+  margin-right: 10px;
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+  position: sticky; 
+  top: 0; 
+  z-index: 10;
+  padding: 10px 0;
+}
+
+.notice-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.notice-content ul {
+  padding-bottom: 0 !important;
+}
+
+/* 自定义滚动条样式 */
+.notice-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notice-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.notice-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.notice-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>

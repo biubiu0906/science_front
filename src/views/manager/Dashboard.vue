@@ -438,7 +438,7 @@ const loadBaseData = () => {
 const loadNotice = () => {
   request.get('/notice/selectAll').then(res => {
     if (res.code === '200') {
-      data.noticeData = res.data
+      data.noticeData = res.data.list
     } else {
       ElMessage.error(res.msg)
     }
