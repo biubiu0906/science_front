@@ -12,7 +12,7 @@
         </div>
 
         <div class="card" style="margin-bottom: 5px">
-            <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+            <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
                 <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
                 <el-table-column prop="projectName" label="项目名称" />
                 <el-table-column prop="projectCode" label="项目编号" />

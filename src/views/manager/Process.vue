@@ -14,7 +14,7 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="projectName" label="项目名称" sortable />
         <el-table-column prop="projectCode" label="项目编号" sortable />
         <el-table-column prop="teacherName" label="教师姓名" sortable />
@@ -42,7 +42,7 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" circle size="small" :icon="Edit"
+            <el-button v-if="data.user.role === 'TEACHER'" type="primary" circle size="small" :icon="Edit"
               @click="handleEdit(scope.row)"></el-button>
             <el-button type="danger" circle size="small" :icon="Delete"
               @click="del(scope.row.id)"></el-button>
@@ -108,6 +108,10 @@ const data = reactive({
   projectData: [],
   laboratoryLevel: null
 })
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const formRef = ref()
 const rules = reactive({

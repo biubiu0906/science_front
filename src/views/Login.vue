@@ -14,6 +14,14 @@
           <el-input show-password :prefix-icon="Lock" size="large" v-model="data.form.password"
             placeholder="请输入密码"></el-input>
         </el-form-item>
+        <el-form-item prop="role">
+          <div style="font-size: 15px; margin-right: 10px; margin-left: 10px;">角色：</div>
+          <el-radio-group v-model="data.form.role">
+            <el-radio value="TEACHER">教师</el-radio>
+            <el-radio value="LAB">实验室</el-radio>
+            <el-radio value="ADMIN">管理员</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item>
           <el-button size="large" type="primary" style="width: 100%; margin-top: 20px;" @click="login">登 录</el-button>
         </el-form-item>
@@ -33,7 +41,9 @@ import { ElMessage } from "element-plus";
 import router from "@/router/index.js";
 
 const data = reactive({
-  form: {},
+  form: {
+    role: 'TEACHER'
+  },
   dialogVisible: true,
   rules: {
     username: [
@@ -55,8 +65,14 @@ const login = () => {
           ElMessage.success('登录成功')
           // 存储用户信息到浏览器的缓存
           localStorage.setItem('xm-user', JSON.stringify(res.data))
+          
+          const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
           setTimeout(() => {
-            location.href = '/manager/home'
+            if(userInfo.role === 'ADMIN' || userInfo.role === 'KEY_LABORATORY') {
+              location.href = '/manager/dashboard'
+            } else {
+              location.href = '/manager/home'
+            }
           }, 500)
         } else {
           ElMessage.error(res.msg)
@@ -91,7 +107,7 @@ const login = () => {
 }
 
 .login-box {
-  width: 400px;
+  width: 450px;
   height: 450px;
   padding: 40px;
   border-radius: 0 5px 5px 0;

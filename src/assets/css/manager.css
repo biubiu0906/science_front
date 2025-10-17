@@ -13,23 +13,31 @@
 .manager-main-left {
     width: 200px;
     background-color: #3969b2;
-    height: 100vh;
+    height: calc(100vh - 10px);
     position: fixed;
     left: 0;
     top: 0;
     z-index: 1000;
     box-shadow: 2px 0 4px rgba(0, 21, 41, .08);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
     /* 隐藏滚动条 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 和 Edge */
     transition: width 0.3s ease;
+
+    margin: 5px;
+    border-radius: 5px;
 }
 
 /* 侧边栏折叠状态 */
 .manager-main-left.collapsed {
     width: 64px;
+}
+
+.manager-header.collapsed {
+    margin-left: 10px;
 }
 
 /* 隐藏 Webkit 浏览器的滚动条 */
@@ -40,7 +48,7 @@
 /* 右侧内容区域 - 独立滚动 */
 .manager-main-right {
     flex: 1;
-    margin-left: 200px; /* 为侧边栏留出空间 */
+    margin-left: 210px; /* 为侧边栏留出空间 */
     background-color: #f8f8ff;
     height: 100vh;
     display: flex;
@@ -63,14 +71,15 @@
     display: none;
 }
 
-/* 头部样式 - 现在在右侧内容区内 */
+/* 头部样式 */
 .manager-header {
     height: 59px;
     background-color: #3969b2;
     display: flex;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
-    margin-bottom: 0;
+    margin:5px 5px 0 0;
+    border-radius: 5px;
 }
 
 /* 折叠按钮样式 */
@@ -114,7 +123,15 @@
     /* 隐藏滚动条 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 和 Edge */
-    background-color: #e9edf2;
+    /*background-color: #e9edf2;*/
+
+    /* 使用背景图片，遮罩层通过伪元素实现 */
+    position: relative;
+    background-image: url('../imgs/content-bg.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
 }
 
 /* 隐藏 Webkit 浏览器的滚动条 */
@@ -122,7 +139,26 @@
     display: none;
 }
 
-/* 菜单头部样式 */
+/* 内容区域的遮罩层 */
+.content-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.815);
+    pointer-events: none; /* 确保遮罩层不会阻挡鼠标事件 */
+    z-index: 1;
+}
+
+/* 确保内容在遮罩层之上 */
+.content-area > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* 菜单头部样式 - 固定在顶部 */
 .menu-header {
     background-color: #2d5a9e;
     height: 60px;
@@ -131,6 +167,10 @@
     justify-content: center;
     border-bottom: 1px solid #e6e6e6;
     transition: justify-content 0.3s ease;
+    flex-shrink: 0; /* 防止被压缩 */
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 /* 折叠时菜单头部居中 */
@@ -162,6 +202,17 @@
 .el-menu {
     border: none;
     background-color: #3969b2;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 隐藏滚动条 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 和 Edge */
+}
+
+/* 隐藏菜单滚动条 */
+.el-menu::-webkit-scrollbar {
+    display: none;
 }
 
 .el-tooltip__trigger {
@@ -223,4 +274,18 @@
 th.el-table__cell {
     background-color: #f8f8f8 !important;
     color: #666;
+}
+
+.menu-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 10px 20px 10px;
+    background-color: #3969b2;
+    flex-shrink: 0;
+}
+
+.menu-footer img {
+    width: 150px;
+    height: 120px;
 }

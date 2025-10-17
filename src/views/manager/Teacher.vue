@@ -31,6 +31,7 @@
         <el-table-column prop="phone" label="电话" min-width="120" sortable />
         <el-table-column prop="email" label="邮箱" min-width="120" sortable />
         <el-table-column prop="unit" label="单位" min-width="120" sortable />
+        <el-table-column prop="ofLab" label="所属实验室" min-width="120" sortable />
         <el-table-column prop="employmentType" label="全职/非全职" min-width="130" sortable>
           <template v-slot="scope">
             <el-tag 
@@ -74,7 +75,7 @@
     </div>
 
     <el-dialog title="教师信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px; margin-right: 30px;">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
         </el-form-item>
@@ -92,6 +93,16 @@
         </el-form-item>
         <el-form-item prop="unit" label="单位">
           <el-input v-model="data.form.unit" placeholder="请输入单位"></el-input>
+        </el-form-item>
+        <el-form-item v-if="data.user.role==='ADMIN'" prop="ofLab" label="所属实验室">
+          <el-select v-model="data.form.ofLab" placeholder="请选择所属实验室">
+            <el-option
+              v-for="item in data.labOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item prop="gender" label="性别">
           <el-radio-group v-model="data.form.gender">
@@ -143,6 +154,7 @@ const data = reactive({
   formVisible: false,
   form: {},
   tableData: [],
+  labOptions: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
@@ -179,6 +191,9 @@ const rules = reactive({
   unit: [
     { required: true, message: '请输入单位', trigger: 'blur' },
   ],
+  ofLab: [
+    { required: true, message: '请输入所属实验室', trigger: 'blur' },
+  ],
 })
 
 const load = () => {
@@ -210,6 +225,25 @@ const load = () => {
     })
   }
 }
+
+const loadLabOptions = () => {
+  request.get('/laboratory/selectAll').then(res => {
+    if (res.code === '200') {
+      // 后端直接返回数组，不是包装在list中
+      data.labOptions = res.data || []
+      data.labOptions.forEach(item => {
+        // 后端返回的字段是userName，不是username
+        item.value = item.userName
+        item.label = item.laboratoryName
+      })
+      console.log('实验室选项加载成功:', data.labOptions)
+    }
+  }).catch(error => {
+    console.error('加载实验室选项失败:', error)
+    ElMessage.error('加载实验室选项失败')
+  })
+}
+
 const handleAdd = () => {
   data.form = {}
   data.formVisible = true
@@ -306,6 +340,7 @@ const togglePasswordVisibility = () => {
 }
 
 load()
+loadLabOptions()
 </script>
 
 

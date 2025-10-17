@@ -1,8 +1,9 @@
 <template>
     <el-card class="main-card">
-        <el-button type="primary" size="small" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'">新增</el-button>
+        <h3 style="margin-left: 20px;">重点实验室申请</h3>
+        <el-button type="primary" size="small" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'" style="margin-left: 20px;">新增</el-button>
         <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList" class="table-center">
+            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
                 <el-table-column prop="id" label="申请编号" />
                 <el-table-column prop="institutionName" label="实验室名称" />
                 <el-table-column prop="establishmentDate" label="成立日期" width="120" />
@@ -135,7 +136,7 @@
                         <h3>依托学科 & 研究方向</h3>
                         <el-form label-width="120px" ref="memberForm" :model="formData" :rules="rules">
                             <el-form-item label="其他依托学科" prop="direction.disciplines">
-                                <el-table :data="formData.direction.disciplines" border style="width: 100%">
+                                <el-table :data="formData.direction.disciplines" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
                                     <el-table-column label="依托学科" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -168,7 +169,7 @@
                                 </el-table>
                             </el-form-item>
                             <el-form-item label="研究方向" prop="direction.researches">
-                                <el-table :data="formData.direction.researches" border style="width: 100%">
+                                <el-table :data="formData.direction.researches" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
                                     <el-table-column label="研究方向" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -223,7 +224,7 @@
                         <!-- 研究方向 -->
                         <el-form ref="buildingsForm" :model="formData.buildings">
                             <el-form-item>
-                                <el-table :data="formData.buildings.construacts" border style="width: 100%">
+                                <el-table :data="formData.buildings.construacts" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
                                     <el-table-column label="子机构名称" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -761,7 +762,7 @@ const getFileName = (fileUrl) => {
 /* 确保表单控件占满宽度 */
 :deep(.el-card__body) {
     width: 100%;
-    /* 表单控件占满剩余宽度 */
+    padding:0;
 }
 
 .success-container {

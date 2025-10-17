@@ -24,6 +24,7 @@
           <template v-slot="scope">
             <el-tag v-if="scope.row.projectStatus === '0'" type="primary">在研</el-tag>
             <el-tag v-if="scope.row.projectStatus === '1'" type="success">结项</el-tag>
+            <el-tag v-if="scope.row.projectStatus === '2'" type="info">未开始</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="teacherName" label="申请教师" min-width="110" sortable />
@@ -45,7 +46,7 @@
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
             <el-button type="primary" circle :icon="View" size="small" @click="handleQuery(scope.row)" title="查看详情"></el-button>
-            <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
+            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle
               :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
             <el-button v-if="data.user.role === 'ADMIN'" type="warning" circle :icon="Tickets" size="small"
               @click="handleCheck(scope.row)"></el-button>
@@ -96,9 +97,6 @@
             <el-form ref="formRef" :rules="data.isViewMode ? {} : rules" :model="data.form" label-width="120px">
               <el-form-item prop="name" label="项目名称" :required="!data.isViewMode">
                 <el-input v-model="data.form.name" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.name ? '暂无信息' : '请输入项目名称'" style="width: 70%;"></el-input>
-              </el-form-item>
-              <el-form-item prop="code" label="立项编号" :required="!data.isViewMode">
-                <el-input v-model="data.form.code" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.code ? '暂无信息' : '请输入立项编号'" style="width: 70%;"></el-input>
               </el-form-item>
               <el-form-item prop="researchType" label="研究类型" :required="!data.isViewMode">
                 <el-select v-model="data.form.researchType" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.researchType ? '暂无信息' : '请选择研究类型'" style="width: 70%;">
@@ -215,6 +213,7 @@
                 <el-radio-group v-else v-model="data.form.projectStatus" :disabled="data.isViewMode" style="width: 70%;">
                   <el-radio value="0">在研</el-radio>
                   <el-radio value="1">结项</el-radio>
+                  <el-radio value="2">未开始</el-radio>
                 </el-radio-group>
               </el-form-item>
               <el-form-item prop="completionAppraisal" label="结项鉴定情况">
@@ -401,13 +400,8 @@
              :before-upload="beforeAttachmentUpload"
              :limit="1"
              :file-list="data.tempAttachment.fileList || []"
-             accept=".pdf,.jpg,.jpeg,.png,.txt">
+             accept=".pdf,.jpg,.jpeg,.png,.txt,.docx">
              <el-button type="primary" size="small">点击上传</el-button>
-             <template #tip>
-               <div class="el-upload__tip">
-                 <span style="color: red;">*</span>支持PDF,JPG,JPEG,PNG,TXT文件格式，大小不超过5MB
-               </div>
-             </template>
            </el-upload>
          </el-form-item>
        </el-form>
@@ -486,7 +480,6 @@ const data = reactive({
   form: {
     // 项目信息
     name: '',
-    code: '',
     researchType: '',
     subjectCategory: '',
     projectCategory: '',
@@ -521,9 +514,6 @@ const rules = reactive({
   // 项目信息验证规则
   name: [
     { required: true, message: '请输入项目名称', trigger: 'blur' },
-  ],
-  code: [
-    { required: true, message: '请输入立项编号', trigger: 'blur' },
   ],
   researchType: [
     { required: true, message: '请选择研究类型', trigger: 'change' },
@@ -595,7 +585,6 @@ const handleAdd = () => {
     data.form = {
       // 项目信息
       name: '',
-      code: '',
       researchType: '',
       subjectCategory: '',
       projectCategory: '',
@@ -826,13 +815,15 @@ const beforeAttachmentUpload = (file) => {
     'image/jpeg', 'image/jpg', 'image/png',
     // 文本文件
     'text/plain',
+    // Word文档
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ]
   
   const isAllowedType = allowedTypes.includes(file.type)
   const isLt10M = file.size / 1024 / 1024 < 10
 
   if (!isAllowedType) {
-    ElMessage.error('支持png,jpg,jpeg,txt,pdf文件格式')
+    ElMessage.error('支持png,jpg,jpeg,txt,pdf,docx文件格式')
     return false
   }
   if (!isLt10M) {
@@ -882,7 +873,10 @@ const previewFile = (attachment) => {
     fileType = 'pdf'
   }
   // Word文档
-  else if (['doc', 'docx'].includes(fileExtension)) {
+  else if (fileExtension === 'docx') {
+    fileType = 'docx'
+  }
+  else if (fileExtension === 'doc') {
     fileType = 'word'
   }
   // 文本文件
@@ -968,7 +962,6 @@ const resetCurrentTab = () => {
       case 'projectInfo':
         // 重置项目信息
         data.form.name = ''
-        data.form.code = ''
         data.form.researchType = ''
         data.form.subjectCategory = ''
         data.form.projectCategory = ''
@@ -1019,9 +1012,6 @@ const saveCurrentTab = () => {
       if (!data.form.name) {
         isValid = false
         errorMessage = '请输入项目名称'
-      } else if (!data.form.code) {
-        isValid = false
-        errorMessage = '请输入立项编号'
       } else if (!data.form.researchType) {
         isValid = false
         errorMessage = '请选择研究类型'
@@ -1072,7 +1062,6 @@ const saveCurrentTab = () => {
     case 'projectInfo':
       tabData.projectInfo = {
         name: data.form.name,
-        code: data.form.code,
         researchType: data.form.researchType,
         subjectCategory: data.form.subjectCategory,
         projectCategory: data.form.projectCategory,
@@ -1123,9 +1112,6 @@ const submitForm = () => {
   if (!data.form.name) {
     isValid = false
     errorMessage = '请输入项目名称'
-  } else if (!data.form.code) {
-    isValid = false
-    errorMessage = '请输入立项编号'
   } else if (!data.form.researchType) {
     isValid = false
     errorMessage = '请选择研究类型'

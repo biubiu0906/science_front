@@ -14,7 +14,7 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="avatar" label="头像" align="center">
           <template v-slot="scope">
             <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
@@ -118,6 +118,10 @@ const data = reactive({
   ids: [],
   showPassword: false // 控制密码显示状态
 })
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const rules = reactive({
   username: [

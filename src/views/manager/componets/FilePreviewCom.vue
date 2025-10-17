@@ -4,7 +4,7 @@
     <el-dialog
       v-model="visible"
       :title="dialogTitle"
-      width="60%"
+      width="50%"
       height="80%"
       :before-close="handleClose"
       destroy-on-close
@@ -40,6 +40,16 @@
           />
         </div>
 
+        <!-- DOCX文件预览 - 使用vue-office -->
+        <div v-else-if="fileType === 'docx'" class="docx-preview">
+          <VueOfficeDocx
+            :src="fileUrl"
+            @rendered="onDocxRendered"
+            @error="onDocxError"
+            style="height: 100%; width: 100%;"
+          />
+        </div>
+
         <!-- 文本文件预览 -->
         <div v-else-if="fileType === 'text'" class="text-preview">
           <pre class="text-content">{{ textContent }}</pre>
@@ -69,6 +79,8 @@
 import { ref, watch, nextTick, onUnmounted } from 'vue'
 import VuePDF from 'vue3-pdf-app'
 import 'vue3-pdf-app/dist/icons/main.css'
+import VueOfficeDocx from '@vue-office/docx'
+import '@vue-office/docx/lib/index.css'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -182,6 +194,10 @@ const initPreview = async () => {
         scale.value = 1.0
         loading.value = false
         break
+      case 'docx':
+        // DOCX预览由vue-office组件处理，这里只需要重置状态
+        loading.value = false
+        break
       case 'text':
         await loadText()
         break
@@ -233,42 +249,6 @@ const onPdfRendered = () => {
 }
 
 /**
- * 上一页
- */
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-/**
- * 下一页
- */
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-/**
- * 放大
- */
-const zoomIn = () => {
-  if (scale.value < 3) {
-    scale.value += 0.25
-  }
-}
-
-/**
- * 缩小
- */
-const zoomOut = () => {
-  if (scale.value > 0.5) {
-    scale.value -= 0.25
-  }
-}
-
-/**
  * 加载文本文件
  */
 const loadText = async () => {
@@ -290,6 +270,24 @@ const loadText = async () => {
 const handleError = () => {
   loading.value = false
   ElMessage.error('文件加载失败')
+}
+
+/**
+ * DOCX文件渲染完成事件
+ */
+const onDocxRendered = () => {
+  console.log('DOCX文件渲染完成')
+  loading.value = false
+  ElMessage.success('DOCX文件加载成功')
+}
+
+/**
+ * DOCX文件加载失败事件
+ */
+const onDocxError = (error) => {
+  console.error('DOCX文件加载失败:', error)
+  loading.value = false
+  ElMessage.error('DOCX文件加载失败，请检查文件格式或网络连接')
 }
 
 /**
@@ -395,6 +393,7 @@ onUnmounted(() => {
   height: 100%;
   flex: 1;
   overflow: hidden;
+  align-items: center;
 }
 
 .pdf-viewer {
@@ -406,6 +405,41 @@ onUnmounted(() => {
   margin-bottom: 10px;
   width: 100%;
   max-width: 100%;
+}
+
+/* DOCX预览样式 */
+.docx-preview {
+  height: 100%;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-radius: 4px;
+}
+
+.docx-preview :deep(.vue-office-docx) {
+  height: 100% !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.docx-preview :deep(.docx-container) {
+  padding: 20px !important;
+  background-color: #ffffff !important;
+}
+
+.docx-preview :deep(.docx-wrapper) {
+  padding: 30px !important;
+  padding-bottom: 0px !important;
+  display: flex !important;
+  align-items: center !important;
+  background: none !important;
+  flex-flow: row nowrap !important;
+}
+
+:deep(.docx) {
+  padding: 30px !important;
 }
 
 
@@ -515,25 +549,37 @@ onUnmounted(() => {
 :deep(.pdfViewer) {
   left: 0 !important;
   width: 100% !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
 /* 确保PDF页面不超出容器宽度 */
 :deep(.page) {
-  max-width: 100% !important;
-  margin: 0 auto !important;
+  margin: 20px auto !important;
+  transform: scale(1.0) !important;
+  transform-origin: center !important;
 }
 
 /* 确保PDF画布不超出容器宽度 */
 :deep(.canvasWrapper) {
   max-width: 100% !important;
+  width: 100% !important;
   overflow: hidden !important;
 }
 
 :deep(.canvasWrapper canvas) {
   max-width: 100% !important;
   height: auto !important;
+  transform-origin: center !important;
+}
+
+:deep(.textLayer) {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
 }
 
 /* 移除所有可能的水平滚动 */
@@ -567,4 +613,7 @@ onUnmounted(() => {
   border: none !important;
 }
 
+:deep(.pdf-app.light) {
+  --pdf-app-background-color: none !important;
+}
 </style>

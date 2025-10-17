@@ -13,7 +13,7 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="title" label="标题" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.title)">
@@ -78,6 +78,10 @@ const data = reactive({
   title: null,
   ids: []
 })
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const load = () => {
   request.get('/notice/selectPage', {
@@ -188,7 +192,7 @@ load()
 /* 内容两端对齐 */
 .content-justify {
   text-align: justify;
-  text-justify: inter-ideograph; /* 中文字符间对齐 */
+  text-justify: inter-ideograph;
   line-height: 1.5;
 }
 </style>

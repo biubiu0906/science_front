@@ -11,7 +11,7 @@
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="teacherName" label="教师姓名" />
         <el-table-column prop="activityName" label="活动名称" />

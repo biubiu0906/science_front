@@ -6,8 +6,8 @@
       <div class="manager-main-left" :class="{ 'collapsed': isCollapse }">
         <el-menu 
           :default-active="router.currentRoute.value.path" 
-          :default-openeds="['1', '2']" 
           :collapse="isCollapse"
+          :default-openeds="['1','2']"
           router>
           <!-- 菜单头部区域 -->
           <div class="menu-header">
@@ -78,18 +78,22 @@
             <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
           </el-sub-menu>
         </el-menu>
+        <!-- 侧边栏底部图片 -->
+        <!--<div class="menu-footer">
+          <img src="@/assets/imgs/文件夹.png" alt="文件夹" />
+        </div>-->
       </div>
       <!-- 右侧内容区 -->
       <div class="manager-main-right" :class="{ 'sidebar-collapsed': isCollapse }">
         <!-- 头部区域 -->
-        <div class="manager-header">
+        <div class="manager-header" :class="{ 'collapsed': isCollapse }">
           <div class="manager-header-left" @click="isCollapse = !isCollapse">
             <div v-if="isCollapse"><el-icon><Fold /></el-icon></div>
             <div v-else><el-icon><Expand /></el-icon></div>
           </div>
           <div class="manager-header-center">
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="{ path: '/manager/dashboard' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item :to="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/home'">首页</el-breadcrumb-item>
               <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>

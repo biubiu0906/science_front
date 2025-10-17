@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;;">
-    <div class="card" style="margin-bottom: 10px; margin-top: 15px; width: 85%; font-weight: bold; font-size: 18px; display: flex; align-items: center; padding-top: 10px; padding-bottom: 10px; background-color: #78c8f4;">
+    <div class="card header-card">
       <div style="
         width: 35px; 
         height: 35px; 
@@ -41,7 +41,7 @@
           </div>
           系统公告
         </div>
-        <div style="color: #666; font-size: 13px; font-weight: normal;">
+        <div style="color: #333; font-size: 13px; font-weight: normal;">
           共 {{ data.noticeData.length }} 条公告
         </div>
       </div>
@@ -124,15 +124,25 @@ loadNotice()
 </script>
 
 <style scoped>
+.header-card {
+  margin-bottom: 10px; 
+  margin-top: 15px; 
+  width: 85%; 
+  font-weight: bold; 
+  font-size: 18px; 
+  display: flex; 
+  align-items: center; 
+  padding-top: 10px; 
+  padding-bottom: 10px; 
+  background-color: #3871b6;
+}
+
 .notice-box {
   max-height: calc(100vh - 170px);
   width: 85%; 
   display: flex;
   flex-direction: column;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url('@/assets/imgs/notice.png');
+  background: linear-gradient(to bottom,#326db3 0%, #5f8ec4 10%, #fff 30%);
 }
 
 .notice-header {

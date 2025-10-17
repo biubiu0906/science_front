@@ -13,7 +13,7 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="name" label="类型名称" sortable />
         <el-table-column prop="description" label="类型描述" sortable />
         <el-table-column label="操作" width="100" fixed="right">
@@ -65,6 +65,10 @@ const data = reactive({
   name: null,
   ids: []
 })
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const load = () => {
   request.get('/type/selectPage', {

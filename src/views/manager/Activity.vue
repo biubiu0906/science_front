@@ -18,7 +18,7 @@
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="img" label="活动封面" width="100">
           <template v-slot="scope">

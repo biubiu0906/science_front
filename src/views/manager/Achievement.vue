@@ -15,10 +15,10 @@
         <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
-        <el-table-column type="index" label="序号" width="80" />
         <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="projectName" label="项目名称" min-width="150"show-overflow-tooltip sortable />
-        <el-table-column prop="code" label="立项编号" min-width="120" show-overflow-tooltip sortable />
+        <el-table-column prop="projectCode" label="立项编号" min-width="120" show-overflow-tooltip sortable />
         <el-table-column prop="typeName" label="成果类型" min-width="110" show-overflow-tooltip sortable />
         <el-table-column prop="name" label="成果名称" min-width="110" sortable>
           <template v-slot="scope">
@@ -37,7 +37,7 @@
         <el-table-column prop="teacherName" label="教师" min-width="100" sortable />
         <el-table-column prop="process" label="科研过程" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="navTo('/manager/processLine?id=' + scope.row.projectId)">查看</el-button>
+            <el-button type="primary" size="small" @click="handleViewProcess(scope.row.projectId)">查看</el-button>
           </template>
         </el-table-column>
         <el-table-column prop="openFile" label="立项文件" min-width="120" sortable>
@@ -72,7 +72,7 @@
         <el-table-column prop="time" label="审核时间" min-width="110" show-overflow-tooltip sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'KEY_LABORATORY' && scope.row.status === '待审核'" type="primary" circle
+            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle
               :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
             <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle size="small" :icon="View"
               @click="handleCheck(scope.row)"></el-button>
@@ -149,6 +149,59 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 科研过程抽屉 -->
+    <el-drawer v-model="data.drawerVisible" title="科研过程" direction="rtl" size="50%">
+      <div style="padding: 20px">
+        <el-timeline style="max-width: 600px">
+          <el-timeline-item 
+            :timestamp="item.time" 
+            placement="top" 
+            v-for="(item, index) in data.processData" 
+            :key="item.id"
+          >
+            <template #dot>
+              <div style="
+                width: 25px; 
+                height: 25px; 
+                border-radius: 50%; 
+                background: linear-gradient(135deg, #ff6b6b, #ee5a52); 
+                color: white; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                font-weight: bold; 
+                font-size: 13px;
+                box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+                border: 2px solid #fff;
+                position: relative;
+                transform: translate(-30%, -30%);
+                margin: 0;
+              ">
+                {{ index + 1 }}
+              </div>
+            </template>
+            <el-card style="margin-top: 20px;">
+              <div style="margin-bottom: 8px;">
+                <div style="font-size: 15px; font-weight: bold; color: #333333; margin-bottom: 2px;">工作内容：</div>
+                <div style="color: #666; line-height: 1.5; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; text-indent: 2em;">{{ item.content }}</div>
+              </div>
+              <div style="margin-bottom: 8px;">
+                <div style="font-size: 15px; font-weight: bold; color: #333333; margin-bottom: 2px;">遇到的问题：</div>
+                <div style="color: #666; line-height: 1.5; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; text-indent: 2em;">{{ item.question }}</div>
+              </div>
+              <div>
+                <div style="font-size: 15px; font-weight: bold; color: #333333; margin-bottom: 2px;">解决方案：</div>
+                <div style="color: #666; line-height: 1.5; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; text-indent: 2em;">{{ item.solution }}</div>
+              </div>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+        <div v-if="!data.processData.length" style="text-align: center; color: #999; margin-top: 50px;">
+          暂无科研过程数据
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -165,6 +218,7 @@ const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   formVisible: false,
   checkVisible: false,
+  drawerVisible: false, // 抽屉显示状态
   form: {},
   tableData: [],
   pageNum: 1,
@@ -175,7 +229,9 @@ const data = reactive({
   projectData: [],
   typeData: [],
   ids: [],
-  laboratoryLevel: null
+  laboratoryLevel: null,
+  currentProjectId: null, // 当前查看的项目ID
+  processData: [] // 科研过程数据
 })
 
 const rules = reactive({
@@ -191,7 +247,16 @@ const rules = reactive({
   projectId: [
     { required: true, message: '请选择科研项目', trigger: 'blur' },
   ],
+  typeId: [
+    { required: true, message: '请选择成果类型', trigger: 'blur' },
+  ]
+  
 })
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
+
 const navTo = (url) => {
   location.href = url
 }
@@ -341,6 +406,35 @@ const down = (url) => {
   window.open(url)
 }
 
+// 处理查看科研过程
+const handleViewProcess = (projectId) => {
+  data.currentProjectId = projectId
+  data.drawerVisible = true
+  loadProcess()
+}
+
+// 加载科研过程数据
+const loadProcess = () => {
+  if (!data.currentProjectId) return
+  
+  request.get('/process/selectAll', {
+    params: {
+      projectId: data.currentProjectId
+    }
+  }).then(res => {
+    if (res.code === '200') {
+      data.processData = res.data
+    } else {
+      ElMessage.error(res.msg)
+      data.processData = []
+    }
+  }).catch(error => {
+    console.error('获取科研过程数据失败:', error)
+    ElMessage.error('获取科研过程数据失败')
+    data.processData = []
+  })
+}
+
 const getLaboratoryLevel = () => {
   // 检查用户是否有实验室ID
   if (!data.user.laboratoryId) {
@@ -406,5 +500,30 @@ loadType()
   text-align: justify;
   text-justify: inter-ideograph;
   line-height: 1.5;
+}
+
+:deep(.el-drawer__header) {
+  margin-bottom: 0 !important;
+  padding: 15px !important;
+  background-color: #f4f7f9;
+}
+
+:deep(.el-drawer__body) {
+  padding: 0 35px 0 20px !important;
+  background-color: #f4f7f9;
+}
+
+:deep(.el-drawer__title) {
+  font-size: 19px;
+  color: #333;
+}
+
+:deep(.el-card__body) {
+  padding: 15px !important;
+  background-color: #fff;
+}
+
+:deep(.el-card.is-always-shadow) {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.351) !important;
 }
 </style>

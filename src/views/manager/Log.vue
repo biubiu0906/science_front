@@ -10,7 +10,7 @@
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="操作名称" />
         <el-table-column prop="ip" label="IP" />

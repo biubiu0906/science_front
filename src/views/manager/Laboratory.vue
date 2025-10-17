@@ -13,8 +13,8 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
-        <el-table-column prop="name" label="实验室名称" sortable />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
+        <el-table-column prop="laboratoryName" label="实验室名称" sortable />
         <el-table-column prop="laboratoryDescription" label="实验室描述" sortable />
         <el-table-column prop="laboratoryAddress" label="实验室地址" sortable />
         <el-table-column prop="type" label="实验室类别" sortable>
@@ -97,7 +97,9 @@ import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
 // 表单引用
 const formRef = ref(null)
 
-const baseUrl = import.meta.env.VITE_BASE_URL
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const data = reactive({
   formVisible: false,

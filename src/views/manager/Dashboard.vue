@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div style="display: flex; margin-bottom: 10px">
+  <div style="height: calc(100vh - 89px); overflow-y: auto; padding-right: 10px;">
+    <div style="display: flex; margin-bottom: 10px;">
       <!-- 左侧：系统公告 -->
       <div class="card" style="width: 50%; margin-right: 5px; height: 250px; padding: 20px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -53,7 +53,7 @@
       <!-- 右侧：统计数据 -->
       <div style="width: 50%; margin-left: 5px; height: 250px; box-sizing: border-box;">
         <!-- 第一行：科研项目数、科研成果总数 -->
-        <div style="display: flex; margin-bottom: 10px">
+        <div style="display: flex; margin-bottom: 10px;">
           <div style="flex: 1; margin-right: 5px; display: flex; height: 120px; align-items: center" class="card">
             <div style="flex: 1; text-align: center">
               <div style="
@@ -74,7 +74,7 @@
             </div>
             <div style="flex: 1">
               <div style="font-size: 20px">科研项目数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.project }}</div>
+              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.project || 0 }}</div>
             </div>
           </div>
           <div style="flex: 1; margin-left: 5px; display: flex; height: 120px; align-items: center" class="card">
@@ -97,13 +97,13 @@
             </div>
             <div style="flex: 1">
               <div style="font-size: 20px">科研成果数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.achievement }}</div>
+              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.achievement || 0 }}</div>
             </div>
           </div>
         </div>
         
         <!-- 第二行：反馈总数、教师总数 -->
-        <div style="display: flex">
+        <div style="display: flex;">
           <div style="flex: 1; margin-right: 5px; display: flex; height: 120px; align-items: center" class="card">
             <div style="flex: 1; text-align: center">
               <div style="
@@ -123,8 +123,8 @@
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 20px">反馈总数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.feedback }}</div>
+              <div style="font-size: 20px">实验室总数</div>
+              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
             </div>
           </div>
           <div style="flex: 1; margin-left: 5px; display: flex; height: 120px; align-items: center" class="card">
@@ -147,23 +147,24 @@
             </div>
             <div style="flex: 1">
               <div style="font-size: 20px">教师总数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.teacher }}</div>
+              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.teacher || 0 }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div style="margin-top: 10px; display: flex">
+    <div style="margin-top: 10px; display: flex;">
       <div id="pie" style="flex: 1; margin-right: 5px; height: 400px" class="card"></div>
       <div id="bar1" style="flex: 1; margin-left: 5px; height: 400px" class="card"></div>
     </div>
-    <div style="margin-top: 10px; display: flex">
-      <div id="bar2" style="flex: 1; margin-right: 5px; height: 400px" class="card"></div>
-      <div id="line" style="flex: 1; margin-left: 5px; height: 400px" class="card"></div>
+    <div style="margin-top: 10px; display: flex;">
+      <div id="bar2" style="flex: 1; margin-right: 5px; height: 400px; padding: 10px;" class="card"></div>
+      <!--<div id="line" style="flex: 1; margin-left: 5px; height: 400px" class="card"></div>-->
+      <div id="pie2" style="flex: 1; margin-left: 5px; height: 400px; padding: 10px;" class="card"></div>
     </div>
     
     <!-- 第五行：排行榜 -->
-    <div style="margin-top: 10px; display: flex">
+    <div style="margin-top: 10px; display: flex;">
       <!-- 左侧排行榜：科研项目Top5 -->
       <div class="card" style="flex: 1; margin-right: 5px; height: 400px; padding: 20px; box-sizing: border-box;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -174,8 +175,14 @@
           </div>
         </div>
         <div>
+          <!-- 无数据显示 -->
+          <div v-if="!data.projectRanking || data.projectRanking.length === 0" 
+               style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
+            暂无数据
+          </div>
+          
           <!-- 管理员角色：显示实验室排行 -->
-          <div v-if="data.user.role === 'ADMIN'" 
+          <div v-else-if="data.user.role === 'ADMIN'" 
                v-for="(item, index) in data.projectRanking" 
                :key="'project-lab-' + index"
                style="
@@ -204,7 +211,7 @@
               </div>
               <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
             </div>
-            <div style="font-size: 18px; font-weight: bold; color: #409eff;">{{ item.count }}</div>
+            <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
           </div>
           
           <!-- 重点实验室角色：显示教师排行 -->
@@ -252,8 +259,14 @@
           </div>
         </div>
         <div>
+          <!-- 无数据显示 -->
+          <div v-if="!data.achievementRanking || data.achievementRanking.length === 0" 
+               style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
+            暂无数据
+          </div>
+          
           <!-- 管理员：显示实验室排行 -->
-          <div v-if="data.user.role === 'ADMIN'" 
+          <div v-else-if="data.user.role === 'ADMIN'" 
                v-for="(item, index) in data.achievementRanking" 
                :key="'achievement-lab-' + index"
                style="
@@ -409,18 +422,8 @@ const data = reactive({
   allNoticesVisible: false, // 查看全部公告弹窗显示状态
   // 排行榜模拟数据 - 管理员角色（实验室维度）
   projectRanking: [
-    { name: '人工智能实验室', count: 45 },
-    { name: '大数据分析实验室', count: 38 },
-    { name: '网络安全实验室', count: 32 },
-    { name: '软件工程实验室', count: 28 },
-    { name: '物联网实验室', count: 25 }
   ],
   achievementRanking: [
-    { name: '人工智能实验室', count: 28 },
-    { name: '大数据分析实验室', count: 24 },
-    { name: '网络安全实验室', count: 20 },
-    { name: '软件工程实验室', count: 18 },
-    { name: '物联网实验室', count: 15 }
   ],
 })
 
@@ -490,9 +493,33 @@ const loadBar1 = () => {
     if (res.code === '200') {
       let chartDom = document.getElementById('bar1')
       let myChart = echarts.init(chartDom)
-      bar1Options.xAxis.data = res.data.xAxis
-      bar1Options.series[0].data = res.data.yAxis
-      myChart.setOption(bar1Options)
+      
+      // 检查是否有数据
+      if (!res.data.xAxis || !res.data.yAxis || res.data.xAxis.length === 0 || res.data.yAxis.length === 0) {
+        // 无数据时显示空状态
+        myChart.setOption({
+          title: {
+            text: '系统中不同老师的科研项目数量',
+            subtext: '统计维度：教师',
+            left: 'center'
+          },
+          graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: '暂无数据',
+              fontSize: 14,
+              fill: '#999'
+            }
+          }
+        })
+      } else {
+        // 有数据时正常显示
+        bar1Options.xAxis.data = res.data.xAxis
+        bar1Options.series[0].data = res.data.yAxis
+        myChart.setOption(bar1Options)
+      }
     }
   })
 }
@@ -502,9 +529,33 @@ const loadBar2 = () => {
     if (res.code === '200') {
       let chartDom = document.getElementById('bar2')
       let myChart = echarts.init(chartDom)
-      bar2Options.xAxis.data = res.data.xAxis
-      bar2Options.series[0].data = res.data.yAxis
-      myChart.setOption(bar2Options)
+      
+      // 检查是否有数据
+      if (!res.data.xAxis || !res.data.yAxis || res.data.xAxis.length === 0 || res.data.yAxis.length === 0) {
+        // 无数据时显示空状态
+        myChart.setOption({
+          title: {
+            text: '系统中不同老师的科研成果数量',
+            subtext: '统计维度：教师',
+            left: 'center'
+          },
+          graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: '暂无数据',
+              fontSize: 14,
+              fill: '#999'
+            }
+          }
+        })
+      } else {
+        // 有数据时正常显示
+        bar2Options.xAxis.data = res.data.xAxis
+        bar2Options.series[0].data = res.data.yAxis
+        myChart.setOption(bar2Options)
+      }
     }
   })
 }
@@ -527,8 +578,74 @@ const loadPie = () => {
     if (res.code === '200') {
       let chartDom = document.getElementById('pie')
       let myChart = echarts.init(chartDom)
-      pieOptions.series[0].data = res.data
-      myChart.setOption(pieOptions)
+      
+      // 检查是否有数据或所有数据值都为0
+      const hasValidData = res.data && res.data.length > 0 && 
+        res.data.some(item => item.value && parseFloat(item.value) > 0)
+      
+      if (!hasValidData) {
+        // 无数据或所有值都为0时显示空状态
+        myChart.setOption({
+          title: {
+            text: '科研项目学科类别占比图',
+            subtext: '统计维度：学科分类',
+            left: 'center'
+          },
+          graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: '暂无数据',
+              fontSize: 14,
+              fill: '#999'
+            }
+          }
+        })
+      } else {
+        // 有数据时正常显示
+        pieOptions.series[0].data = res.data
+        myChart.setOption(pieOptions)
+      }
+    }
+  })
+}
+
+const loadPie2 = () => {
+  echarts.dispose(document.getElementById('pie2'))
+  request.get('/dashboard/pie2').then(res => {
+    if (res.code === '200') {
+      let chartDom = document.getElementById('pie2')
+      let myChart = echarts.init(chartDom)
+      
+      // 检查是否有数据或所有数据值都为0
+      const hasValidData = res.data && res.data.length > 0 && 
+        res.data.some(item => item.value && parseFloat(item.value) > 0)
+      
+      if (!hasValidData) {
+        // 无数据或所有值都为0时显示空状态
+        myChart.setOption({
+          title: {
+            text: '科研项目状态分布图',
+            subtext: '统计维度：项目状态',
+            left: 'center'
+          },
+          graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+              text: '暂无数据',
+              fontSize: 14,
+              fill: '#999'
+            }
+          }
+        })
+      } else {
+        // 有数据时正常显示
+        pieOptions2.series[0].data = res.data
+        myChart.setOption(pieOptions2)
+      }
     }
   })
 }
@@ -540,7 +657,8 @@ onMounted(() => {
   loadPie()
   loadBar1()
   loadBar2()
-  loadLine()
+  //loadLine()  //教师反馈图
+  loadPie2()
 })
 
 // 饼图数据结构
@@ -623,7 +741,7 @@ let bar1Options = {
 let bar2Options = {
   title: {
     text: '系统中不同类型下的科研成果数量', // 主标题
-    subtext: '统计维度：成果分类', // 副标题
+    subtext: '统计维度：成果类型', // 副标题
     left: 'center'
   },
   xAxis: {
@@ -655,8 +773,8 @@ let bar2Options = {
 
 let lineOptions = {
   title: {
-    text: '最近七天的教师反馈数量', // 主标题
-    subtext: '统计维度：教师', // 副标题
+    text: '项目完成情况分布', // 主标题
+    subtext: '统计维度：项目', // 副标题
     left: 'center'
   },
   xAxis: {
@@ -695,6 +813,39 @@ let lineOptions = {
           }, {
             offset: 1, color: 'rgba(250, 140, 22, 0.05)' // 渐变结束颜色
           }]
+        }
+      }
+    }
+  ]
+}
+
+let pieOptions2 = {
+  title: {
+    text: '项目状态分布图',
+    subtext: '统计维度：项目状态',
+    left: 'center'
+  },
+  tooltip: {
+    trigger: 'item'
+  },
+  legend: {
+    orient: 'vertical',
+    left: 'left'
+  },
+  series: [
+    {
+      type: 'pie',
+      radius: '50%',
+      data: [
+        { value: 1048, name: '在研' },
+        { value: 735, name: '结项' },
+        { value: 580, name: '未开始' }
+      ],
+      emphasis: {
+        itemStyle: {
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowColor: 'rgba(0, 0, 0, 0.5)'
         }
       }
     }

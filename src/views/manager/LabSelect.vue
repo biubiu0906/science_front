@@ -1,9 +1,9 @@
 <template>
     <el-card class="main-card">
-        <h3>重点实验室审核</h3>
+        <h3 style="margin-left: 20px;">重点实验室审核</h3>
         <div class="card" style="margin-top: 15px">
             <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
-                <el-table-column type="index" label="序号" width="80" />
+                <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
                 <el-table-column prop="id" label="申请编号" width="150" sortable />
                 <el-table-column prop="institutionName" label="实验室名称" width="150" sortable />
                 <el-table-column prop="establishmentDate" label="成立日期" width="110" sortable />
@@ -25,31 +25,39 @@
 
                 <el-table-column label="审核状态" width="110" sortable>
                     <template v-slot="scope">
-                        <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0" type="warning">
+                        <!-- 调试信息 -->
+                        <!-- {{ console.log('审核状态数据:', scope.row.applicationRecordList) }} -->
+                        <el-tag v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0'" type="warning">
                             待审核
                         </el-tag>
-                        <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 1" type="success">
+                        <el-tag v-else-if="getApplyStatus(scope.row) === 1 || getApplyStatus(scope.row) === '1'" type="success">
                             审核通过
                         </el-tag>
-                        <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2" type="danger">
+                        <el-tag v-else-if="getApplyStatus(scope.row) === 2 || getApplyStatus(scope.row) === '2'" type="danger">
                             审批拒绝
+                        </el-tag>
+                        <el-tag v-else type="info">
+                            未知状态
                         </el-tag>
                     </template>
                 </el-table-column>
 
                 <el-table-column label="审核意见" width="200" sortable>
                     <template v-slot="scope">
-                        <div :class="getContentAlignClass(scope.row.applicationRecordList?.[0]?.reviewComments)">
-                            {{ scope.row.applicationRecordList?.[0]?.reviewComments }}
+                        <div :class="getContentAlignClass(getReviewComments(scope.row))">
+                            {{ getReviewComments(scope.row) || '暂无审核意见' }}
                         </div>
                     </template>
                 </el-table-column>
 
                 <!-- 操作列 -->
-                <el-table-column label="操作" width="80" fixed="right">
+                <el-table-column label="操作" width="160" fixed="right">
                     <template v-slot="scope">
                         <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
-                        <el-button @click="reviewApply(scope.row.id)" size="small" type="primary" v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0">审核</el-button>
+                        <el-button @click="reviewApply(scope.row.id)" size="small" type="primary" 
+                                   v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0' || !hasApplicationRecord(scope.row)">
+                            审核
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -110,13 +118,19 @@ const reviewData = ref({
     reviewComments: '',
 });
 
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
+
 const reviewApply = (id) => {
     formVisible.value = true;
     reviewData.value.labApplyForId = id;
 }
 
 const data = reactive({
-    user: JSON.parse(localStorage.getItem('xm-user') || '{}')
+    user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+    pageNum: 1,
+    pageSize: 10
 })
 const getFileName = (fileUrl) => {
     return fileUrl.split('-').pop();
@@ -180,6 +194,28 @@ const getContentAlignClass = (content) => {
   return isMultiLine ? 'content-justify' : 'content-center'
 }
 
+// 获取申请状态的辅助函数
+const getApplyStatus = (row) => {
+  console.log('获取审核状态:', row.applicationRecordList)
+  if (!row.applicationRecordList || row.applicationRecordList.length === 0) {
+    return 0 // 如果没有审核记录，默认为待审核状态
+  }
+  return row.applicationRecordList[0]?.applyStatus
+}
+
+// 判断是否有申请记录的辅助函数
+const hasApplicationRecord = (row) => {
+  return row.applicationRecordList && row.applicationRecordList.length > 0
+}
+
+// 获取审核意见的辅助函数
+const getReviewComments = (row) => {
+  if (!row.applicationRecordList || row.applicationRecordList.length === 0) {
+    return ''
+  }
+  return row.applicationRecordList[0]?.reviewComments || ''
+}
+
 </script>
 
 
@@ -238,7 +274,7 @@ const getContentAlignClass = (content) => {
 /* 确保表单控件占满宽度 */
 :deep(.el-card__body) {
     width: 100%;
-    /* 表单控件占满剩余宽度 */
+    padding:0;
 }
 
 .fade-enter-active,
