@@ -171,9 +171,6 @@ watch([() => props.fileName, () => props.fileType], () => {
   dialogTitle.value = props.fileName || '文件预览'
 })
 
-/**
- * 初始化预览
- */
 const initPreview = async () => {
   if (!props.fileUrl) {
     ElMessage.error('文件URL不能为空')
@@ -212,9 +209,6 @@ const initPreview = async () => {
   }
 }
 
-/**
- * PDF加载完成事件
- */
 const onPdfLoaded = (pdf) => {
   console.log('PDF加载成功:', pdf)
   totalPages.value = pdf.numPages
@@ -223,9 +217,6 @@ const onPdfLoaded = (pdf) => {
   ElMessage.success('PDF文件加载成功')
 }
 
-/**
- * PDF加载失败事件
- */
 const onPdfLoadingFailed = (error) => {
   console.error('PDF加载失败:', error)
   loading.value = false
@@ -241,16 +232,10 @@ const onPdfLoadingFailed = (error) => {
   ElMessage.error(errorMessage)
 }
 
-/**
- * PDF渲染完成事件
- */
 const onPdfRendered = () => {
   console.log('PDF页面渲染完成')
 }
 
-/**
- * 加载文本文件
- */
 const loadText = async () => {
   try {
     const response = await fetch(props.fileUrl)
@@ -264,35 +249,53 @@ const loadText = async () => {
   }
 }
 
-/**
- * 处理错误
- */
 const handleError = () => {
   loading.value = false
   ElMessage.error('文件加载失败')
 }
 
-/**
- * DOCX文件渲染完成事件
- */
-const onDocxRendered = () => {
-  console.log('DOCX文件渲染完成')
-  loading.value = false
-  ElMessage.success('DOCX文件加载成功')
-}
 
-/**
- * DOCX文件加载失败事件
- */
 const onDocxError = (error) => {
   console.error('DOCX文件加载失败:', error)
   loading.value = false
   ElMessage.error('DOCX文件加载失败，请检查文件格式或网络连接')
 }
 
-/**
- * 关闭对话框
- */
+const adjustDocxScale = () => {
+  if (props.fileType === 'docx') {
+    nextTick(() => {
+      setTimeout(() => {
+        const docxWrapper = document.querySelector('.docx-preview .docx-wrapper .docx')
+        const container = document.querySelector('.docx-preview')
+        
+        if (docxWrapper && container) {
+          const containerWidth = container.offsetWidth
+          const contentWidth = docxWrapper.scrollWidth
+          
+          // 如果内容宽度超过容器宽度，进行缩放
+          if (contentWidth > containerWidth) {
+            const scale = (containerWidth - 40) / contentWidth // 留出40px边距
+            const finalScale = Math.min(Math.max(scale, 0.5), 1) // 限制缩放范围在0.5-1之间
+            docxWrapper.style.transform = `scale(${finalScale})`
+            docxWrapper.style.transformOrigin = 'top left'
+            console.log(`DOCX自动缩放: ${finalScale.toFixed(2)}`)
+          }
+        }
+      }, 500) // 延迟500ms确保DOCX内容完全渲染
+    })
+  }
+}
+
+const handleResize = () => {
+  adjustDocxScale()
+}
+
+const onDocxRendered = () => {
+  loading.value = false
+  // 渲染完成后自动调整缩放
+  adjustDocxScale()
+}
+
 const handleClose = () => {
   visible.value = false
   // 重置状态
@@ -301,11 +304,30 @@ const handleClose = () => {
   totalPages.value = 0
   scale.value = 1.0
   textContent.value = ''
+  
+  // 移除事件监听器
+  window.removeEventListener('resize', handleResize)
 }
+
+// 监听对话框显示状态变化
+watch(visible, (newVal) => {
+  if (newVal) {
+    // 对话框打开时添加事件监听
+    window.addEventListener('resize', handleResize)
+    
+    // 延迟调整缩放，确保内容已加载
+    setTimeout(() => {
+      adjustDocxScale()
+    }, 1000)
+  } else {
+    // 对话框关闭时移除事件监听
+    window.removeEventListener('resize', handleResize)
+  }
+})
 
 // 组件卸载时清理
 onUnmounted(() => {
-  // vue3-pdf-app 会自动处理清理工作
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -365,6 +387,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  align-items: center;
 }
 
 /* 图片预览样式 */
@@ -415,6 +438,7 @@ onUnmounted(() => {
   overflow-y: auto;
   background-color: #ffffff;
   border-radius: 4px;
+  position: relative;
 }
 
 .docx-preview :deep(.vue-office-docx) {
@@ -427,19 +451,85 @@ onUnmounted(() => {
 .docx-preview :deep(.docx-container) {
   padding: 20px !important;
   background-color: #ffffff !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .docx-preview :deep(.docx-wrapper) {
-  padding: 30px !important;
+  padding: 20px !important;
   padding-bottom: 0px !important;
   display: flex !important;
   align-items: center !important;
   background: none !important;
   flex-flow: row nowrap !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  justify-content: center !important;
 }
 
 :deep(.docx) {
-  padding: 30px !important;
+  padding: 20px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  transform-origin: top left !important;
+  overflow: hidden !important;
+}
+
+/* DOCX内容自适应缩放 */
+.docx-preview :deep(.docx-wrapper .docx) {
+  transform: scale(1) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* 确保DOCX内容不会超出容器 */
+.docx-preview :deep(.docx-wrapper .docx *) {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* 针对小屏幕的特殊优化 */
+@media (max-width: 768px) {
+  .docx-preview :deep(.docx-container) {
+    padding: 10px !important;
+  }
+  
+  .docx-preview :deep(.docx-wrapper) {
+    padding: 10px !important;
+    padding-bottom: 0px !important;
+  }
+  
+  :deep(.docx) {
+    padding: 10px !important;
+  }
+  
+  /* 小屏幕下自动缩放内容 */
+  .docx-preview :deep(.docx-wrapper .docx) {
+    transform: scale(0.85) !important;
+    transform-origin: top left !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .docx-preview :deep(.docx-container) {
+    padding: 5px !important;
+  }
+  
+  .docx-preview :deep(.docx-wrapper) {
+    padding: 5px !important;
+    padding-bottom: 0px !important;
+  }
+  
+  :deep(.docx) {
+    padding: 5px !important;
+  }
+  
+  /* 超小屏幕下进一步缩放 */
+  .docx-preview :deep(.docx-wrapper .docx) {
+    transform: scale(0.7) !important;
+    transform-origin: top left !important;
+  }
 }
 
 
@@ -603,9 +693,56 @@ onUnmounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  /* 小屏幕下调整对话框尺寸 */
+  .file-preview-dialog.fixed-dialog {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+  }
+  
+  .file-preview-dialog.fixed-dialog :deep(.el-dialog__body) {
+    padding: 5px !important;
+    max-height: calc(95vh - 120px) !important;
+  }
+  
+  .preview-container {
+    height: calc(95vh - 120px);
+    max-height: calc(95vh - 120px);
+  }
   
   .page-info, .zoom-info {
     margin: 5px 0;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 超小屏幕下进一步优化 */
+  .file-preview-dialog.fixed-dialog {
+    max-width: 98vw !important;
+    max-height: 98vh !important;
+  }
+  
+  .file-preview-dialog.fixed-dialog :deep(.el-dialog__header) {
+    padding: 10px 15px !important;
+  }
+  
+  .file-preview-dialog.fixed-dialog :deep(.el-dialog__footer) {
+    padding: 10px 15px !important;
+  }
+  
+  .file-preview-dialog.fixed-dialog :deep(.el-dialog__body) {
+    padding: 2px !important;
+    max-height: calc(98vh - 100px) !important;
+  }
+  
+  .preview-container {
+    height: calc(98vh - 100px);
+    max-height: calc(98vh - 100px);
+  }
+  
+  .page-info, .zoom-info {
+    font-size: 11px;
+    margin: 2px 0;
   }
 }
 

@@ -13,8 +13,8 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
-        <el-table-column prop="avatar" label="头像" align="center">
+        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
+        <el-table-column prop="avatar" label="头像" text-align="center">
           <template v-slot="scope">
             <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
                       :src="scope.row.avatar || '/src/assets/imgs/头像.jpeg'" 
@@ -62,9 +62,10 @@
             <span v-else>******</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
             <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
             <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
           </template>
         </el-table-column>
@@ -133,6 +134,44 @@
         </span>
       </template>
     </el-dialog>
+
+    <el-dialog 
+      title="生成报告" 
+      v-model="data.reportFormVisible" 
+      width="450px" 
+      destroy-on-close
+      :modal="true"
+      :close-on-click-modal="false"
+      append-to-body>
+      <el-form ref="reportFormRef" :model="data.reportForm" :rules="reportRules" style="display: flex; flex-direction: column; align-items: center;">
+        <el-form-item prop="beginTime" label="起始时间" style="margin-top: 5px;">
+          <el-date-picker
+            v-model="data.reportForm.beginTime"
+            type="datetime"
+            placeholder="请选择起始时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            date-format="MMM DD, YYYY"
+            time-format="HH:mm"
+          />
+        </el-form-item>
+        <el-form-item prop="endTime" label="结束时间">
+          <el-date-picker
+            v-model="data.reportForm.endTime"
+            type="datetime"
+            placeholder="请选择结束时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            date-format="MMM DD, YYYY"
+            time-format="HH:mm"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button size="small" @click="data.reportFormVisible = false">取 消</el-button>
+          <el-button type="primary" size="small" @click="createReport">确 定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -141,18 +180,24 @@
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
+import {Delete, Edit, View, Hide, Collection} from "@element-plus/icons-vue";
 import Password from "./Password.vue";
 
 // 表单引用
 const formRef = ref(null)
-
+const reportFormRef = ref(null)
 const baseUrl = import.meta.env.VITE_BASE_URL
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+}
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   formVisible: false,
   form: {},
+  reportFormVisible: false,
+  reportForm: {},
   tableData: [],
   labOptions: [],
   pageNum: 1,
@@ -193,6 +238,15 @@ const rules = reactive({
   ],
   ofLab: [
     { required: true, message: '请输入所属实验室', trigger: 'blur' },
+  ],
+})
+
+const reportRules = reactive({
+  beginTime: [
+    { required: true, message: '请选择起始时间', trigger: 'change' }
+  ],
+  endTime: [
+    { required: true, message: '请选择结束时间', trigger: 'change' }
   ],
 })
 
@@ -286,6 +340,71 @@ const save = () => {
       // 验证失败，显示错误信息
       ElMessage.error('请填写完整的必填信息')
       return false
+    }
+  })
+}
+
+// 创建教师报告
+const handleReportForm = (id) => {
+  data.reportFormVisible = true
+  if(data.user.role === 'ADMIN'){
+    data.reportForm.targetId = id
+    data.reportForm.targetType = 'TEACHER'
+  }else{
+    data.reportForm.teacherId = id
+  }
+}
+
+const createReport = () => {
+  if (!reportFormRef.value) return
+  
+  reportFormRef.value.validate((valid) => {
+    console.log('form', data.reportForm)
+    if (valid) {
+      // 格式化时间为 YYYY-MM-DD 格式
+      const formatDate = (date) => {
+        if (!date) return null
+        const d = new Date(date)
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+
+      // 准备发送的参数，包含格式化后的时间
+      const requestParams = {
+        ...data.reportForm,
+        beginTime: formatDate(data.reportForm.beginTime),
+        endTime: formatDate(data.reportForm.endTime)
+      }
+
+      // 验证通过，执行保存操作
+      if(data.user.role === 'ADMIN'){
+        request.get('/report/admin', {
+          params: requestParams
+        }).then(res => {
+        if (res.code === '200') {
+          ElMessage.success('请求成功，请到报告信息页查看报告信息')
+          data.reportFormVisible = false
+        } else {
+          ElMessage.error(res.msg)
+        }
+      })
+      }else {
+        request.get('/report/teacher', {
+          params: requestParams
+        }).then(res => {
+        if (res.code === '200') {
+          ElMessage.success('请求成功，请到报告信息页查看报告信息')
+          data.reportFormVisible = false
+        } else {
+          ElMessage.error(res.msg)
+        }
+      })
+      }
+    } else {
+      // 验证失败，显示错误信息
+      ElMessage.error('请填写完整的必填信息')
     }
   })
 }

@@ -55,6 +55,7 @@
 
             <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item> -->
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
+            <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">系统公告管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2" v-if="data.user.role === 'ADMIN'">
@@ -78,10 +79,6 @@
             <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
           </el-sub-menu>
         </el-menu>
-        <!-- 侧边栏底部图片 -->
-        <!--<div class="menu-footer">
-          <img src="@/assets/imgs/文件夹.png" alt="文件夹" />
-        </div>-->
       </div>
       <!-- 右侧内容区 -->
       <div class="manager-main-right" :class="{ 'sidebar-collapsed': isCollapse }">

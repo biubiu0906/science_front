@@ -31,6 +31,7 @@ const router = createRouter({
         { path: 'log', meta: { name: '日志管理' }, component: () => import('@/views/manager/Log.vue'), },
         { path: 'dashboard', meta: { name: '数据统计' }, component: () => import('@/views/manager/Dashboard.vue'), },
         { path: 'laboratory', meta: { name: '实验室信息' }, component: () => import('@/views/manager/Laboratory.vue'), },
+        { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue'), },
       ]
     },
     {

@@ -404,11 +404,36 @@
              <el-button type="primary" size="small">点击上传</el-button>
            </el-upload>
          </el-form-item>
+         
+         <!-- 文件校验状态显示 -->
+         <el-form-item v-if="data.fileValidationStatus" label="文件校验">
+           <div style="display: flex; align-items: center;">
+             <el-icon v-if="data.fileValidationStatus === 'validating'" class="is-loading" style="margin-right: 8px;">
+               <Loading />
+             </el-icon>
+             <el-icon v-else-if="data.fileValidationStatus === 'success'" style="color: #67c23a; margin-right: 8px;">
+               <SuccessFilled />
+             </el-icon>
+             <el-icon v-else-if="data.fileValidationStatus === 'failed'" style="color: #f56c6c; margin-right: 8px;">
+               <CircleCloseFilled />
+             </el-icon>
+             <span v-if="data.fileValidationStatus === 'validating'" style="color: #409eff;">正在校验...</span>
+             <span v-else-if="data.fileValidationStatus === 'success'" style="color: #67c23a;">校验通过</span>
+             <span v-else-if="data.fileValidationStatus === 'failed'" style="color: #f56c6c;">校验失败</span>
+           </div>
+         </el-form-item>
        </el-form>
        <template #footer>
-         <span class="dialog-footer">
-           <el-button size="small" @click="data.showAttachmentDialog = false">取 消</el-button>
-           <el-button type="primary" size="small" @click="addAttachment">确 定</el-button>
+           <span class="dialog-footer">
+             <el-button size="small" @click="cancelAttachmentDialog" :disabled="data.validationLoading">取 消</el-button>
+           <el-button 
+             type="primary" 
+             size="small" 
+             @click="addAttachment" 
+             :loading="data.validationLoading"
+             :disabled="data.validationLoading">
+             {{ data.validationLoading ? '校验中...' : '确 定' }}
+           </el-button>
          </span>
        </template>
      </el-dialog>
@@ -452,7 +477,7 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, Edit, View, Tickets } from "@element-plus/icons-vue";
+import { Delete, Edit, View, Tickets, Loading, SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
 import FilePreviewCom from "./componets/FilePreviewCom.vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
@@ -477,6 +502,9 @@ const data = reactive({
   tempTeamMember: {},
   tempCooperativeUnit: {},
   tempAttachment: {},
+  // 文件校验状态
+  fileValidationStatus: '', // 'validating', 'success', 'failed'
+  validationLoading: false, // 校验加载状态
   form: {
     // 项目信息
     name: '',
@@ -766,25 +794,66 @@ const removeTeamMember = (index) => {
 
 
 // 附件材料相关方法
-const addAttachment = () => {
+const addAttachment = async () => {
   // 验证必填字段
   if (!data.tempAttachment.fileCategory || !data.tempAttachment.fileName || !data.tempAttachment.fileUrl) {
     ElMessage.warning('请选择文件类别并上传文件')
     return
   }
   
-  // 添加到附件材料列表
-  data.form.attachments.push({
-    fileName: data.tempAttachment.fileName,
-    fileCategory: data.tempAttachment.fileCategory,
-    fileDescription: data.tempAttachment.fileDescription || '',
-    fileUrl: data.tempAttachment.fileUrl
-  })
+  // 开始文件校验
+  data.validationLoading = true
+  data.fileValidationStatus = 'validating'
   
-  // 重置临时数据并关闭对话框
-  data.tempAttachment = { fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] }
-  data.showAttachmentDialog = false
-  ElMessage.success('附件材料添加成功')
+  try {
+    // 调用文件校验接口
+    const response = await validateFile(data.tempAttachment.fileUrl)
+    
+    if (response.status === 'success') {
+      data.fileValidationStatus = 'success'
+      
+      // 校验成功，添加到附件材料列表
+      data.form.attachments.push({
+        fileName: data.tempAttachment.fileName,
+        fileCategory: data.tempAttachment.fileCategory,
+        fileDescription: data.tempAttachment.fileDescription || '',
+        fileUrl: data.tempAttachment.fileUrl
+      })
+      
+      // 重置临时数据并关闭对话框
+      data.tempAttachment = { fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] }
+      data.showAttachmentDialog = false
+      data.fileValidationStatus = ''
+      ElMessage.success('附件材料添加成功')
+    } else {
+      // 校验失败
+      data.fileValidationStatus = 'failed'
+      ElMessage.error('文件校验失败，请检查文件是否满足要求')
+    }
+  } catch (error) {
+    // 校验接口调用失败
+    data.fileValidationStatus = 'failed'
+    ElMessage.error('文件校验失败，请重试')
+    console.error('文件校验错误:', error)
+  } finally {
+    data.validationLoading = false
+  }
+}
+
+const validateFile = async (fileUrl) => {
+  return new Promise((resolve, reject) => {
+    request.post('/api/file/upload', { file: fileUrl })
+      .then(res => {
+        if (res.code === '200') {
+          resolve(res.data)
+        } else {
+          reject(new Error(res.msg || '校验失败'))
+        }
+      })
+      .catch(error => {
+        reject(error)
+      })
+  })
 }
 
 const removeAttachment = (index) => {
@@ -794,6 +863,17 @@ const removeAttachment = (index) => {
   }).catch(() => {
     // 用户取消删除
   })
+}
+
+/**
+ * 取消附件材料对话框
+ */
+const cancelAttachmentDialog = () => {
+  // 重置文件校验状态
+  data.fileValidationStatus = ''
+  data.validationLoading = false
+  // 关闭对话框
+  data.showAttachmentDialog = false
 }
 
 const handleAttachmentUpload = (res) => {
@@ -875,9 +955,6 @@ const previewFile = (attachment) => {
   // Word文档
   else if (fileExtension === 'docx') {
     fileType = 'docx'
-  }
-  else if (fileExtension === 'doc') {
-    fileType = 'word'
   }
   // 文本文件
   else if (['txt', 'md', 'json', 'xml', 'csv'].includes(fileExtension)) {
@@ -1185,6 +1262,9 @@ const handleDrawerClose = () => {
   data.tempTeamMember = {}
   data.tempCooperativeUnit = {}
   data.tempAttachment = {}
+  // 重置文件校验状态
+  data.fileValidationStatus = ''
+  data.validationLoading = false
   // 关闭所有子对话框
   data.showTeamMemberDialog = false
   data.showCooperativeUnitDialog = false
@@ -1219,6 +1299,9 @@ const handleTabChange = (tabName) => {
     data.tempTeamMember = {}
     data.tempCooperativeUnit = {}
     data.tempAttachment = {}
+    // 重置文件校验状态
+    data.fileValidationStatus = ''
+    data.validationLoading = false
   }, 50) // 50ms防抖延迟
 }
 
