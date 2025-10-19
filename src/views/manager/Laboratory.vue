@@ -49,9 +49,15 @@
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
-            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-tooltip content="编辑实验室" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="生成报告" placement="bottom" effect="light">
+              <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除实验室" placement="bottom" effect="light">
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

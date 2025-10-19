@@ -139,13 +139,13 @@
     display: none;
 }
 
-/* 内容区域的遮罩层 */
+/* 内容区域的遮罩层 - 修复滚动时遮罩层覆盖不全的问题 */
 .content-area::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: fixed;
+    top: 64px; /* 页头高度59px + 上边距5px + 下边距5px */
+    left: 210px; /* 为侧边栏留出空间 */
+    right: 0; /* 为右边距留出空间 */
     bottom: 0;
     background-color: rgba(255, 255, 255, 0.815);
     pointer-events: none; /* 确保遮罩层不会阻挡鼠标事件 */
@@ -156,6 +156,11 @@
 .content-area > * {
     position: relative;
     z-index: 2;
+}
+
+/* 侧边栏折叠时调整遮罩层位置 */
+.manager-main-right.sidebar-collapsed .content-area::before {
+    left: 60px; /* 折叠后侧边栏宽度 + 10px 边距 */
 }
 
 /* 菜单头部样式 - 固定在顶部 */

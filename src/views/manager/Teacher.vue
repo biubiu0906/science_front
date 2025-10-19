@@ -12,18 +12,18 @@
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
-        <el-table-column type="selection" width="55" />
+        <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="avatar" label="头像" text-align="center">
           <template v-slot="scope">
             <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
-                      :src="scope.row.avatar || '/src/assets/imgs/头像.jpeg'" 
-                      :preview-src-list="[scope.row.avatar || '/src/assets/imgs/头像.jpeg']" 
+                      :src="scope.row.avatar || '/avatar.png'" 
+                      :preview-src-list="[scope.row.avatar || '/avatar.png']" 
                       preview-teleported></el-image>
           </template>
         </el-table-column>
         <el-table-column prop="name" label="姓名" min-width="100" sortable />
-        <el-table-column prop="gender" label="性别" sortable>
+        <el-table-column prop="gender" label="性别" width="80" sortable>
           <template v-slot="scope">
             {{ scope.row.gender === 'boy' ? '男' : scope.row.gender === 'girl' ? '女' : scope.row.gender === 'Male' ? '男' : scope.row.gender === 'Female' ? '女' : scope.row.gender }}
           </template>
@@ -31,7 +31,7 @@
         <el-table-column prop="phone" label="电话" min-width="120" sortable />
         <el-table-column prop="email" label="邮箱" min-width="120" sortable />
         <el-table-column prop="unit" label="单位" min-width="120" sortable />
-        <el-table-column prop="ofLab" label="所属实验室" min-width="120" sortable />
+        <el-table-column prop="ofLab" label="所属实验室" min-width="180" sortable />
         <el-table-column prop="employmentType" label="全职/非全职" min-width="130" sortable>
           <template v-slot="scope">
             <el-tag 
@@ -42,7 +42,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" sortable />
+        <el-table-column prop="username" label="用户名" min-width="100" sortable />
         <el-table-column prop="password" label="密码" min-width="150" sortable>
           <template #header>
             <span>密码</span>
@@ -64,9 +64,15 @@
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
-            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-tooltip content="编辑教师" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="生成报告" placement="bottom" effect="light">
+              <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除教师" placement="bottom" effect="light">
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

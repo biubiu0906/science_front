@@ -43,7 +43,9 @@
         <el-table-column prop="createdAt" label="创建时间" />
         <el-table-column label="操作" width="80" text-align="center">
           <template v-slot="scope">
-            <el-button type="danger" circle  size="small" :icon="Delete"  @click="del(scope.row.id)"></el-button>
+            <el-tooltip content="删除报告" placement="bottom" effect="light">
+              <el-button type="danger" circle  size="small" :icon="Delete"  @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -188,7 +190,7 @@ const getSubject = (id, type) => {
 // 删除单个报告
 const del = (id) => {
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(() => {
-    request.delete('/task/delete/' + id).then(res => {
+    request.delete('/report/task/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
         load()
@@ -201,6 +203,26 @@ const del = (id) => {
     })
   }).catch(() => {
     // 用户取消删除
+  })
+}
+
+// 批量删除报告
+const delBatch = () => {
+  if (!data.ids.length) {
+    ElMessage.warning("请选择数据")
+    return
+  }
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+    request.delete("/report/task/delete/batch", {data: data.ids}).then(res => {
+      if (res.code === '200') {
+        ElMessage.success('操作成功')
+        load()
+      } else {
+        ElMessage.error(res.msg)
+      }
+    })
+  }).catch(err => {
+    console.error(err)
   })
 }
 
@@ -274,28 +296,6 @@ const createReport = () => {
     }
   })
 }
-
-// 批量删除报告
-const delBatch = () => {
-  if (!data.ids.length) {
-    ElMessage.warning("请选择数据")
-    return
-  }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
-    request.delete("/task/delete/batch", {data: data.ids}).then(res => {
-      if (res.code === '200') {
-        ElMessage.success('操作成功')
-        load()
-      } else {
-        ElMessage.error(res.msg)
-      }
-    })
-  }).catch(err => {
-    console.error(err)
-  })
-}
-
-
 
 // 组件挂载时加载数据
 onMounted(() => {

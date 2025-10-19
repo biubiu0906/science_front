@@ -45,12 +45,18 @@
         <el-table-column prop="time" label="审核时间" min-width="160" show-overflow-tooltip sortable />
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="View" size="small" @click="handleQuery(scope.row)" title="查看详情"></el-button>
-            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle
-              :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="warning" circle :icon="Tickets" size="small"
-              @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle :icon="Delete" size="small" @click="del(scope.row.id)"></el-button>
+            <el-tooltip content="查看详情" placement="bottom" effect="light">
+              <el-button type="primary" circle :icon="View" size="small" @click="handleQuery(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" content="编辑项目" placement="bottom" effect="light">
+              <el-button type="primary" circle :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip v-if="data.user.role === 'ADMIN'" content="审核项目" placement="bottom" effect="light">
+              <el-button type="warning" circle :icon="Tickets" size="small" @click="handleCheck(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除项目" placement="bottom" effect="light">
+              <el-button type="danger" circle :icon="Delete" size="small" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -149,7 +155,9 @@
               <el-table-column prop="affiliation" label="署名/代表单位" min-width="200"></el-table-column>
               <el-table-column v-if="!data.isViewMode" label="操作" width="60">
                 <template #default="{ $index }">
-                  <el-button type="danger" circle :icon="Delete" size="small" @click="removeTeamMember($index)"></el-button>
+                  <el-tooltip content="删除团队成员" placement="bottom" effect="light">
+                    <el-button type="danger" circle :icon="Delete" size="small" @click="removeTeamMember($index)"></el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -173,7 +181,9 @@
               <el-table-column prop="completionUnit" label="完成单位" min-width="200"></el-table-column>
               <el-table-column v-if="!data.isViewMode" label="操作" width="60">
                 <template #default="{ $index }">
-                  <el-button type="danger" circle :icon="Delete" size="small" @click="removeCooperativeUnit($index)"></el-button>
+                  <el-tooltip content="删除合作单位" placement="bottom" effect="light">
+                    <el-button type="danger" circle :icon="Delete" size="small" @click="removeCooperativeUnit($index)"></el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -306,10 +316,13 @@
               <el-table-column prop="fileDescription" label="文件简介" min-width="150"></el-table-column>
               <el-table-column label="操作" width="90">
                 <template #default="scope">
-                  <el-button type="primary" :icon="View" circle size="small" @click="previewFile(scope.row)">
-                  </el-button>
-                  <el-button v-if="!data.isViewMode" type="danger" circle :icon="Delete" size="small" @click="removeAttachment(scope.$index)"></el-button>
-                  
+                  <el-tooltip content="预览文件" placement="bottom" effect="light">
+                    <el-button type="primary" :icon="View" circle size="small" @click="previewFile(scope.row)">
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip v-if="!data.isViewMode" content="删除附件" placement="bottom" effect="light">
+                    <el-button type="danger" circle :icon="Delete" size="small" @click="removeAttachment(scope.$index)"></el-button>
+                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>

@@ -53,11 +53,14 @@
                 <!-- 操作列 -->
                 <el-table-column label="操作" width="160" fixed="right">
                     <template v-slot="scope">
-                        <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
-                        <el-button @click="reviewApply(scope.row.id)" size="small" type="primary" 
-                                   v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0' || !hasApplicationRecord(scope.row)">
-                            审核
-                        </el-button>
+                        <el-tooltip content="查看申请详情" placement="bottom" effect="light">
+                            <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
+                        </el-tooltip>
+                        <el-tooltip v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0' || !hasApplicationRecord(scope.row)" content="审核申请" placement="bottom" effect="light">
+                            <el-button @click="reviewApply(scope.row.id)" size="small" type="primary">
+                                审核
+                            </el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>

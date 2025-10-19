@@ -23,10 +23,12 @@
                 <el-table-column prop="solution" label="解决方案" show-overflow-tooltip />
                 <el-table-column label="操作" width="100" fixed="right">
                     <template v-slot="scope">
-                        <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" circle size="small" :icon="Edit"
-              @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="danger" circle size="small" :icon="Delete"
-              @click="del(scope.row.id)"></el-button>
+                        <el-tooltip v-if="data.user.role === 'KEY_LABORATORY'" content="编辑实验室成员" placement="bottom" effect="light">
+                            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+                        </el-tooltip>
+                        <el-tooltip v-if="data.user.role === 'ADMIN'" content="删除实验室成员" placement="bottom" effect="light">
+                            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>

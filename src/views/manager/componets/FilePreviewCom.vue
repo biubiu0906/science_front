@@ -387,7 +387,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  align-items: center;
 }
 
 /* 图片预览样式 */

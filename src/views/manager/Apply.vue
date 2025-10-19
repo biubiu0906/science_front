@@ -28,9 +28,15 @@
         <el-table-column prop="checkTime" label="审核时间" />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='TEACHER'" type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="scope.row.status === '待审核' && data.user.role ==='ADMIN'" type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-tooltip v-if="scope.row.status === '待审核' && data.user.role ==='TEACHER'" content="编辑申请" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip v-if="scope.row.status === '待审核' && data.user.role ==='ADMIN'" content="审核申请" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除申请" placement="bottom" effect="light">
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

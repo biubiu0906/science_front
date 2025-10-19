@@ -37,22 +37,30 @@
         <el-table-column prop="teacherName" label="教师" min-width="100" sortable />
         <el-table-column prop="process" label="科研过程" min-width="110" sortable>
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="handleViewProcess(scope.row.projectId)">查看</el-button>
+            <el-tooltip content="查看科研过程" placement="bottom" effect="light">
+              <el-button type="primary" size="small" @click="handleViewProcess(scope.row.projectId)">查看</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="openFile" label="立项文件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
+            <el-tooltip content="下载立项文件" placement="bottom" effect="light">
+              <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="closeFile" label="结项文件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
+            <el-tooltip content="下载结项文件" placement="bottom" effect="light">
+              <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="file" label="附件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
+            <el-tooltip content="下载附件文件" placement="bottom" effect="light">
+              <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="审核状态" min-width="120" sortable>
@@ -72,11 +80,15 @@
         <el-table-column prop="time" label="审核时间" min-width="110" show-overflow-tooltip sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" type="primary" circle
-              :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
-            <el-button v-if="data.user.role === 'ADMIN'" type="primary" circle size="small" :icon="View"
-              @click="handleCheck(scope.row)"></el-button>
-            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-tooltip v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" content="编辑成果" placement="bottom" effect="light">
+              <el-button type="primary" circle :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip v-if="data.user.role === 'ADMIN'" content="审核成果" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除成果" placement="bottom" effect="light">
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

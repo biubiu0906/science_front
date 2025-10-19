@@ -31,8 +31,12 @@
         <el-table-column prop="time" label="发布时间" width="160" sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
-            <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            <el-tooltip content="编辑公告" placement="bottom" effect="light">
+              <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除公告" placement="bottom" effect="light">
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

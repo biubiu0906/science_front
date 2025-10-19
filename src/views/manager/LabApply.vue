@@ -46,10 +46,13 @@
                 <!-- 操作列 -->
                 <el-table-column label="操作" width="180">
                     <template v-slot="scope">
-                        <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
+                        <el-tooltip content="查看申请详情" placement="bottom" effect="light">
+                            <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
+                        </el-tooltip>
                         <!-- 只有审核完毕的状态，才允许修改 -->
-                        <el-button @click="updateDetails(scope.row.id)" size="small"
-                            v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2" type="primary">修改</el-button>
+                        <el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2" content="修改申请信息" placement="bottom" effect="light">
+                            <el-button @click="updateDetails(scope.row.id)" size="small" type="primary">修改</el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>

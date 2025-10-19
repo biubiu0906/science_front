@@ -34,8 +34,12 @@
         <el-table-column prop="replyTime" label="回复时间" width="120" sortable />
         <el-table-column label="操作" width="200" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" size="small" @click="handleEdit(scope.row)">回复</el-button>
-            <el-button type="danger" size="small" @click="del(scope.row.id)">删除</el-button>
+            <el-tooltip content="回复反馈" placement="bottom" effect="light">
+              <el-button type="primary" size="small" @click="handleEdit(scope.row)">回复</el-button>
+            </el-tooltip>
+            <el-tooltip content="删除反馈" placement="bottom" effect="light">
+              <el-button type="danger" size="small" @click="del(scope.row.id)">删除</el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

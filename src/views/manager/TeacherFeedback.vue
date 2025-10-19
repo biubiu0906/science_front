@@ -13,7 +13,7 @@
         <div v-for="item in data.feedBackData" style="margin-bottom: 20px">
         <div style="display: flex; align-items: flex-start">
           <div style="display: flex;">
-            <img :src="item.teacherAvatar || '/src/assets/imgs/头像.jpeg'" alt="" style="width: 30px; height: 30px; border-radius: 50%">
+            <img :src="item.teacherAvatar || '/avatar.png'" alt="" style="width: 30px; height: 30px; border-radius: 50%">
             <div style="margin-left: 10px; color: #409EFF; font-weight: 600;">{{ item.teacherName }} :</div>
           </div>
           <div style="flex: 1; margin-left: 10px; margin-right: 20px; text-align: justify; word-wrap: break-word; word-break: break-all; white-space: pre-wrap; overflow-wrap: break-word; min-width: 0;">{{ item.content }}</div>

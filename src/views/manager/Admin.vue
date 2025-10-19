@@ -18,8 +18,8 @@
         <el-table-column prop="avatar" label="头像" align="center">
           <template v-slot="scope">
             <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
-                      :src="scope.row.avatar || '/src/assets/imgs/头像.jpeg'" 
-                      :preview-src-list="[scope.row.avatar || '/src/assets/imgs/头像.jpeg']" 
+                      :src="scope.row.avatar || '/avatar.png'" 
+                      :preview-src-list="[scope.row.avatar || '/avatar.png']" 
                       preview-teleported></el-image>
           </template>
         </el-table-column>
@@ -48,8 +48,12 @@
         </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
-            <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)" size="small"></el-button>
-            <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
+            <el-tooltip content="编辑管理员" placement="bottom" effect="light">
+              <el-button type="primary" circle :icon="Edit" @click="handleEdit(scope.row)" size="small"></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除管理员" placement="bottom" effect="light">
+              <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>

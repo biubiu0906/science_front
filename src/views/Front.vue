@@ -20,7 +20,7 @@
         <div v-else>
           <el-dropdown style="cursor: pointer; height: 60px">
             <div style="display: flex; align-items: center">
-              <img style="width: 30px; height: 30px; border-radius: 50%;" :src="data.user.avatar || '/src/assets/imgs/头像.jpeg'" alt="">
+              <img style="width: 30px; height: 30px; border-radius: 50%;" :src="data.user.avatar || '/avatar.png'" alt="">
               <span style="margin-left: 5px;">{{ data.user.name }}</span><el-icon><arrow-down /></el-icon>
             </div>
             <template #dropdown>
