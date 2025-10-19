@@ -51,10 +51,19 @@
               v-for="(item, index) in data.noticeData"
               :key="index"
               :timestamp="item.time"
-              :type="index < 2 ? 'error' : 'primary'"
-              :color="index < 2 ? '#f70303' : null"
+              :color="index < 1 ? '#f62323' : null"
           >
-            <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">{{ item.title }}</div>
+            <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px; display: flex; align-items: center;">
+              {{ item.title }}
+              <span v-if="index === 0" style="
+                color: #f62323; 
+                font-weight: 900; 
+                font-style: italic; 
+                margin-left: 10px; 
+                font-size: 12px; 
+                display: inline-block;
+              ">NEW</span>
+            </div>
             <div style="font-size: 14px; line-height: 22px;">{{ item.content }}</div>
           </el-timeline-item>
         </el-timeline>
@@ -134,7 +143,7 @@ loadNotice()
   align-items: center; 
   padding-top: 10px; 
   padding-bottom: 10px; 
-  background-color: #3871b6;
+  background-color: #4176b8;
 }
 
 .notice-box {

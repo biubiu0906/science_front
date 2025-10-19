@@ -12,7 +12,7 @@
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
-        <el-table-column type="selection" width="55" />
+        <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
         <el-table-column prop="title" label="标题" sortable>
           <template v-slot="scope">
