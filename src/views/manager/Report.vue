@@ -7,9 +7,9 @@
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
         <el-table-column type="selection" width="35" />
-        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
-        <el-table-column prop="taskId" label="编号" />
-        <el-table-column prop="url" label="报告内容">
+        <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
+        <el-table-column prop="taskId" label="编号" min-width="200" />
+        <el-table-column prop="url" label="报告内容" min-width="120">
           <template v-slot="scope">
             <span v-if="!scope.row.url">暂无数据</span>
             <el-link 
@@ -23,8 +23,9 @@
             </el-link>
           </template>
         </el-table-column>
-        <el-table-column prop="subject" label="报告对象" />
-        <el-table-column prop="status" label="报告状态" width="120">
+        <el-table-column prop="subject" label="报告对象" min-width="100" />
+        <el-table-column prop="comment" label="报告类型" min-width="100" />
+        <el-table-column prop="status" label="报告状态" min-width="100">
           <template v-slot="scope">
             <el-tag 
               :type="scope.row.status === 'RUNNING' ? 'primary' : 
@@ -40,8 +41,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" />
-        <el-table-column label="操作" width="80" text-align="center">
+        <el-table-column prop="createdAt" label="创建时间" min-width="160"/>
+        <el-table-column label="操作" width="80" text-align="center" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="删除报告" placement="bottom" effect="light">
               <el-button type="danger" circle  size="small" :icon="Delete"  @click="del(scope.row.id)"></el-button>
@@ -49,6 +50,9 @@
           </template>
         </el-table-column>
       </el-table>
+      <div style="margin-top: 10px; text-align: center;">
+        <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
+      </div>
     </div>
 
     <!-- 生成报告对话框 -->
