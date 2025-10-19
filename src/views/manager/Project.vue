@@ -813,18 +813,18 @@ const addAttachment = async () => {
     ElMessage.warning('请选择文件类别并上传文件')
     return
   }
-  
+
   // 开始文件校验
   data.validationLoading = true
   data.fileValidationStatus = 'validating'
-  
+
   try {
     // 调用文件校验接口
-    const response = await validateFile(data.tempAttachment.fileUrl)
-    
-    if (response.status === 'success') {
+    const result = await validateFile(data.tempAttachment.fileUrl)
+
+    if (result.status === 'SUCCESS') {
       data.fileValidationStatus = 'success'
-      
+
       // 校验成功，添加到附件材料列表
       data.form.attachments.push({
         fileName: data.tempAttachment.fileName,
@@ -832,16 +832,32 @@ const addAttachment = async () => {
         fileDescription: data.tempAttachment.fileDescription || '',
         fileUrl: data.tempAttachment.fileUrl
       })
-      
+
       // 重置临时数据并关闭对话框
       data.tempAttachment = { fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] }
       data.showAttachmentDialog = false
       data.fileValidationStatus = ''
       ElMessage.success('附件材料添加成功')
     } else {
-      // 校验失败
+      // 校验失败,仅仅提示下，依然让提交
       data.fileValidationStatus = 'failed'
       ElMessage.error('文件校验失败，请检查文件是否满足要求')
+
+
+      data.form.attachments.push({
+        fileName: data.tempAttachment.fileName,
+        fileCategory: data.tempAttachment.fileCategory,
+        fileDescription: data.tempAttachment.fileDescription || '',
+        fileUrl: data.tempAttachment.fileUrl
+      })
+
+      // 重置临时数据并关闭对话框
+      data.tempAttachment = { fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] }
+      data.showAttachmentDialog = false
+      data.fileValidationStatus = ''
+      ElMessage.success('附件材料添加成功')
+
+
     }
   } catch (error) {
     // 校验接口调用失败
@@ -853,21 +869,20 @@ const addAttachment = async () => {
   }
 }
 
+// ✅ 改进的 validateFile
 const validateFile = async (fileUrl) => {
-  return new Promise((resolve, reject) => {
-    request.post('/api/file/upload', { file: fileUrl })
+  return request
+      .post('/api/file/upload', { file: fileUrl })
       .then(res => {
-        if (res.code === '200') {
-          resolve(res.data)
+        // 注意：这里假设后端返回的就是 {status, authors, error}
+        if (res && res.status) {
+          return res
         } else {
-          reject(new Error(res.msg || '校验失败'))
+          throw new Error(res?.msg || '校验响应格式错误')
         }
       })
-      .catch(error => {
-        reject(error)
-      })
-  })
 }
+
 
 const removeAttachment = (index) => {
   ElMessageBox.confirm('确定要删除该附件材料吗？', '删除确认', { type: 'warning' }).then(() => {
