@@ -137,8 +137,10 @@
 <script setup>
 import { reactive, onMounted, ref } from "vue";
 import router from "@/router/index.js";
-import { ElMessage } from "element-plus";
+import { ElMessage } from "@/utils/element-plus";
 import request from "@/utils/request.js";
+// 按需引入 Element Plus 图标
+import { Odometer, HomeFilled, Menu, Fold, Expand, ArrowDown } from "@element-plus/icons-vue";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),

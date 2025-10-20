@@ -52,7 +52,7 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
 
 const data = reactive({

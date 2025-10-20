@@ -2,13 +2,13 @@
     <el-card class="main-card">
         <h3 style="margin-left: 20px;">重点实验室审核</h3>
         <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
-                <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
+            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" border empty-text="暂无数据">
+                <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
                 <el-table-column prop="id" label="申请编号" width="150" sortable />
-                <el-table-column prop="institutionName" label="实验室名称" width="150" sortable />
+                <el-table-column prop="institutionName" label="实验室名称" min-width="120" sortable />
                 <el-table-column prop="establishmentDate" label="成立日期" width="110" sortable />
                 <el-table-column prop="totalStaff" label="人数" width="80" sortable />
-                <el-table-column label="附件" sortable>
+                <el-table-column label="附件" min-width="150" sortable>
                     <template v-slot="scope">
                         <div v-if="scope.row.attachments?.files?.length">
                             <div v-for="(fileUrl, index) in scope.row.attachments.files" :key="index">
@@ -51,7 +51,7 @@
                 </el-table-column>
 
                 <!-- 操作列 -->
-                <el-table-column label="操作" width="160" fixed="right">
+                <el-table-column label="操作" width="140" fixed="right">
                     <template v-slot="scope">
                         <el-tooltip content="查看申请详情" placement="bottom" effect="light">
                             <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>

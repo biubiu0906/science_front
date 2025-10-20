@@ -407,8 +407,8 @@
 
 import {reactive, onMounted} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage} from "element-plus";
-import * as echarts from "echarts";
+import {ElMessage} from "@/utils/element-plus";
+import echarts from "@/utils/echarts.js";
 // 导入图标组件
 import { Platform, HelpFilled, Comment, Avatar } from '@element-plus/icons-vue';
 

@@ -76,7 +76,7 @@
 
 import {reactive, onMounted} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage} from "element-plus";
+import {ElMessage} from "@/utils/element-plus";
 import {List, BellFilled, StarFilled} from "@element-plus/icons-vue";
 
 const data = reactive({

@@ -18,7 +18,7 @@
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="img" label="活动封面" width="100">
           <template v-slot="scope">
@@ -105,7 +105,7 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 
@@ -190,7 +190,7 @@ const save = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/activity/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -208,7 +208,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/activity/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')

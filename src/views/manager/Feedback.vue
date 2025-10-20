@@ -10,9 +10,9 @@
       <div style="margin-bottom: 10px; margin-left: 10px;">
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" :row-style="{height: 'auto'}" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" :row-style="{height: 'auto'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="80" />
+        <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="teacherName" label="反馈人" width="100" sortable />
         <el-table-column prop="content" label="反馈内容" min-width="200" sortable>
           <template v-slot="scope">
@@ -68,7 +68,7 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
 
 
@@ -117,7 +117,7 @@ const save = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/feedback/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -135,7 +135,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/feedback/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')

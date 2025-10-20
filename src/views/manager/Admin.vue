@@ -12,9 +12,9 @@
         <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
         <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="avatar" label="头像" align="center">
           <template v-slot="scope">
             <el-image style="width: 30px; height: 30px; border-radius: 50%; display: block; margin: 0 auto"
@@ -103,7 +103,7 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
 
 // 表单引用
@@ -206,7 +206,7 @@ const save = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/admin/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -224,7 +224,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/admin/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')

@@ -20,7 +20,7 @@
 <script setup>
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage} from "element-plus";
+import {ElMessage} from "@/utils/element-plus";
 import router from "@/router/index.js";
 
 const formRef = ref()

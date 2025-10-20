@@ -42,6 +42,8 @@
   import router from "@/router/index.js";
   import { reactive } from "vue";
   import request from "@/utils/request.js";
+  // 按需引入 Element Plus 图标
+  import { Bell, ArrowDown } from "@element-plus/icons-vue";
 
   const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),

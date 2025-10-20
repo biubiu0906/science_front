@@ -5,7 +5,7 @@
         <el-button type="primary" plain size="small" v-if="data.user.role !== 'ADMIN'" @click="creatMyReport">生成报告</el-button>
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="taskId" label="编号" min-width="200" />
@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from '@/utils/element-plus'
 import request from '@/utils/request.js'
 import { Delete } from '@element-plus/icons-vue'
 
@@ -193,7 +193,7 @@ const getSubject = (id, type) => {
 
 // 删除单个报告
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(() => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
     request.delete('/report/task/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -216,7 +216,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/report/task/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')

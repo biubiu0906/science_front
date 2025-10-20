@@ -11,9 +11,9 @@
         <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
-        <el-table-column type="index" label="序号" :index="indexMethod" width="80" />
+        <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="title" label="标题" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.title)">
@@ -68,7 +68,7 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
 
 
@@ -136,7 +136,7 @@ const save = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/notice/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -154,7 +154,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/notice/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')

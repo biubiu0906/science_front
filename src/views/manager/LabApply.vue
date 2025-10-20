@@ -3,7 +3,7 @@
         <h3 style="margin-left: 20px;">重点实验室申请</h3>
         <el-button type="primary" size="small" @click="labAddHandle" v-if="data.user.role ===  'NORMAL_LABORATORY'" style="margin-left: 20px;">新增</el-button>
         <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
                 <el-table-column prop="id" label="申请编号" />
                 <el-table-column prop="institutionName" label="实验室名称" />
                 <el-table-column prop="establishmentDate" label="成立日期" width="120" />
@@ -44,13 +44,13 @@
                 </el-table-column>
 
                 <!-- 操作列 -->
-                <el-table-column label="操作" width="180">
+                <el-table-column label="操作" width="140">
                     <template v-slot="scope">
                         <el-tooltip content="查看申请详情" placement="bottom" effect="light">
                             <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
                         </el-tooltip>
                         <!-- 只有审核完毕的状态，才允许修改 -->
-                        <el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2" content="修改申请信息" placement="bottom" effect="light">
+                        <el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2"  content="修改申请信息" placement="bottom" effect="light">
                             <el-button @click="updateDetails(scope.row.id)" size="small" type="primary">修改</el-button>
                         </el-tooltip>
                     </template>
@@ -139,7 +139,7 @@
                         <h3>依托学科 & 研究方向</h3>
                         <el-form label-width="120px" ref="memberForm" :model="formData" :rules="rules">
                             <el-form-item label="其他依托学科" prop="direction.disciplines">
-                                <el-table :data="formData.direction.disciplines" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+                                <el-table :data="formData.direction.disciplines" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无依托学科">
                                     <el-table-column label="依托学科" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -172,7 +172,7 @@
                                 </el-table>
                             </el-form-item>
                             <el-form-item label="研究方向" prop="direction.researches">
-                                <el-table :data="formData.direction.researches" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+                                <el-table :data="formData.direction.researches" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无研究方向">
                                     <el-table-column label="研究方向" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -227,7 +227,7 @@
                         <!-- 研究方向 -->
                         <el-form ref="buildingsForm" :model="formData.buildings">
                             <el-form-item>
-                                <el-table :data="formData.buildings.construacts" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+                                <el-table :data="formData.buildings.construacts" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无建设内容">
                                     <el-table-column label="子机构名称" prop="name">
                                         <template #default="scope">
                                             <el-form-item>
@@ -313,7 +313,7 @@
 <script setup>
 import { ref, reactive, toRaw, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding } from '@element-plus/icons-vue';
+import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 import LabApplicationForm from './componets/LabCom.vue';
 

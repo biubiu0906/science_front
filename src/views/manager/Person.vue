@@ -36,7 +36,9 @@
 <script setup>
 import { reactive } from "vue";
 import request from "@/utils/request.js";
-import {ElMessage} from "element-plus";
+import {ElMessage} from "@/utils/element-plus";
+// 按需引入 Element Plus 图标
+import { Plus } from "@element-plus/icons-vue";
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 

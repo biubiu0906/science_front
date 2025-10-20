@@ -13,8 +13,8 @@
       <div style="margin-bottom: 10px; margin-left: 10px;" v-if="data.laboratoryLevel === 2">
         <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
       </div>
-      <el-table stripe :data="data.tableData" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
-        <el-table-column label="序号" type="index" :index="indexMethod" width="80"/>
+      <el-table stripe :data="data.tableData" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
+        <el-table-column label="序号" type="index" :index="indexMethod" width="60"/>
         <el-table-column prop="name" label="项目名称" min-width="150" sortable />
         <el-table-column prop="code" label="立项编号" min-width="140" sortable />
         <el-table-column prop="researchType" label="研究类型" min-width="120" sortable />
@@ -149,7 +149,7 @@
             </div>
             
             <!-- 团队成员表格 -->
-            <el-table :data="data.form.teamMembers" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+            <el-table :data="data.form.teamMembers" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无团队成员">
               <el-table-column prop="name" label="姓名" width="80"></el-table-column>
               <el-table-column prop="role" label="参与角色" width="95"></el-table-column>
               <el-table-column prop="affiliation" label="署名/代表单位" min-width="200"></el-table-column>
@@ -176,7 +176,7 @@
             </div>
             
             <!-- 合作研究单位表格 -->
-            <el-table :data="data.form.cooperativeUnits" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+            <el-table :data="data.form.cooperativeUnits" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无合作单位">
               <el-table-column prop="unitName" label="单位名称" width="370"></el-table-column>
               <el-table-column prop="completionUnit" label="完成单位" min-width="200"></el-table-column>
               <el-table-column v-if="!data.isViewMode" label="操作" width="60">
@@ -306,7 +306,7 @@
             </div>
             
             <!-- 附件材料表格 -->
-            <el-table :data="data.form.attachments" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center">
+            <el-table :data="data.form.attachments" border style="width: 100%" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无附件">
               <el-table-column label="文件名" min-width="120">
                 <template #default="scope">
                   {{ getDisplayFileName(scope.row.fileName) }}
@@ -489,7 +489,7 @@
 
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 import { Delete, Edit, View, Tickets, Loading, SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
 import FilePreviewCom from "./componets/FilePreviewCom.vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
@@ -740,7 +740,7 @@ const submit = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/project/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -782,7 +782,7 @@ const addTeamMember = () => {
 }
 
 const removeTeamMember = (index) => {
-  ElMessageBox.confirm('确定要删除该团队成员吗？', '删除确认', { type: 'warning' }).then(() => {
+  ElMessageBox.confirm('确定要删除该团队成员吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
     data.form.teamMembers.splice(index, 1)
     ElMessage.success('删除成功')
   }).catch(() => {
@@ -885,7 +885,7 @@ const validateFile = async (fileUrl) => {
 
 
 const removeAttachment = (index) => {
-  ElMessageBox.confirm('确定要删除该附件材料吗？', '删除确认', { type: 'warning' }).then(() => {
+  ElMessageBox.confirm('确定要删除该附件材料吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
     data.form.attachments.splice(index, 1)
     ElMessage.success('删除成功')
   }).catch(() => {
@@ -1045,7 +1045,7 @@ const handleFileDownload = (downloadData) => {
 }
 
 const removeCooperativeUnit = (index) => {
-  ElMessageBox.confirm('确定要删除该合作研究单位吗？', '删除确认', { type: 'warning' }).then(() => {
+  ElMessageBox.confirm('确定要删除该合作研究单位吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
     data.form.cooperativeUnits.splice(index, 1)
     ElMessage.success('删除成功')
   }).catch(() => {
@@ -1062,7 +1062,7 @@ const down = (url) => {
 
 // 重置当前标签页的数据
 const resetCurrentTab = () => {
-  ElMessageBox.confirm('确定要重置当前标签页的数据吗？', '重置确认', { type: 'warning' }).then(() => {
+  ElMessageBox.confirm('确定要重置当前标签页的数据吗？', '重置确认', { type: 'warning', buttonSize: 'small' }).then(() => {
     switch (data.activeTab) {
       case 'projectInfo':
         // 重置项目信息

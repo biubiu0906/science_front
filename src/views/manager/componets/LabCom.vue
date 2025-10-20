@@ -98,7 +98,7 @@
                     <h3>依托学科 & 研究方向</h3>
                     <el-form label-width="120px" ref="memberForm" :model="formData">
                         <el-form-item label="其他依托学科">
-                            <el-table :data="formData.direction.disciplines" border style="width: 100%">
+                            <el-table :data="formData.direction.disciplines" border style="width: 100%" empty-text="暂无依托学科">
                                 <el-table-column label="依托学科" prop="name">
                                     <template #default="scope">
                                         <span>{{ scope.row.name }}</span>
@@ -112,7 +112,7 @@
                             </el-table>
                         </el-form-item>
                         <el-form-item label="研究方向">
-                            <el-table :data="formData.direction.researches" border style="width: 100%">
+                            <el-table :data="formData.direction.researches" border style="width: 100%" empty-text="暂无研究方向">
                                 <el-table-column label="研究方向" prop="name">
                                     <template #default="scope">
                                         <span>{{ scope.row.name }}</span>
@@ -144,7 +144,7 @@
                     <h3>下属子机构</h3>
                     <el-form ref="buildingsForm" :model="formData.buildings">
                         <el-form-item>
-                            <el-table :data="formData.buildings.construacts" border style="width: 100%">
+                            <el-table :data="formData.buildings.construacts" border style="width: 100%" empty-text="暂无建设内容">
                                 <el-table-column label="子机构名称" prop="name">
                                     <template #default="scope">
                                         <span>{{ scope.row.name }}</span>
@@ -167,7 +167,7 @@
 
                 <div v-if="activeTab === 'attachments'">
                     <h3>申请材料</h3>
-                    <el-table :data="formData.attachments.files" border style="width: 100%">
+                    <el-table :data="formData.attachments.files" border style="width: 100%" empty-text="暂无附件">
                         <el-table-column label="文件名称" prop="name">
                             <template #default="scope">
                                 <a :href="scope.row" target="_blank" download>

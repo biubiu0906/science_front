@@ -41,7 +41,7 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 
@@ -81,7 +81,7 @@ const submit = () => {
   })
 }
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning' }).then(res => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/feedback/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
