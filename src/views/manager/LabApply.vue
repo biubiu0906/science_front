@@ -308,6 +308,9 @@
         <LabApplicationForm v-if="pageStatus === 'select'" :id="selectedApplicationId" />
     </transition>
 
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="showSecurityAlert" @confirm="handleSecurityConfirm" />
+
 </template>
 
 <script setup>
@@ -316,6 +319,8 @@ import { ElMessage } from 'element-plus';
 import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 import LabApplicationForm from './componets/LabCom.vue';
+import SecurityAlert from "@/components/SecurityAlert.vue";
+import { securityAlertManager } from "@/utils/securityAlert.js";
 
 // 读取环境变量
 const baseUrl = import.meta.env?.VITE_BASE_URL || '';
@@ -331,6 +336,7 @@ const selectedApplicationId = ref(null); // 定义 selectedApplicationId
 // 页面状态
 const pageStatus = ref('');
 const activeStep = ref(0);
+const showSecurityAlert = ref(false);
 
 const fileList = ref([]);
 
@@ -546,17 +552,29 @@ const nextTab = () => {
             console.log('formRef', valid);
             if (valid) {
                 activeStep.value += 1;
+                // 如果进入第4步（文件上传步骤），显示安全提醒
+                if (activeStep.value === 4) {
+                    securityAlertManager.show();
+                }
             } else {
                 ElMessage.error('表单校验失败，请检查输入内容');
             }
         });
     } else {
         activeStep.value += 1;
+        // 如果进入第4步（文件上传步骤），显示安全提醒
+        if (activeStep.value === 4) {
+            securityAlertManager.show();
+        }
     }
 };
 
 const prevTab = () => {
     if (activeStep.value > 0) {
+        // 如果从第4步（文件上传步骤）退出，隐藏安全提醒
+        if (activeStep.value === 4) {
+            securityAlertManager.hide();
+        }
         activeStep.value -= 1;
     }
 };
@@ -597,6 +615,7 @@ const submitForm = () => {
                 onClose: () => {
                     // 消息关闭后的回调函数
                     activeStep.value++; // 跳转到下一步
+                    securityAlertManager.hide(); // 隐藏安全提醒
                     fetchLabApplyList();
                 },
             });
@@ -616,6 +635,7 @@ const submitForm = () => {
                 onClose: () => {
                     // 消息关闭后的回调函数
                     activeStep.value++; // 跳转到下一步
+                    securityAlertManager.hide(); // 隐藏安全提醒
                     fetchLabApplyList();
                 },
             });
@@ -638,6 +658,8 @@ const updateDetails = (id) => {
     pageStatus.value = 'update';
     // 回到开头
     activeStep.value = 0;
+    // 隐藏安全提醒
+    securityAlertManager.hide();
     // 但是要填充内容
     fetchApplicationDetails(id);
 }
@@ -676,6 +698,8 @@ const labAddHandle = () => {
     // 刷新 + 清空
     pageStatus.value = 'add';
     activeStep.value = 0;
+    // 隐藏安全提醒
+    securityAlertManager.hide();
     // 清空数据
     formData.value = {
         institutionName: '',
@@ -705,6 +729,11 @@ const labAddHandle = () => {
 
 const getFileName = (fileUrl) => {
     return fileUrl.split('-').pop();
+};
+
+// 安全提醒确认处理
+const handleSecurityConfirm = () => {
+    showSecurityAlert.value = false;
 };
 </script>
 

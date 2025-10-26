@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/manager/home' },
+    { path: '/', redirect: '/manager/dashboard' },
     {
       path: '/manager',
       component: () => import('@/views/Manager.vue'),
@@ -32,7 +32,8 @@ const router = createRouter({
         { path: 'dashboard', meta: { name: '数据统计' }, component: () => import('@/views/manager/Dashboard.vue'), },
         { path: 'laboratory', meta: { name: '实验室信息' }, component: () => import('@/views/manager/Laboratory.vue'), },
         { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue'), },
-        { path: 'notification', meta: { name: '通知管理' }, component: () => import('@/views/manager/Notification.vue'), }
+        { path: 'notification', meta: { name: '通知管理' }, component: () => import('@/views/manager/Notification.vue'), },
+        { path: 'myNotification', meta: { name: '我的通知' }, component: () => import('@/views/manager/MyNotification.vue'), },
       ]
     },
     {

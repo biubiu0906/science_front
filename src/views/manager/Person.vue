@@ -30,6 +30,9 @@
         <el-button type="primary" @click="update">保 存</el-button>
       </div>
     </el-form>
+
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
   </div>
 </template>
 
@@ -39,11 +42,13 @@ import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 // 按需引入 Element Plus 图标
 import { Plus } from "@element-plus/icons-vue";
+import SecurityAlert from "@/components/SecurityAlert.vue";
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 
 const data = reactive({
-  user: JSON.parse(localStorage.getItem('xm-user') || '{}')
+  user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+  showSecurityAlert: true // 控制安全提醒弹窗的显示
 })
 
 // 头像上传前的验证函数
@@ -67,6 +72,11 @@ const beforeAvatarUpload = (file) => {
 
 const handleFileUpload = (res) => {
   data.user.avatar = res.data
+}
+
+// 处理安全提醒确认
+const handleSecurityConfirm = () => {
+  data.showSecurityAlert = false
 }
 
 const emit = defineEmits(['updateUser'])

@@ -1,51 +1,98 @@
 <template>
   <div style="height: calc(100vh - 89px); overflow: hidden; padding-right: 10px; padding-bottom: 0;">
     <div style="display: flex; margin-bottom: 10px;">
-      <!-- 左侧：系统公告 -->
-      <div class="card" style="width: 50%; margin-right: 5px; height: 180px; padding: 10px 15px; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="font-weight: bold; font-size: 16px; color: #333">系统公告</div>
+      <!-- 左侧：通知和公告 -->
+      <div class="card" style="width: 50%; margin-right: 5px; height: 180px; padding: 0 15px 10px 15px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <el-tabs v-model="data.activeNoticeTab">
+            <!-- 通知标签页 -->
+            <el-tab-pane label="通知" name="notification">
+            </el-tab-pane>
+          
+            <!-- 公告标签页 -->
+            <el-tab-pane label="公告" name="notice">
+            </el-tab-pane>
+          </el-tabs>
           <el-button 
             type="primary" 
             size="small" 
             text
             bg
-            @click="showAllNotices"
+            @click="handleViewAll"
+            style="margin-left: 10px;"
           >
             查看全部
           </el-button>
         </div>
-        <div style="max-height: 120px; overflow-y: hidden">
-          <div 
-            v-for="(item, index) in data.noticeData.slice(0, 3)" 
-            :key="index"
-            @click="showNoticeDetail(item)"
-            style="
-              padding: 5px 8px; 
-              margin-bottom: 8px;
-              border-left: 3px solid #409eff; 
-              background: #f5f7fa; 
-              cursor: pointer;
-              border-radius: 4px;
-              transition: all 0.3s;
-            "
-            :style="{ 'background': hoveredNotice === index ? '#e6f7ff' : '#f5f7fa' }"
-            @mouseenter="hoveredNotice = index"
-            @mouseleave="hoveredNotice = -1"
-          >
-            <el-tooltip 
-              :content="getNoticeTitle(item)" 
-              placement="right"
-              effect="light"
-              popper-style="max-width: 400px;"
+        
+        <!-- 标签页内容区域 -->
+        <div style="height: calc(100% - 50px);">
+          <div v-if="data.activeNoticeTab === 'notification'" style="max-height: 100px; overflow-y: hidden">
+            <div 
+              v-for="(item, index) in data.notificationData.slice(0, 3)" 
+              :key="index"
+              @click="showNotificationDetail(item)"
+              style="
+                padding: 4px 8px; 
+                margin-bottom: 5px;
+                border-left: 3px solid #67c23a; 
+                background: #f5f7fa; 
+                cursor: pointer;
+                border-radius: 4px;
+                transition: all 0.3s;
+              "
+              :style="{ 'background': hoveredNotification === index ? '#f0f9ff' : '#f5f7fa' }"
+              @mouseenter="hoveredNotification = index"
+              @mouseleave="hoveredNotification = -1"
             >
-              <el-text style="font-size: 14px; color: #333; font-weight: 500" line-clamp="1">
-                {{ getNoticeTitle(item) }}
-              </el-text>
-            </el-tooltip>
+              <el-tooltip 
+                :content="getNotificationTitle(item)" 
+                placement="right"
+                effect="light"
+                popper-style="max-width: 400px;"
+              >
+                <el-text style="font-size: 12px; color: #333; font-weight: 500" line-clamp="1">
+                  {{ getNotificationTitle(item) }}
+                </el-text>
+              </el-tooltip>
+            </div>
+            <div v-if="data.notificationData.length === 0" style="text-align: center; color: #999; padding: 20px">
+              暂无通知
+            </div>
           </div>
-          <div v-if="data.noticeData.length === 0" style="text-align: center; color: #999; padding: 20px">
-            暂无公告
+          
+          <div v-if="data.activeNoticeTab === 'notice'" style="max-height: 100px; overflow-y: hidden">
+            <div 
+              v-for="(item, index) in data.noticeData.slice(0, 3)" 
+              :key="index"
+              @click="showNoticeDetail(item)"
+              style="
+                padding: 4px 8px; 
+                margin-bottom: 5px;
+                border-left: 3px solid #409eff; 
+                background: #f5f7fa; 
+                cursor: pointer;
+                border-radius: 4px;
+                transition: all 0.3s;
+              "
+              :style="{ 'background': hoveredNotice === index ? '#e6f7ff' : '#f5f7fa' }"
+              @mouseenter="hoveredNotice = index"
+              @mouseleave="hoveredNotice = -1"
+            >
+              <el-tooltip 
+                :content="getNoticeTitle(item)" 
+                placement="right"
+                effect="light"
+                popper-style="max-width: 400px;"
+              >
+                <el-text style="font-size: 12px; color: #333; font-weight: 500" line-clamp="1">
+                  {{ getNoticeTitle(item) }}
+                </el-text>
+              </el-tooltip>
+            </div>
+            <div v-if="data.noticeData.length === 0" style="text-align: center; color: #999; padding: 20px">
+              暂无公告
+            </div>
           </div>
         </div>
       </div>
@@ -188,14 +235,14 @@
         <!-- 科研项目Top5 -->
         <el-tab-pane label="项目排行" name="projectRank">
           <div style="height: calc(100% - 40px); padding: 0 20px 20px 20px; box-sizing: border-box; overflow-y: auto;">
-            <div style="text-align: center; margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 10px;">
               <div style="font-weight: bold; font-size: 18px; color: #333;">科研项目Top5</div>
               <div style="font-size: 12px; color: #666; margin-top: 5px;">
                 <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
                 <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
               </div>
             </div>
-            <div>
+            <div style="background: #f8f9fa;">
               <!-- 无数据显示 -->
               <div v-if="!data.projectRanking || data.projectRanking.length === 0" 
                    style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
@@ -210,15 +257,14 @@
                      display: flex; 
                      align-items: center; 
                      justify-content: space-between;
-                     padding: 12px 16px; 
-                     margin-bottom: 8px;
+                     padding:6px 16px; 
+                     margin-bottom: 5px;
                      border-radius: 8px;
-                     background: #f8f9fa;
                    ">
                 <div style="display: flex; align-items: center;">
                   <div style="
-                    width: 30px; 
-                    height: 30px; 
+                    width: 20px; 
+                    height: 20px; 
                     border-radius: 50%; 
                     background: linear-gradient(45deg, #409eff, #67c23a);
                     color: white; 
@@ -228,12 +274,13 @@
                     font-weight: bold;
                     margin-right: 30px;
                     margin-left: 30px;
+                    font-size: 12px;
                   ">
                     {{ index + 1 }}
                   </div>
-                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                  <div style="font-size: 15px; font-weight: 500; color: #333;">{{ item.name }}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
               </div>
               
               <!-- 重点实验室角色：显示教师排行 -->
@@ -244,15 +291,14 @@
                      display: flex; 
                      align-items: center; 
                      justify-content: space-between;
-                     padding: 12px 16px; 
-                     margin-bottom: 8px;
+                     padding: 6px 16px; 
+                     margin-bottom: 5px;
                      border-radius: 8px;
-                     background: #f8f9fa;
                    ">
                 <div style="display: flex; align-items: center;">
                   <div style="
-                    width: 30px; 
-                    height: 30px; 
+                    width: 20px; 
+                    height: 20px; 
                     border-radius: 50%; 
                     background: linear-gradient(45deg, #409eff, #67c23a);
                     color: white; 
@@ -262,12 +308,13 @@
                     font-weight: bold;
                     margin-right: 30px;
                     margin-left: 30px;
+                    font-size: 12px;
                   ">
                     {{ index + 1 }}
                   </div>
-                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                  <div style="font-size: 15px; font-weight: 500; color: #333;">{{ item.name }}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
               </div>
             </div>
           </div>
@@ -276,14 +323,14 @@
         <!-- 科研成果Top5 -->
         <el-tab-pane label="成果排行" name="achievementRank">
           <div style="height: calc(100% - 40px); padding: 0 20px 20px 20px; box-sizing: border-box; overflow-y: auto;">
-            <div style="text-align: center; margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 10px;">
               <div style="font-weight: bold; font-size: 18px; color: #333;">科研成果Top5</div>
               <div style="font-size: 12px; color: #666; margin-top: 5px;">
                 <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
                 <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
               </div>
             </div>
-            <div>
+            <div style="background: #f8f9fa;">
               <!-- 无数据显示 -->
               <div v-if="!data.achievementRanking || data.achievementRanking.length === 0" 
                    style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
@@ -298,15 +345,14 @@
                      display: flex; 
                      align-items: center; 
                      justify-content: space-between;
-                     padding: 12px 16px; 
-                     margin-bottom: 8px;
+                     padding: 6px 16px; 
+                     margin-bottom: 5px;
                      border-radius: 8px;
-                     background: #f8f9fa;
                    ">
                 <div style="display: flex; align-items: center;">
                   <div style="
-                    width: 30px; 
-                    height: 30px; 
+                    width: 20px; 
+                    height: 20px; 
                     border-radius: 50%; 
                     background: linear-gradient(45deg, #e6a23c, #f56c6c);
                     color: white; 
@@ -316,12 +362,13 @@
                     font-weight: bold;
                     margin-right: 30px;
                     margin-left: 30px;
+                    font-size: 12px;
                   ">
                     {{ index + 1 }}
                   </div>
-                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                  <div style="font-size: 15px; font-weight: 500; color: #333;">{{ item.name }}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
               </div>
               
               <!-- 重点实验室角色：显示教师排行 -->
@@ -332,15 +379,14 @@
                      display: flex; 
                      align-items: center; 
                      justify-content: space-between;
-                     padding: 12px 16px; 
-                     margin-bottom: 8px;
+                     padding: 6px 16px; 
+                     margin-bottom: 5px;
                      border-radius: 8px;
-                     background: #f8f9fa;
                    ">
                 <div style="display: flex; align-items: center;">
                   <div style="
-                    width: 30px; 
-                    height: 30px; 
+                    width: 20px; 
+                    height: 20px; 
                     border-radius: 50%; 
                     background: linear-gradient(45deg, #e6a23c, #f56c6c);
                     color: white; 
@@ -350,12 +396,13 @@
                     font-weight: bold;
                     margin-right: 30px;
                     margin-left: 30px;
+                    font-size: 12px;
                   ">
                     {{ index + 1 }}
                   </div>
-                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                  <div style="font-size: 15px; font-weight: 500; color: #333;">{{ item.name }}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
               </div>
             </div>
           </div>
@@ -366,10 +413,10 @@
     <!-- 公告详情弹窗 -->
     <el-dialog 
       v-model="data.noticeDetailVisible" 
-      width="600px"
+      width="800px"
       :before-close="() => data.noticeDetailVisible = false"
     >
-      <div style="padding: 20px">
+      <div style="padding: 0 15px;">
         <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333">
           {{ getNoticeTitle(data.currentNotice) }}
         </div>
@@ -378,6 +425,30 @@
         </div>
         <div style="line-height: 1.8; color: #666; text-align: justify">
           {{ data.currentNotice.content }}
+        </div>
+        
+        <!-- 附件显示区域 -->
+        <div v-if="data.currentNotice.file" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+          <div style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 10px;">
+            <el-icon style="margin-right: 5px;"><Paperclip /></el-icon>
+            附件
+          </div>
+          <div class="notice-attachment">
+            <div class="attachment-item">
+              <div class="attachment-info">
+                <el-icon class="file-icon"><Document /></el-icon>
+                <span class="file-name">{{ getFileName(data.currentNotice.file) }}</span>
+              </div>
+              <el-button 
+                type="primary" 
+                size="small" 
+                @click="downloadFile(data.currentNotice.file)"
+                class="download-btn"
+              >
+                下载
+              </el-button>
+            </div>
+          </div>
         </div>
       </div>
       <template #footer>
@@ -390,7 +461,7 @@
     <!-- 查看全部公告弹窗 -->
     <el-dialog 
       v-model="data.allNoticesVisible" 
-      title="公告" 
+      title="全部公告" 
       width="800px"
       :before-close="() => data.allNoticesVisible = false"
     >
@@ -398,34 +469,91 @@
          :data="data.noticeData" 
          style="width: 100%"
          :show-header="false"
+         @row-click="showNoticeDetailFromTable"
+         :row-style="{ cursor: 'pointer' }"
        >
          <el-table-column 
            prop="title" 
            min-width="300"
          >
            <template #default="scope">
-             <el-button 
-               type="text" 
-               style="color: #333; font-weight: 500;"
-               @click="showNoticeDetailFromTable(scope.row)"
-             >
+             <span style="color: #333; font-weight: 500;">
                {{ getNoticeTitle(scope.row) }}
-             </el-button>
+             </span>
            </template>
          </el-table-column>
          <el-table-column 
-           prop="time" 
+           prop="createTime" 
            width="180"
            align="center"
          >
          </el-table-column>
        </el-table>
-      <div v-if="data.noticeData.length === 0" style="text-align: center; color: #999; padding: 40px">
-        暂无公告
-      </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="data.allNoticesVisible = false" size="small">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 通知详情弹窗 -->
+    <el-dialog 
+      v-model="data.notificationDetailVisible" 
+      width="800px"
+      :before-close="() => data.notificationDetailVisible = false"
+    >
+      <div style="padding: 0 15px;">
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333">
+          {{ getNotificationTitle(data.currentNotification) }}
+        </div>
+        <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
+          发布时间：{{ data.currentNotification.createTime }}
+        </div>
+        <div style="line-height: 1.8; color: #666; text-align: justify">
+          {{ data.currentNotification.content }}
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="data.notificationDetailVisible = false" size="small">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 查看全部通知弹窗 -->
+    <el-dialog 
+      v-model="data.allNotificationsVisible" 
+      title="全部通知" 
+      width="800px"
+      :before-close="() => data.allNotificationsVisible = false"
+    >
+      <el-table 
+         :data="data.notificationData" 
+         style="width: 100%"
+         :show-header="false"
+         @row-click="showNotificationDetailFromTable"
+         :row-style="{ cursor: 'pointer' }"
+       >
+         <el-table-column 
+           prop="title" 
+           min-width="300"
+         >
+           <template #default="scope">
+             <span style="color: #333; font-weight: 500;">
+               {{ getNotificationTitle(scope.row) }}
+             </span>
+           </template>
+         </el-table-column>
+         <el-table-column 
+           prop="createTime" 
+           width="180"
+           align="center"
+         >
+         </el-table-column>
+       </el-table>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="data.allNotificationsVisible = false" size="small">关闭</el-button>
         </span>
       </template>
     </el-dialog>
@@ -439,7 +567,7 @@ import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import echarts from "@/utils/echarts.js";
 // 导入图标组件
-import { Platform, HelpFilled, Comment, Avatar } from '@element-plus/icons-vue';
+import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download } from '@element-plus/icons-vue';
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -450,6 +578,13 @@ const data = reactive({
   currentNotice: {}, // 当前查看的公告详情
   allNoticesVisible: false, // 查看全部公告弹窗显示状态
   activeTab: 'subject', // 当前激活的tab页，默认为学科分布
+  activeNoticeTab: 'notification', // 当前激活的通知/公告标签页，默认为通知
+  // 通知相关数据
+  notificationData: [], // 通知数据，从接口获取
+  hoveredNotification: -1, // 鼠标悬停的通知索引
+  notificationDetailVisible: false, // 通知详情弹窗显示状态
+  currentNotification: {}, // 当前查看的通知详情
+  allNotificationsVisible: false, // 查看全部通知弹窗显示状态
   // 排行榜模拟数据 - 管理员角色（实验室维度）
   projectRanking: [
   ],
@@ -472,6 +607,19 @@ const loadNotice = () => {
   request.get('/notice/selectAll').then(res => {
     if (res.code === '200') {
       data.noticeData = res.data.list
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+// 加载通知数据
+const loadNotification = () => {
+  // 根据用户角色选择不同的接口
+  const endpoint = data.user.role === 'ADMIN' ? '/notification/selectAll' : '/notification/selectCurrent'
+  request.get(endpoint).then(res => {
+    if (res.code === '200') {
+      data.notificationData = res.data.list
     } else {
       ElMessage.error(res.msg)
     }
@@ -506,6 +654,56 @@ const showNoticeDetailFromTable = (notice) => {
   data.allNoticesVisible = false // 关闭全部公告弹窗
   data.currentNotice = notice
   data.noticeDetailVisible = true // 打开公告详情弹窗
+}
+
+// 获取通知标题（如果有title字段则使用，否则取content前几个字）
+const getNotificationTitle = (notification) => {
+  if (notification.title && notification.title.trim()) {
+    return notification.title
+  }
+  // 如果没有标题，取内容的前20个字符作为标题
+  if (notification.content) {
+    return notification.content.length > 20 ? notification.content.substring(0, 20) + '...' : notification.content
+  }
+  return '无标题'
+}
+
+// 显示通知详情
+const showNotificationDetail = (notification) => {
+  data.currentNotification = notification
+  data.notificationDetailVisible = true
+}
+
+// 显示全部通知
+const showAllNotifications = () => {
+  // 根据用户角色选择不同的接口获取所有通知数据
+  const endpoint = data.user.role === 'ADMIN' ? '/notification/selectAll' : '/notification/selectCurrent'
+  request.get(endpoint).then(res => {
+    if (res.code === '200') {
+      data.notificationData = res.data.list
+      data.allNotificationsVisible = true
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+// 从表格中查看通知详情
+const showNotificationDetailFromTable = (notification) => {
+  data.allNotificationsVisible = false // 关闭全部通知弹窗
+  data.currentNotification = notification
+  data.notificationDetailVisible = true // 打开通知详情弹窗
+}
+
+// 处理查看全部按钮点击事件
+const handleViewAll = () => {
+  if (data.activeNoticeTab === 'notification') {
+    // 当前是通知标签页，调用显示全部通知
+    showAllNotifications()
+  } else if (data.activeNoticeTab === 'notice') {
+    // 当前是公告标签页，调用显示全部公告
+    showAllNotices()
+  }
 }
 
 const loadRankingData = () => {
@@ -738,6 +936,7 @@ const handleTabChange = (tabName) => {
 
 loadBaseData()
 loadNotice()
+loadNotification()
 loadRankingData()
 onMounted(() => {
   // 初始加载默认tab的图表
@@ -997,4 +1196,82 @@ let pieOptions2 = {
     }
   ]
 }
+
+// 附件相关方法
+const getFileName = (filePath) => {
+  if (!filePath) return ''
+  return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
+}
+
+const downloadFile = (filePath) => {
+  if (!filePath) {
+    ElMessage.warning('文件不存在')
+    return
+  }
+  // 这里应该调用后端接口下载文件
+  // 暂时使用模拟下载
+  const link = document.createElement('a')
+  link.href = filePath
+  link.download = getFileName(filePath)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  ElMessage.success('开始下载文件')
+}
 </script>
+
+<style scoped>
+/* 附件显示样式 */
+.notice-attachment {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 5px;
+  border: 1px solid #e9ecef;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+}
+
+.file-icon {
+  color: #409eff;
+  font-size: 18px;
+}
+
+.file-name {
+  color: #606266;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.download-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+:deep(.el-tabs__header) {
+  margin: 5px !important;
+}
+</style>

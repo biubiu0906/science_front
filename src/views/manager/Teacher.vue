@@ -81,7 +81,7 @@
       <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="教师信息" v-model="data.formVisible" width="40%" destroy-on-close>
+    <el-dialog title="教师信息" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened">
       <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px; margin-right: 30px;">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
@@ -178,6 +178,9 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
   </div>
 </template>
 
@@ -188,6 +191,7 @@ import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Collection} from "@element-plus/icons-vue";
 import Password from "./Password.vue";
+import SecurityAlert from "@/components/SecurityAlert.vue";
 
 // 表单引用
 const formRef = ref(null)
@@ -212,7 +216,8 @@ const data = reactive({
   name: null,
   ids: [],
   Password: null,
-  showPassword: false
+  showPassword: false,
+  showSecurityAlert: false
 })
 
 // 表单验证规则
@@ -462,6 +467,16 @@ const reset = () => {
 
 const togglePasswordVisibility = () => {
   data.showPassword = !data.showPassword
+}
+
+// 处理对话框打开事件
+const handleDialogOpened = () => {
+  // 移除自动弹出安全提醒的逻辑
+}
+
+// 处理安全提醒确认
+const handleSecurityConfirm = () => {
+  data.showSecurityAlert = false
 }
 
 load()

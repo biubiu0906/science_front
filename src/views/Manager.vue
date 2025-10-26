@@ -20,11 +20,17 @@
             </el-icon>
             <span>数据统计</span>
           </el-menu-item>
-          <el-menu-item index="/manager/home">
+          <!--<el-menu-item index="/manager/home">
             <el-icon>
               <HomeFilled />
             </el-icon>
             <span>系统公告</span>
+          </el-menu-item>-->
+          <el-menu-item index="/manager/myNotification" v-if="data.user.role === 'TEACHER' || data.user.role === 'NORMAL_LABORATORY'">
+            <el-icon>
+              <Bell />
+            </el-icon>
+            <span>通知</span>
           </el-menu-item>
           <el-sub-menu index="1" v-if="data.user.role !== 'TEACHER'">
             <template #title>
@@ -57,7 +63,7 @@
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">公告管理</el-menu-item>
-            <el-menu-item index="/manager/notification" v-if="data.user.role === 'ADMIN'">通知管理</el-menu-item>
+            <el-menu-item index="/manager/notification" v-if="data.user.role !== 'TEACHER'">通知管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="1" v-else>
             <template #title>
@@ -141,7 +147,7 @@ import router from "@/router/index.js";
 import { ElMessage } from "@/utils/element-plus";
 import request from "@/utils/request.js";
 // 按需引入 Element Plus 图标
-import { Odometer, HomeFilled, Menu, Fold, Expand, ArrowDown } from "@element-plus/icons-vue";
+import { Odometer, Bell, Menu, Fold, Expand, ArrowDown } from "@element-plus/icons-vue";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -178,12 +184,6 @@ const getLaboratoryLevel = () => {
 const updateUser = () => {
   data.user = JSON.parse(localStorage.getItem('xm-user') || '{}')
 }
-
-onMounted(() => {
-  if (data.user.id) {
-    getLaboratoryLevel()
-  }
-})
 
 if (!data.user.id) {
   logout()

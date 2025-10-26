@@ -73,6 +73,7 @@
       size="65%" 
       destroy-on-close
       @close="handleDrawerClose"
+      @opened="handleDrawerOpened"
       :before-close="handleBeforeClose">
       <template #header>
         <div style="font-size: 18px; color: #303133; font-weight: 500;">
@@ -482,6 +483,9 @@
       @download="handleFileDownload"
     />
 
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
+
   </div>
 </template>
 
@@ -492,6 +496,8 @@ import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 import { Delete, Edit, View, Tickets, Loading, SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
 import FilePreviewCom from "./componets/FilePreviewCom.vue";
+import SecurityAlert from "@/components/SecurityAlert.vue";
+import { securityAlertManager } from "@/utils/securityAlert.js";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
 const data = reactive({
@@ -547,6 +553,8 @@ const data = reactive({
   total: 0,
   code: null,
   name: null,
+  showSecurityAlert: false,
+  securityAlertShown: false, // 标记是否已经显示过安全提醒，避免重复弹出
   laboratoryLevel: null,
   savedTabData: {}, // 临时保存的标签页数据
 })
@@ -648,6 +656,7 @@ const handleAdd = () => {
     }
     data.isViewMode = false // 设置为编辑模式
     data.activeTab = 'projectInfo' // 重置到项目信息标签页
+    data.securityAlertShown = false // 重置安全提醒标记，允许在附件材料标签页显示
     data.formVisible = true
     console.log('新增抽屉应该已打开，formVisible:', data.formVisible)
   }, 10)
@@ -660,6 +669,7 @@ const handleEdit = (row) => {
   if (!data.form.attachments) data.form.attachments = []
   data.isViewMode = false // 设置为编辑模式
   data.activeTab = 'projectInfo' // 重置到第一个标签页
+  data.securityAlertShown = false // 重置安全提醒标记，允许在附件材料标签页显示
   data.formVisible = true
 }
 const handleCheck = (row) => {
@@ -1282,6 +1292,8 @@ const handleDrawerClose = () => {
   console.log('抽屉关闭事件被触发')
   // 确保抽屉状态正确关闭
   data.formVisible = false
+  // 隐藏安全提醒
+  securityAlertManager.hide()
   // 重置表单状态
   data.activeTab = 'projectInfo'
   data.isViewMode = false
@@ -1330,6 +1342,12 @@ const handleTabChange = (tabName) => {
     // 重置文件校验状态
     data.fileValidationStatus = ''
     data.validationLoading = false
+    
+    // 在新增模式下，切换到附件材料标签页时弹出安全提醒
+    if (!data.isViewMode && tabName === 'attachments' && !data.securityAlertShown) {
+      securityAlertManager.show()
+      data.securityAlertShown = true
+    }
   }, 50) // 50ms防抖延迟
 }
 
@@ -1362,6 +1380,16 @@ const getContentAlignClass = (content) => {
   // 判断内容是否超过一行（这里以50个字符为基准，可根据实际情况调整）
   const isMultiLine = content.length > 50 || content.includes('\n')
   return isMultiLine ? 'content-justify' : 'content-center'
+}
+
+// 处理抽屉打开事件
+const handleDrawerOpened = () => {
+  // 不再自动弹出安全提醒，改为在特定条件下弹出
+}
+
+// 处理安全提醒确认
+const handleSecurityConfirm = () => {
+  data.showSecurityAlert = false
 }
 
 onMounted(() => {

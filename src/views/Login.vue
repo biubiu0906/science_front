@@ -69,8 +69,13 @@ const login = () => {
           const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
           setTimeout(() => {
             if(userInfo.role === 'ADMIN' || userInfo.role === 'KEY_LABORATORY') {
+              // 管理员和实验室用户跳转到数据统计页
               location.href = '/manager/dashboard'
+            } else if(userInfo.role === 'TEACHER' || userInfo.role === 'NORMAL_LABORATORY') {
+              // 教师用户跳转到通知页
+              location.href = '/manager/myNotification'
             } else {
+              // 其他情况跳转到首页
               location.href = '/manager/home'
             }
           }, 500)

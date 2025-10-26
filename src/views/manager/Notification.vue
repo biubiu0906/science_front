@@ -28,16 +28,16 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="laboratoryUsername" label="通知对象" width="160" sortable>
+        <el-table-column prop="laboratoryNames" label="通知对象" width="160" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.laboratoryUsername)">
-              <template v-if="Array.isArray(scope.row.laboratoryUsername)">
-                <div v-for="(lab, index) in scope.row.laboratoryUsername" :key="index" style="margin-bottom: 2px;">
+            <div :class="getContentAlignClass(scope.row.laboratoryNames)">
+              <template v-if="Array.isArray(scope.row.laboratoryNames)">
+                <div v-for="(lab, index) in scope.row.laboratoryNames" :key="index" style="margin-bottom: 2px;">
                   {{ lab }}
                 </div>
               </template>
               <template v-else>
-                {{ scope.row.laboratoryUsername }}
+                {{ scope.row.laboratoryNames }}
               </template>
             </div>
           </template>
@@ -60,7 +60,7 @@
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除通知" placement="bottom" effect="light">
-              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
+              <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.notificationId)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -159,11 +159,9 @@ const data = reactive({
   rules: {
     title: [
       { required: true, message: '请输入通知标题', trigger: 'blur' },
-      { min: 1, max: 100, message: '标题长度应在1到100个字符之间', trigger: 'blur' }
     ],
     content: [
       { required: true, message: '请输入通知内容', trigger: 'blur' },
-      { min: 1, max: 500, message: '内容长度应在1到500个字符之间', trigger: 'blur' }
     ],
     laboratoryUsername: [
       { required: true, message: '请选择通知对象', trigger: 'change' },
@@ -197,7 +195,12 @@ const indexMethod = (index) => {
 }
 
 const load = () => {
-  request.get('/notification/selectPage', {
+  // 根据是否有搜索条件决定使用哪个接口
+  const endpoint = data.title ? '/notification/search' : '/notification/selectPageGrouped'
+  console.log("endpoint",endpoint)
+  console.log("title",data.title)
+
+  request.get(endpoint, {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
@@ -239,15 +242,15 @@ const handleAdd = () => {
 }
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
-  // 处理通知对象字段，确保为数组格式以适配多选组件
-  if (data.form.laboratoryUsername) {
+  // 处理通知对象字段，使用 laboratoryUsernames 字段
+  if (data.form.laboratoryUsernames) {
     // 如果已经是数组，直接使用
-    if (Array.isArray(data.form.laboratoryUsername)) {
-      // 数组格式，无需处理
+    if (Array.isArray(data.form.laboratoryUsernames)) {
+      data.form.laboratoryUsername = data.form.laboratoryUsernames
     }
     // 其他情况转换为数组
     else {
-      data.form.laboratoryUsername = [data.form.laboratoryUsername]
+      data.form.laboratoryUsername = [data.form.laboratoryUsernames]
     }
   } else {
     data.form.laboratoryUsername = []
@@ -267,8 +270,15 @@ const add = () => {
   if (!Array.isArray(formData.laboratoryUsername)) {
     formData.laboratoryUsername = formData.laboratoryUsername ? [formData.laboratoryUsername] : []
   }
+
+  // 创建addData对象，包含指定的字段
+  const addData = {
+    title: formData.title,
+    content: formData.content,
+    laboratoryUsernames: formData.laboratoryUsername
+  }
   
-  request.post('/notification/add', formData).then(res => {
+  request.post('/notification/add', addData).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -282,16 +292,22 @@ const add = () => {
 const update = () => {
   // 创建副本并处理数据格式
   const formData = JSON.parse(JSON.stringify(data.form))
-  // 确保laboratoryUsername为数组格式发送给后端
+  // 确保laboratoryUsername为数组格式发送给后端，并重命名为 laboratoryUsernames
   if (!Array.isArray(formData.laboratoryUsername)) {
-    formData.laboratoryUsername = formData.laboratoryUsername ? [formData.laboratoryUsername] : []
+    formData.laboratoryUsernames = formData.laboratoryUsername ? [formData.laboratoryUsername] : []
+  } else {
+    formData.laboratoryUsernames = formData.laboratoryUsername
   }
+  // 删除旧字段名
+  delete formData.laboratoryUsername
   
-  request.put('/notification/update', formData).then(res => {
+  request.put(`/notification/updateGroup/${formData.notificationId}`, formData).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
       load()
+    } else {
+      ElMessage.error(res.msg)
     }
   })
 }
@@ -306,7 +322,7 @@ const save = () => {
   form.value.validate((valid) => {
     if (valid) {
       // 验证通过，执行保存操作
-      data.form.id ? update() : add()
+      data.form.notificationId ? update() : add()
     } else {
       // 验证失败，显示错误信息
       ElMessage.error('请填写完整的必填信息')
@@ -315,9 +331,9 @@ const save = () => {
   })
 }
 
-const del = (id) => {
+const del = (notificationId) => {
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
-    request.delete('/notification/delete/' + id).then(res => {
+    request.delete('/notification/deleteGroup/' + notificationId).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
         load()
@@ -335,7 +351,7 @@ const delBatch = () => {
     return
   }
   ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
-    request.delete("/notification/delete/batch", {data: data.ids}).then(res => {
+    request.delete("/notification/deleteGroupBatch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         load()
@@ -348,7 +364,7 @@ const delBatch = () => {
   })
 }
 const handleSelectionChange = (rows) => {
-  data.ids = rows.map(v => v.id)
+  data.ids = rows.map(v => v.notificationId)
 }
 
 const reset = () => {

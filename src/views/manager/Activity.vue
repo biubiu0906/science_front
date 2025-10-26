@@ -55,7 +55,7 @@
       <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="学术活动" v-model="data.formVisible" width="40%" destroy-on-close>
+    <el-dialog title="学术活动" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened">
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="avatar" label="活动封面">
           <el-upload
@@ -98,6 +98,9 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
   </div>
 </template>
 
@@ -107,6 +110,7 @@ import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit} from "@element-plus/icons-vue";
+import SecurityAlert from "@/components/SecurityAlert.vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
 
 const data = reactive({
@@ -118,7 +122,8 @@ const data = reactive({
   total: 0,
   type: null,
   name: null,
-  ids: []
+  ids: [],
+  showSecurityAlert: false // 控制安全提醒弹窗的显示
 })
 
 const formRef = ref()
@@ -233,6 +238,16 @@ const reset = () => {
 
 const handleFileUpload = (res) => {
   data.form.img = res.data
+}
+
+// 处理对话框打开事件
+const handleDialogOpened = () => {
+  data.showSecurityAlert = true
+}
+
+// 处理安全提醒确认
+const handleSecurityConfirm = () => {
+  data.showSecurityAlert = false
 }
 
 load()

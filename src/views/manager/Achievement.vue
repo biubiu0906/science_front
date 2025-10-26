@@ -98,7 +98,7 @@
         v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="科研成果提交" v-model="data.formVisible" width="40%" destroy-on-close>
+    <el-dialog title="科研成果提交" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
       <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="openFile" label="立项文件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
@@ -214,6 +214,9 @@
         </div>
       </div>
     </el-drawer>
+
+    <!-- 安全提醒组件 -->
+    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
   </div>
 </template>
 
@@ -224,6 +227,8 @@ import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 import { Delete, Edit, View } from "@element-plus/icons-vue";
 import router from "@/router/index.js";
+import SecurityAlert from "@/components/SecurityAlert.vue";
+import { securityAlertManager } from "@/utils/securityAlert.js";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
 const data = reactive({
@@ -243,7 +248,8 @@ const data = reactive({
   ids: [],
   laboratoryLevel: null,
   currentProjectId: null, // 当前查看的项目ID
-  processData: [] // 科研过程数据
+  processData: [], // 科研过程数据
+  showSecurityAlert: false // 控制安全提醒弹窗的显示
 })
 
 const rules = reactive({
@@ -489,6 +495,21 @@ const getContentAlignClass = (content) => {
   
   // 否则使用居中对齐
   return 'content-center'
+}
+
+// 处理对话框打开事件
+const handleDialogOpened = () => {
+  securityAlertManager.show()
+}
+
+// 处理对话框关闭事件
+const handleDialogClose = () => {
+  securityAlertManager.hide()
+}
+
+// 处理安全提醒确认
+const handleSecurityConfirm = () => {
+  data.showSecurityAlert = false
 }
 
 onMounted(() => {
