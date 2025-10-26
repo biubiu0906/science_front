@@ -1,10 +1,10 @@
 <template>
-  <div style="height: calc(100vh - 89px); overflow-y: auto; padding-right: 10px;">
+  <div style="height: calc(100vh - 89px); overflow: hidden; padding-right: 10px; padding-bottom: 0;">
     <div style="display: flex; margin-bottom: 10px;">
       <!-- 左侧：系统公告 -->
-      <div class="card" style="width: 50%; margin-right: 5px; height: 250px; padding: 20px; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <div style="font-weight: bold; font-size: 18px; color: #333">系统公告</div>
+      <div class="card" style="width: 50%; margin-right: 5px; height: 180px; padding: 10px 15px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-weight: bold; font-size: 16px; color: #333">系统公告</div>
           <el-button 
             type="primary" 
             size="small" 
@@ -15,13 +15,13 @@
             查看全部
           </el-button>
         </div>
-        <div style="max-height: 180px; overflow-y: hidden">
+        <div style="max-height: 120px; overflow-y: hidden">
           <div 
-            v-for="(item, index) in data.noticeData.slice(0, 4)" 
+            v-for="(item, index) in data.noticeData.slice(0, 3)" 
             :key="index"
             @click="showNoticeDetail(item)"
             style="
-              padding: 8px 12px; 
+              padding: 5px 8px; 
               margin-bottom: 8px;
               border-left: 3px solid #409eff; 
               background: #f5f7fa; 
@@ -51,14 +51,14 @@
       </div>
       
       <!-- 右侧：统计数据 -->
-      <div style="width: 50%; margin-left: 5px; height: 250px; box-sizing: border-box;">
+      <div style="width: 50%; margin-left: 5px; height: 180px; box-sizing: border-box;">
         <!-- 第一行：科研项目数、科研成果总数 -->
         <div style="display: flex; margin-bottom: 10px;">
-          <div style="flex: 1; margin-right: 5px; display: flex; height: 120px; align-items: center" class="card">
-            <div style="flex: 1; text-align: center">
+          <div style="flex: 1; margin-right: 5px; display: flex; height: 85px; align-items: center" class="card">
+            <div style="flex: 1;">
               <div style="
-                width: 60px; 
-                height: 60px; 
+                width: 45px; 
+                height: 45px; 
                 border-radius: 50%; 
                 background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                 display: flex; 
@@ -67,21 +67,21 @@
                 margin: 0 auto;
                 box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
               ">
-                <el-icon size="26" color="#1976d2">
+                <el-icon size="20" color="#1976d2">
                   <Platform />
                 </el-icon>
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 20px">科研项目数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.project || 0 }}</div>
+              <div style="font-size: 16px">科研项目数</div>
+              <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.project || 0 }}</div>
             </div>
           </div>
-          <div style="flex: 1; margin-left: 5px; display: flex; height: 120px; align-items: center" class="card">
-            <div style="flex: 1; text-align: center">
+          <div style="flex: 1; margin-left: 5px; display: flex; height: 85px; align-items: center" class="card">
+            <div style="flex: 1;">
               <div style="
-                width: 60px; 
-                height: 60px; 
+                width: 45px; 
+                height: 45px; 
                 border-radius: 50%; 
                 background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
                 display: flex; 
@@ -90,25 +90,25 @@
                 margin: 0 auto;
                 box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
               ">
-                <el-icon size="26" color="#388e3c">
+                <el-icon size="20" color="#388e3c">
                   <HelpFilled />
                 </el-icon>
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 20px">科研成果数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.achievement || 0 }}</div>
+              <div style="font-size: 16px">科研成果数</div>
+              <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.achievement || 0 }}</div>
             </div>
           </div>
         </div>
         
         <!-- 第二行：反馈总数、教师总数 -->
         <div style="display: flex;">
-          <div style="flex: 1; margin-right: 5px; display: flex; height: 120px; align-items: center" class="card">
-            <div style="flex: 1; text-align: center">
+          <div style="flex: 1; margin-right: 5px; display: flex; height: 85px; align-items: center" class="card">
+            <div style="flex: 1;">
               <div style="
-                width: 60px; 
-                height: 60px; 
+                width: 45px; 
+                height: 45px; 
                 border-radius: 50%; 
                 background: linear-gradient(135deg, #fff3e0, #ffcc80);
                 display: flex; 
@@ -117,21 +117,21 @@
                 margin: 0 auto;
                 box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
               ">
-                <el-icon size="26" color="#f57c00">
+                <el-icon size="20" color="#f57c00">
                   <Comment />
                 </el-icon>
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 20px">实验室总数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
+              <div style="font-size: 16px">实验室总数</div>
+              <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
             </div>
           </div>
-          <div style="flex: 1; margin-left: 5px; display: flex; height: 120px; align-items: center" class="card">
-            <div style="flex: 1; text-align: center">
+          <div style="flex: 1; margin-left: 5px; display: flex; height: 85px; align-items: center" class="card">
+            <div style="flex: 1;">
               <div style="
-                width: 60px; 
-                height: 60px; 
+                width: 45px; 
+                height: 45px; 
                 border-radius: 50%; 
                 background: linear-gradient(135deg, #f3e5f5, #ce93d8);
                 display: flex; 
@@ -140,198 +140,227 @@
                 margin: 0 auto;
                 box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
               ">
-                <el-icon size="26" color="#7b1fa2">
+                <el-icon size="20" color="#7b1fa2">
                   <Avatar />
                 </el-icon>
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 20px">教师总数</div>
-              <div style="font-size: 20px; margin-top: 10px; font-weight: bold">{{ data.baseData.teacher || 0 }}</div>
+              <div style="font-size: 16px">教师总数</div>
+              <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.teacher || 0 }}</div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div style="margin-top: 10px; display: flex;">
-      <div id="pie" style="flex: 1; margin-right: 5px; height: 400px" class="card"></div>
-      <div id="bar1" style="flex: 1; margin-left: 5px; height: 400px" class="card"></div>
-    </div>
-    <div style="margin-top: 10px; display: flex;">
-      <div id="bar2" style="flex: 1; margin-right: 5px; height: 400px; padding: 10px;" class="card"></div>
-      <!--<div id="line" style="flex: 1; margin-left: 5px; height: 400px" class="card"></div>-->
-      <div id="pie2" style="flex: 1; margin-left: 5px; height: 400px; padding: 10px;" class="card"></div>
     </div>
     
-    <!-- 第五行：排行榜 -->
-    <div style="margin-top: 10px; display: flex;">
-      <!-- 左侧排行榜：科研项目Top5 -->
-      <div class="card" style="flex: 1; margin-right: 5px; height: 400px; padding: 20px; box-sizing: border-box;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div style="font-weight: bold; font-size: 18px; color: #333;">科研项目Top5</div>
-          <div style="font-size: 12px; color: #666; margin-top: 5px;">
-            <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
-            <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
+    <!-- 图表展示区域 - 使用 el-tabs 组件 -->
+    <div style="margin-top: 12px; height: calc(100vh - 90px - 180px - 14px);" class="card">
+      <el-tabs v-model="data.activeTab" type="border-card" @tab-change="handleTabChange" style="height: 100%;">
+        <!-- 科研项目学科类别占比图 -->
+        <el-tab-pane label="学科分布" name="subject">
+          <div style="height: calc(100vh - 360px); display: flex;">
+            <div id="pie" style="flex: 1; height: 100%;"></div>
           </div>
-        </div>
-        <div>
-          <!-- 无数据显示 -->
-          <div v-if="!data.projectRanking || data.projectRanking.length === 0" 
-               style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
-            暂无数据
+        </el-tab-pane>
+        
+        <!-- 系统中不同老师的科研项目数量 -->
+        <el-tab-pane label="项目统计" name="project">
+          <div style="height: calc(100vh - 320px); display: flex;">
+            <div id="bar1" style="flex: 1; height: 100%;"></div>
           </div>
-          
-          <!-- 管理员角色：显示实验室排行 -->
-          <div v-else-if="data.user.role === 'ADMIN'" 
-               v-for="(item, index) in data.projectRanking" 
-               :key="'project-lab-' + index"
-               style="
-                 display: flex; 
-                 align-items: center; 
-                 justify-content: space-between;
-                 padding: 12px 16px; 
-                 margin-bottom: 8px;
-                 border-radius: 8px;
-               ">
-            <div style="display: flex; align-items: center;">
-              <div style="
-                width: 30px; 
-                height: 30px; 
-                border-radius: 50%; 
-                background: linear-gradient(45deg, #409eff, #67c23a);
-                color: white; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                font-weight: bold;
-                margin-right: 30px;
-                margin-left: 30px;
-              ">
-                {{ index + 1 }}
+        </el-tab-pane>
+        
+        <!-- 系统中不同类型下的科研成果数量 -->
+        <el-tab-pane label="成果统计" name="achievement">
+          <div style="height: calc(100vh - 330px); display: flex;">
+            <div id="bar2" style="flex: 1; height: 100%;"></div>
+          </div>
+        </el-tab-pane>
+        
+        <!-- 项目状态分布图 -->
+        <el-tab-pane label="状态分布" name="status">
+          <div style="height: calc(100vh - 360px); display: flex;">
+            <div id="pie2" style="flex: 1; height: 100%;"></div>
+          </div>
+        </el-tab-pane>
+        
+        <!-- 科研项目Top5 -->
+        <el-tab-pane label="项目排行" name="projectRank">
+          <div style="height: calc(100% - 40px); padding: 0 20px 20px 20px; box-sizing: border-box; overflow-y: auto;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="font-weight: bold; font-size: 18px; color: #333;">科研项目Top5</div>
+              <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
+                <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
               </div>
-              <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
             </div>
-            <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
-          </div>
-          
-          <!-- 重点实验室角色：显示教师排行 -->
-          <div v-else-if="data.user.role === 'KEY_LABORATORY'" 
-               v-for="(item, index) in data.projectRanking" 
-               :key="'project-teacher-' + index"
-               style="
-                 display: flex; 
-                 align-items: center; 
-                 justify-content: space-between;
-                 padding: 12px 16px; 
-                 margin-bottom: 8px;
-                 border-radius: 8px;
-               ">
-            <div style="display: flex; align-items: center;">
-              <div style="
-                width: 30px; 
-                height: 30px; 
-                border-radius: 50%; 
-                background: linear-gradient(45deg, #409eff, #67c23a);
-                color: white; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                font-weight: bold;
-                margin-right: 30px;
-                margin-left: 30px;
-              ">
-                {{ index + 1 }}
+            <div>
+              <!-- 无数据显示 -->
+              <div v-if="!data.projectRanking || data.projectRanking.length === 0" 
+                   style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
+                暂无数据
               </div>
-              <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
-            </div>
-            <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 右侧排行榜：科研成果Top5 -->
-      <div class="card" style="flex: 1; margin-left: 5px; height: 400px; padding: 20px; box-sizing: border-box;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div style="font-weight: bold; font-size: 18px; color: #333;">科研成果Top5</div>
-          <div style="font-size: 12px; color: #666; margin-top: 5px;">
-            <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
-            <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
-          </div>
-        </div>
-        <div>
-          <!-- 无数据显示 -->
-          <div v-if="!data.achievementRanking || data.achievementRanking.length === 0" 
-               style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
-            暂无数据
-          </div>
-          
-          <!-- 管理员：显示实验室排行 -->
-          <div v-else-if="data.user.role === 'ADMIN'" 
-               v-for="(item, index) in data.achievementRanking" 
-               :key="'achievement-lab-' + index"
-               style="
-                 display: flex; 
-                 align-items: center; 
-                 justify-content: space-between;
-                 padding: 12px 16px; 
-                 margin-bottom: 8px;
-                 border-radius: 8px;
-               ">
-            <div style="display: flex; align-items: center;">
-              <div style="
-                width: 30px; 
-                height: 30px; 
-                border-radius: 50%; 
-                background: linear-gradient(45deg, #e6a23c, #f56c6c);
-                color: white; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                font-weight: bold;
-                margin-right: 30px;
-                margin-left: 30px;
-              ">
-                {{ index + 1 }}
+              
+              <!-- 管理员角色：显示实验室排行 -->
+              <div v-else-if="data.user.role === 'ADMIN'" 
+                   v-for="(item, index) in data.projectRanking" 
+                   :key="'project-lab-' + index"
+                   style="
+                     display: flex; 
+                     align-items: center; 
+                     justify-content: space-between;
+                     padding: 12px 16px; 
+                     margin-bottom: 8px;
+                     border-radius: 8px;
+                     background: #f8f9fa;
+                   ">
+                <div style="display: flex; align-items: center;">
+                  <div style="
+                    width: 30px; 
+                    height: 30px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(45deg, #409eff, #67c23a);
+                    color: white; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    font-weight: bold;
+                    margin-right: 30px;
+                    margin-left: 30px;
+                  ">
+                    {{ index + 1 }}
+                  </div>
+                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
               </div>
-              <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
-            </div>
-            <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
-          </div>
-          
-          <!-- 重点实验室角色：显示教师排行 -->
-          <div v-else-if="data.user.role === 'KEY_LABORATORY'" 
-               v-for="(item, index) in data.achievementRanking" 
-               :key="'achievement-teacher-' + index"
-               style="
-                 display: flex; 
-                 align-items: center; 
-                 justify-content: space-between;
-                 padding: 12px 16px; 
-                 margin-bottom: 8px;
-                 border-radius: 8px;
-               ">
-            <div style="display: flex; align-items: center;">
-              <div style="
-                width: 30px; 
-                height: 30px; 
-                border-radius: 50%; 
-                background: linear-gradient(45deg, #e6a23c, #f56c6c);
-                color: white; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-                font-weight: bold;
-                margin-right: 30px;
-                margin-left: 30px;
-              ">
-                {{ index + 1 }}
+              
+              <!-- 重点实验室角色：显示教师排行 -->
+              <div v-else-if="data.user.role === 'KEY_LABORATORY'" 
+                   v-for="(item, index) in data.projectRanking" 
+                   :key="'project-teacher-' + index"
+                   style="
+                     display: flex; 
+                     align-items: center; 
+                     justify-content: space-between;
+                     padding: 12px 16px; 
+                     margin-bottom: 8px;
+                     border-radius: 8px;
+                     background: #f8f9fa;
+                   ">
+                <div style="display: flex; align-items: center;">
+                  <div style="
+                    width: 30px; 
+                    height: 30px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(45deg, #409eff, #67c23a);
+                    color: white; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    font-weight: bold;
+                    margin-right: 30px;
+                    margin-left: 30px;
+                  ">
+                    {{ index + 1 }}
+                  </div>
+                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #409eff; margin-right: 30px;">{{ item.count }}</div>
               </div>
-              <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
             </div>
-            <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
           </div>
-        </div>
-      </div>
+        </el-tab-pane>
+        
+        <!-- 科研成果Top5 -->
+        <el-tab-pane label="成果排行" name="achievementRank">
+          <div style="height: calc(100% - 40px); padding: 0 20px 20px 20px; box-sizing: border-box; overflow-y: auto;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="font-weight: bold; font-size: 18px; color: #333;">科研成果Top5</div>
+              <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                <span v-if="data.user.role === 'ADMIN'">统计维度：实验室</span>
+                <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
+              </div>
+            </div>
+            <div>
+              <!-- 无数据显示 -->
+              <div v-if="!data.achievementRanking || data.achievementRanking.length === 0" 
+                   style="text-align: center; color: #999; padding: 60px 20px; font-size: 14px;">
+                暂无数据
+              </div>
+              
+              <!-- 管理员：显示实验室排行 -->
+              <div v-else-if="data.user.role === 'ADMIN'" 
+                   v-for="(item, index) in data.achievementRanking" 
+                   :key="'achievement-lab-' + index"
+                   style="
+                     display: flex; 
+                     align-items: center; 
+                     justify-content: space-between;
+                     padding: 12px 16px; 
+                     margin-bottom: 8px;
+                     border-radius: 8px;
+                     background: #f8f9fa;
+                   ">
+                <div style="display: flex; align-items: center;">
+                  <div style="
+                    width: 30px; 
+                    height: 30px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(45deg, #e6a23c, #f56c6c);
+                    color: white; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    font-weight: bold;
+                    margin-right: 30px;
+                    margin-left: 30px;
+                  ">
+                    {{ index + 1 }}
+                  </div>
+                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
+              </div>
+              
+              <!-- 重点实验室角色：显示教师排行 -->
+              <div v-else-if="data.user.role === 'KEY_LABORATORY'" 
+                   v-for="(item, index) in data.achievementRanking" 
+                   :key="'achievement-teacher-' + index"
+                   style="
+                     display: flex; 
+                     align-items: center; 
+                     justify-content: space-between;
+                     padding: 12px 16px; 
+                     margin-bottom: 8px;
+                     border-radius: 8px;
+                     background: #f8f9fa;
+                   ">
+                <div style="display: flex; align-items: center;">
+                  <div style="
+                    width: 30px; 
+                    height: 30px; 
+                    border-radius: 50%; 
+                    background: linear-gradient(45deg, #e6a23c, #f56c6c);
+                    color: white; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    font-weight: bold;
+                    margin-right: 30px;
+                    margin-left: 30px;
+                  ">
+                    {{ index + 1 }}
+                  </div>
+                  <div style="font-size: 16px; font-weight: 500; color: #333;">{{ item.name }}</div>
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #e6a23c; margin-right: 30px;">{{ item.count }}</div>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
 
     <!-- 公告详情弹窗 -->
@@ -405,7 +434,7 @@
 
 <script setup>
 
-import {reactive, onMounted} from "vue";
+import {reactive, onMounted, nextTick} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import echarts from "@/utils/echarts.js";
@@ -420,6 +449,7 @@ const data = reactive({
   noticeDetailVisible: false, // 公告详情弹窗显示状态
   currentNotice: {}, // 当前查看的公告详情
   allNoticesVisible: false, // 查看全部公告弹窗显示状态
+  activeTab: 'subject', // 当前激活的tab页，默认为学科分布
   // 排行榜模拟数据 - 管理员角色（实验室维度）
   projectRanking: [
   ],
@@ -488,10 +518,12 @@ const loadRankingData = () => {
 }
 
 const loadBar1 = () => {
-  echarts.dispose(document.getElementById('bar1'))
+  const chartDom = document.getElementById('bar1')
+  if (!chartDom) return // 如果DOM元素不存在，直接返回
+  
+  echarts.dispose(chartDom)
   request.get('/dashboard/bar1').then(res => {
     if (res.code === '200') {
-      let chartDom = document.getElementById('bar1')
       let myChart = echarts.init(chartDom)
       
       // 检查是否有数据
@@ -520,14 +552,21 @@ const loadBar1 = () => {
         bar1Options.series[0].data = res.data.yAxis
         myChart.setOption(bar1Options)
       }
+      
+      // 添加resize监听，确保图表能够响应容器大小变化
+      window.addEventListener('resize', () => {
+        myChart.resize()
+      })
     }
   })
 }
 const loadBar2 = () => {
-  echarts.dispose(document.getElementById('bar2'))
+  const chartDom = document.getElementById('bar2')
+  if (!chartDom) return // 如果DOM元素不存在，直接返回
+  
+  echarts.dispose(chartDom)
   request.get('/dashboard/bar2').then(res => {
     if (res.code === '200') {
-      let chartDom = document.getElementById('bar2')
       let myChart = echarts.init(chartDom)
       
       // 检查是否有数据
@@ -537,7 +576,8 @@ const loadBar2 = () => {
           title: {
             text: '系统中不同老师的科研成果数量',
             subtext: '统计维度：教师',
-            left: 'center'
+            left: 'center',
+            fontSize: 18
           },
           graphic: {
             type: 'text',
@@ -556,6 +596,11 @@ const loadBar2 = () => {
         bar2Options.series[0].data = res.data.yAxis
         myChart.setOption(bar2Options)
       }
+      
+      // 添加resize监听，确保图表能够响应容器大小变化
+      window.addEventListener('resize', () => {
+        myChart.resize()
+      })
     }
   })
 }
@@ -573,10 +618,12 @@ const loadLine = () => {
 }
 
 const loadPie = () => {
-  echarts.dispose(document.getElementById('pie'))
+  const chartDom = document.getElementById('pie')
+  if (!chartDom) return // 如果DOM元素不存在，直接返回
+  
+  echarts.dispose(chartDom)
   request.get('/dashboard/pie').then(res => {
     if (res.code === '200') {
-      let chartDom = document.getElementById('pie')
       let myChart = echarts.init(chartDom)
       
       // 检查是否有数据或所有数据值都为0
@@ -607,15 +654,22 @@ const loadPie = () => {
         pieOptions.series[0].data = res.data
         myChart.setOption(pieOptions)
       }
+      
+      // 添加resize监听，确保图表能够响应容器大小变化
+      window.addEventListener('resize', () => {
+        myChart.resize()
+      })
     }
   })
 }
 
 const loadPie2 = () => {
-  echarts.dispose(document.getElementById('pie2'))
+  const chartDom = document.getElementById('pie2')
+  if (!chartDom) return // 如果DOM元素不存在，直接返回
+  
+  echarts.dispose(chartDom)
   request.get('/dashboard/pie2').then(res => {
     if (res.code === '200') {
-      let chartDom = document.getElementById('pie2')
       let myChart = echarts.init(chartDom)
       
       // 检查是否有数据或所有数据值都为0
@@ -646,6 +700,38 @@ const loadPie2 = () => {
         pieOptions2.series[0].data = res.data
         myChart.setOption(pieOptions2)
       }
+      
+      // 添加resize监听，确保图表能够响应容器大小变化
+      window.addEventListener('resize', () => {
+        myChart.resize()
+      })
+    }
+  })
+}
+
+// 处理tab切换事件
+const handleTabChange = (tabName) => {
+  // 使用nextTick确保DOM已更新
+  nextTick(() => {
+    switch (tabName) {
+      case 'subject':
+        loadPie() // 科研项目学科类别占比图
+        break
+      case 'project':
+        loadBar1() // 系统中不同老师的科研项目数量
+        break
+      case 'achievement':
+        loadBar2() // 系统中不同类型下的科研成果数量
+        break
+      case 'status':
+        loadPie2() // 项目状态分布图
+        break
+      case 'projectRank':
+        // 项目排行榜不需要加载图表，数据已在data中
+        break
+      case 'achievementRank':
+        // 成果排行榜不需要加载图表，数据已在data中
+        break
     }
   })
 }
@@ -654,11 +740,8 @@ loadBaseData()
 loadNotice()
 loadRankingData()
 onMounted(() => {
-  loadPie()
-  loadBar1()
-  loadBar2()
-  //loadLine()  //教师反馈图
-  loadPie2()
+  // 初始加载默认tab的图表
+  handleTabChange(data.activeTab)
 })
 
 // 饼图数据结构
@@ -666,7 +749,11 @@ let pieOptions = {
   title: {
     text: '科研项目学科类别占比图', // 主标题
     subtext: '统计维度：学科分类', // 副标题
-    left: 'center'
+    left: 'center',
+    top: '2%',
+    textStyle: {
+      fontSize: 18
+    }
   },
   tooltip: {
     trigger: 'item',
@@ -674,14 +761,19 @@ let pieOptions = {
   },
   legend: {
     orient: 'vertical',
-    left: 'left'
+    left: '5%',
+    top: '20%',
+    itemGap: 15,
+    textStyle: {
+      fontSize: 12
+    }
   },
   series: [
     {
       name: '学科分布', // 鼠标移上去显示内容
       type: 'pie',
-      radius: ['20%', '50%'], // 设置内外半径，形成环形图效果
-      center: ['50%', '60%'],
+      radius: ['25%', '65%'], // 增大半径，充分利用空间
+      center: ['50%', '55%'], // 调整位置，为图例留出空间
       itemStyle: {
         borderRadius: 8, // 扇区圆角
         borderColor: '#fff', // 扇区边框颜色
@@ -702,7 +794,18 @@ let bar1Options = {
   title: {
     text: '系统中不同老师的科研项目数量', // 主标题
     subtext: '统计维度：教师', // 副标题
-    left: 'center'
+    left: 'center',
+    top: '1%',
+    textStyle: {
+      fontSize: 18
+    }
+  },
+  grid: {
+    left: '8%',
+    right: '5%',
+    bottom: '15%',
+    top: '20%',
+    containLabel: true
   },
   xAxis: {
     type: 'category',
@@ -712,12 +815,17 @@ let bar1Options = {
       rotate: 15,
       textStyle: {
         color: '#666666',
-        fontSize: 10
+        fontSize: 11
       }
     },
   },
   yAxis: {
-    type: 'value'
+    type: 'value',
+    axisLabel: {
+      textStyle: {
+        fontSize: 11
+      }
+    }
   },
   tooltip: {
     trigger: 'item'
@@ -742,14 +850,35 @@ let bar2Options = {
   title: {
     text: '系统中不同类型下的科研成果数量', // 主标题
     subtext: '统计维度：成果类型', // 副标题
-    left: 'center'
+    left: 'center',
+    top: '1%',
+    textStyle: {
+      fontSize: 18
+    }
+  },
+  grid: {
+    left: '8%',
+    right: '5%',
+    bottom: '15%',
+    top: '20%',
+    containLabel: true
   },
   xAxis: {
     type: 'category',
     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // 示例数据：统计的维度（横坐标）
+    axisLabel: {
+      textStyle: {
+        fontSize: 11
+      }
+    }
   },
   yAxis: {
-    type: 'value'
+    type: 'value',
+    axisLabel: {
+      textStyle: {
+        fontSize: 11
+      }
+    }
   },
   tooltip: {
     trigger: 'item'
@@ -823,24 +952,41 @@ let pieOptions2 = {
   title: {
     text: '项目状态分布图',
     subtext: '统计维度：项目状态',
-    left: 'center'
+    left: 'center',
+    top: '2%',
+    textStyle: {
+      fontSize: 18
+    }
   },
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: '{a} <br/>{b} : {c} ({d}%)'
   },
   legend: {
     orient: 'vertical',
-    left: 'left'
+    left: '5%',
+    top: '20%',
+    itemGap: 15,
+    textStyle: {
+      fontSize: 12
+    }
   },
   series: [
     {
+      name: '项目状态',
       type: 'pie',
-      radius: '50%',
+      radius: ['25%', '65%'], // 增大半径，充分利用空间
+      center: ['50%', '55%'], // 调整位置，为图例留出空间
       data: [
         { value: 1048, name: '在研' },
         { value: 735, name: '结项' },
         { value: 580, name: '未开始' }
       ],
+      itemStyle: {
+        borderRadius: 8, // 扇区圆角
+        borderColor: '#fff', // 扇区边框颜色
+        borderWidth: 2 // 扇区边框宽度，形成间隙效果
+      },
       emphasis: {
         itemStyle: {
           shadowBlur: 10,

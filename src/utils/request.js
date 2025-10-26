@@ -32,6 +32,10 @@ request.interceptors.response.use(
             ElMessage.error(res.msg)
             router.push('/login')
         }
+        // 当系统异常时给出提示
+        if (res.code === '500') {
+            ElMessage.error('系统异常，请查看后端控制台报错')
+        }
         // 兼容服务端返回的字符串数据
         if (typeof res === 'string') {
             res = res ? JSON.parse(res) : res

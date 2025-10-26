@@ -14,14 +14,14 @@
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
-        <el-table-column prop="title" label="标题" sortable>
+        <el-table-column prop="title" label="标题" min-width="150" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.title)">
               {{ scope.row.title }}
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="公告内容" sortable>
+        <el-table-column prop="content" label="公告内容" min-width="300" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.content)">
               {{ scope.row.content }}
