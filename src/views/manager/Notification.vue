@@ -28,16 +28,29 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="laboratoryNames" label="通知对象" width="160" sortable>
+        <el-table-column prop="laboratoryNames" label="通知对象" width="200" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.laboratoryNames)">
               <template v-if="Array.isArray(scope.row.laboratoryNames)">
-                <div v-for="(lab, index) in scope.row.laboratoryNames" :key="index" style="margin-bottom: 2px;">
+                <el-tag 
+                  v-for="(lab, index) in scope.row.laboratoryNames" 
+                  :key="index" 
+                  type="success"
+                  size="small"
+                  class="lab-type-tag"
+                  style="margin: 1px 2px 1px 0;"
+                >
                   {{ lab }}
-                </div>
+                </el-tag>
               </template>
               <template v-else>
-                {{ scope.row.laboratoryNames }}
+                <el-tag 
+                  type="success"
+                  size="small"
+                  class="lab-type-tag"
+                >
+                  {{ scope.row.laboratoryNames }}
+                </el-tag>
               </template>
             </div>
           </template>
@@ -233,7 +246,7 @@ const loadLaboratories = () => {
 }
 const handleAdd = () => {
   data.form = {
-    laboratoryUsername: [], // 初始化为空数组
+    laboratoryUsername: [],
     startTime: null,
     endTime: null
   }
@@ -275,7 +288,9 @@ const add = () => {
   const addData = {
     title: formData.title,
     content: formData.content,
-    laboratoryUsernames: formData.laboratoryUsername
+    laboratoryUsernames: formData.laboratoryUsername,
+    startTime: formData.startTime,
+    endTime: formData.endTime
   }
   
   request.post('/notification/add', addData).then(res => {
@@ -430,6 +445,20 @@ load()
 
 .date-picker-top .el-popper__arrow {
   display: block !important;
+}
+
+/* 重点实验室tag样式 */
+.lab-type-tag {
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.lab-type-tag.el-tag--success {
+  background-color: #f0f9ff;
+  border-color: #c6f6d5;
+  color: #38a169;
 }
 
 </style>

@@ -63,7 +63,7 @@
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
             <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">公告管理</el-menu-item>
-            <el-menu-item index="/manager/notification" v-if="data.user.role !== 'TEACHER'">通知管理</el-menu-item>
+            <el-menu-item index="/manager/notification" v-if="data.user.role === 'ADMIN'">通知管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="1" v-else>
             <template #title>

@@ -29,7 +29,7 @@
         <div style="height: calc(100% - 50px);">
           <div v-if="data.activeNoticeTab === 'notification'" style="max-height: 100px; overflow-y: hidden">
             <div 
-              v-for="(item, index) in data.notificationData.slice(0, 3)" 
+              v-for="(item, index) in (data.notificationData || []).slice(0, 3)" 
               :key="index"
               @click="showNotificationDetail(item)"
               style="
@@ -40,6 +40,9 @@
                 cursor: pointer;
                 border-radius: 4px;
                 transition: all 0.3s;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
               "
               :style="{ 'background': hoveredNotification === index ? '#f0f9ff' : '#f5f7fa' }"
               @mouseenter="hoveredNotification = index"
@@ -51,19 +54,22 @@
                 effect="light"
                 popper-style="max-width: 400px;"
               >
-                <el-text style="font-size: 12px; color: #333; font-weight: 500" line-clamp="1">
+                <el-text style="font-size: 12px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
                   {{ getNotificationTitle(item) }}
                 </el-text>
               </el-tooltip>
+              <span style="font-size: 10px; color: #999; white-space: nowrap;">
+                {{ formatDate(item.createTime) }}
+              </span>
             </div>
-            <div v-if="data.notificationData.length === 0" style="text-align: center; color: #999; padding: 20px">
+            <div v-if="(data.notificationData || []).length === 0" style="text-align: center; color: #999; padding: 20px">
               暂无通知
             </div>
           </div>
           
           <div v-if="data.activeNoticeTab === 'notice'" style="max-height: 100px; overflow-y: hidden">
             <div 
-              v-for="(item, index) in data.noticeData.slice(0, 3)" 
+              v-for="(item, index) in (data.noticeData || []).slice(0, 3)" 
               :key="index"
               @click="showNoticeDetail(item)"
               style="
@@ -74,6 +80,9 @@
                 cursor: pointer;
                 border-radius: 4px;
                 transition: all 0.3s;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
               "
               :style="{ 'background': hoveredNotice === index ? '#e6f7ff' : '#f5f7fa' }"
               @mouseenter="hoveredNotice = index"
@@ -85,12 +94,15 @@
                 effect="light"
                 popper-style="max-width: 400px;"
               >
-                <el-text style="font-size: 12px; color: #333; font-weight: 500" line-clamp="1">
+                <el-text style="font-size: 12px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
                   {{ getNoticeTitle(item) }}
                 </el-text>
               </el-tooltip>
+              <span style="font-size: 10px; color: #999; white-space: nowrap;">
+                {{ formatDate(item.createTime) }}
+              </span>
             </div>
-            <div v-if="data.noticeData.length === 0" style="text-align: center; color: #999; padding: 20px">
+            <div v-if="(data.noticeData || []).length === 0" style="text-align: center; color: #999; padding: 20px">
               暂无公告
             </div>
           </div>
@@ -421,7 +433,7 @@
           {{ getNoticeTitle(data.currentNotice) }}
         </div>
         <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
-          发布时间：{{ data.currentNotice.time }}
+          发布时间：{{ formatDate(data.currentNotice.createTime) }}
         </div>
         <div style="line-height: 1.8; color: #666; text-align: justify">
           {{ data.currentNotice.content }}
@@ -430,22 +442,22 @@
         <!-- 附件显示区域 -->
         <div v-if="data.currentNotice.file" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
           <div style="font-size: 14px; font-weight: 500; color: #333; margin-bottom: 10px;">
-            <el-icon style="margin-right: 5px;"><Paperclip /></el-icon>
+            <el-icon style="margin-right: 5px;"><Link /></el-icon>
             附件
           </div>
-          <div class="notice-attachment">
-            <div class="attachment-item">
-              <div class="attachment-info">
-                <el-icon class="file-icon"><Document /></el-icon>
-                <span class="file-name">{{ getFileName(data.currentNotice.file) }}</span>
+          <div class="notice-link">
+            <div class="link-item">
+              <div class="link-info">
+                <el-icon class="link-icon"><Link /></el-icon>
+                <span class="link-url">{{ data.currentNotice.file }}</span>
               </div>
               <el-button 
                 type="primary" 
                 size="small" 
-                @click="downloadFile(data.currentNotice.file)"
-                class="download-btn"
+                @click="openNoticeLink(data.currentNotice.file)"
+                class="open-link-btn"
               >
-                下载
+                访问链接
               </el-button>
             </div>
           </div>
@@ -484,9 +496,13 @@
          </el-table-column>
          <el-table-column 
            prop="createTime" 
-           width="180"
+           label="发布时间"
+           width="100"
            align="center"
          >
+           <template #default="scope">
+             {{ formatDate(scope.row.createTime) }}
+           </template>
          </el-table-column>
        </el-table>
       <template #footer>
@@ -507,7 +523,7 @@
           {{ getNotificationTitle(data.currentNotification) }}
         </div>
         <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
-          发布时间：{{ data.currentNotification.createTime }}
+          发布时间：{{ formatDate(data.currentNotification.createTime) }}
         </div>
         <div style="line-height: 1.8; color: #666; text-align: justify">
           {{ data.currentNotification.content }}
@@ -546,9 +562,13 @@
          </el-table-column>
          <el-table-column 
            prop="createTime" 
-           width="180"
+           label="发布时间"
+           width="100"
            align="center"
          >
+           <template #default="scope">
+             {{ formatDate(scope.row.createTime) }}
+           </template>
          </el-table-column>
        </el-table>
       <template #footer>
@@ -567,7 +587,7 @@ import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import echarts from "@/utils/echarts.js";
 // 导入图标组件
-import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download } from '@element-plus/icons-vue';
+import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download, Link } from '@element-plus/icons-vue';
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -606,23 +626,27 @@ const loadBaseData = () => {
 const loadNotice = () => {
   request.get('/notice/selectAll').then(res => {
     if (res.code === '200') {
-      data.noticeData = res.data.list
+      data.noticeData = res.data.list || []
     } else {
       ElMessage.error(res.msg)
     }
+  }).catch(error => {
+    console.error('加载公告数据失败:', error)
+    data.noticeData = []
   })
 }
 
 // 加载通知数据
 const loadNotification = () => {
-  // 根据用户角色选择不同的接口
-  const endpoint = data.user.role === 'ADMIN' ? '/notification/selectAll' : '/notification/selectCurrent'
-  request.get(endpoint).then(res => {
+  request.get('/notification/selectCurrent').then(res => {
     if (res.code === '200') {
-      data.notificationData = res.data.list
+      data.notificationData = res.data.list || []
     } else {
       ElMessage.error(res.msg)
     }
+  }).catch(error => {
+    console.error('加载通知数据失败:', error)
+    data.notificationData = []
   })
 }
 
@@ -676,16 +700,8 @@ const showNotificationDetail = (notification) => {
 
 // 显示全部通知
 const showAllNotifications = () => {
-  // 根据用户角色选择不同的接口获取所有通知数据
-  const endpoint = data.user.role === 'ADMIN' ? '/notification/selectAll' : '/notification/selectCurrent'
-  request.get(endpoint).then(res => {
-    if (res.code === '200') {
-      data.notificationData = res.data.list
-      data.allNotificationsVisible = true
-    } else {
-      ElMessage.error(res.msg)
-    }
-  })
+  // 直接显示已加载的通知数据
+  data.allNotificationsVisible = true
 }
 
 // 从表格中查看通知详情
@@ -1203,62 +1219,70 @@ const getFileName = (filePath) => {
   return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
 }
 
-const downloadFile = (filePath) => {
-  if (!filePath) {
-    ElMessage.warning('文件不存在')
+const openNoticeLink = (url) => {
+  if (!url) {
+    ElMessage.warning('链接地址不存在')
     return
   }
-  // 这里应该调用后端接口下载文件
-  // 暂时使用模拟下载
-  const link = document.createElement('a')
-  link.href = filePath
-  link.download = getFileName(filePath)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  ElMessage.success('开始下载文件')
+  // 验证链接格式
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    ElMessage.warning('请输入有效的网址链接（需要以 http:// 或 https:// 开头）')
+    return
+  }
+  // 在新窗口中打开链接
+  window.open(url, '_blank')
+  ElMessage.success('正在打开链接')
+}
+
+// 格式化日期，只显示年月日
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 </script>
 
 <style scoped>
 /* 附件显示样式 */
-.notice-attachment {
+.notice-link {
   background-color: #f8f9fa;
   border-radius: 6px;
   padding: 5px;
   border: 1px solid #e9ecef;
 }
 
-.attachment-item {
+.link-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 0;
 }
 
-.attachment-info {
+.link-info {
   display: flex;
   align-items: center;
   flex: 1;
   gap: 8px;
 }
 
-.file-icon {
+.link-icon {
   color: #409eff;
   font-size: 18px;
 }
 
-.file-name {
+.link-url {
   color: #606266;
   font-size: 14px;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 300px;
 }
 
-.download-btn {
+.open-link-btn {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1266,7 +1290,7 @@ const downloadFile = (filePath) => {
   padding: 6px 12px;
 }
 
-.download-btn:hover {
+.open-link-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }

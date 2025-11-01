@@ -28,19 +28,19 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="file" label="附件" width="120" sortable>
+        <el-table-column prop="file" label="附件" width="150" sortable>
           <template v-slot="scope">
-            <div v-if="scope.row.file" class="file-cell">
+            <div v-if="scope.row.file" class="link-cell">
               <el-tooltip :content="scope.row.file" placement="top" effect="light">
                 <el-button 
                   type="primary" 
                   link 
                   size="small" 
-                  @click="downloadFile(scope.row.file)"
-                  class="file-download-btn"
+                  @click="openLink(scope.row.file)"
+                  class="link-btn"
                 >
-                  <el-icon><Download /></el-icon>
-                  {{ getFileName(scope.row.file) }}
+                  <el-icon><Link /></el-icon>
+                  访问链接
                 </el-button>
               </el-tooltip>
             </div>
@@ -64,8 +64,8 @@
       <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="公告信息" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
-      <el-form ref="form" :model="data.form" label-width="70px" style="padding: 20px">
+    <el-dialog title="公告信息" v-model="data.formVisible" width="40%" destroy-on-close>
+      <el-form ref="form" :model="data.form" label-width="70px" style="padding: 5px 20px 0 20px">
         <el-form-item prop="title" label="公告标题">
           <el-input v-model="data.form.title" placeholder="请输入公告标题"></el-input>
         </el-form-item>
@@ -73,42 +73,15 @@
           <el-input type="textarea" :rows="4" v-model="data.form.content" placeholder="请输入公告内容"></el-input>
         </el-form-item>
         <el-form-item prop="file" label="附件">
-          <div class="file-upload-container">
-            <el-upload
-              ref="uploadRef"
-              :auto-upload="false"
-              :show-file-list="false"
-              :on-change="handleFileChange"
-              :before-upload="beforeUpload"
-              :limit="1"
-              :on-exceed="handleExceed"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-              drag
-              class="file-upload"
-            >
-              <div class="upload-content">
-                <el-icon class="upload-icon"><UploadFilled /></el-icon>
-                <div class="upload-text">
-                  <p>点击或拖拽文件到此区域上传</p>
-                </div>
-              </div>
-            </el-upload>
-            <div v-if="data.form.file" class="current-file">
-              <div class="file-info">
-                <el-icon><Document /></el-icon>
-                <span class="file-name">{{ getFileName(data.form.file) }}</span>
-                <el-button 
-                  type="danger" 
-                  link 
-                  size="small" 
-                  @click="removeFile"
-                  class="remove-file-btn"
-                >
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </div>
-            </div>
-          </div>
+          <el-input 
+            v-model="data.form.file" 
+            placeholder="请输入网址"
+            clearable
+          >
+            <template #prepend>
+              <el-icon><Link /></el-icon>
+            </template>
+          </el-input>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -119,8 +92,7 @@
       </template>
     </el-dialog>
 
-    <!-- 安全提醒组件 -->
-    <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
+
   </div>
 </template>
 
@@ -129,9 +101,7 @@
 import {reactive} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
-import {Delete, Edit, Download, UploadFilled, Document} from "@element-plus/icons-vue";
-import SecurityAlert from "@/components/SecurityAlert.vue";
-import { securityAlertManager } from "@/utils/securityAlert.js";
+import {Delete, Edit, Link} from "@element-plus/icons-vue";
 
 
 const data = reactive({
@@ -144,8 +114,7 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   title: null,
-  ids: [],
-  showSecurityAlert: false
+  ids: []
 })
 
 const indexMethod = (index) => {
@@ -249,64 +218,24 @@ const getContentAlignClass = (content) => {
   return isMultiLine ? 'content-justify' : 'content-center'
 }
 
-// 附件相关方法
-const handleFileChange = (file) => {
-  data.form.file = file.name
-}
+// 链接相关方法
 
-const handleExceed = () => {
-  ElMessage.warning('只能上传一个文件')
-}
-
-const beforeUpload = (file) => {
-  const isLt10M = file.size / 1024 / 1024 < 10
-  if (!isLt10M) {
-    ElMessage.error('文件大小不能超过 10MB!')
-    return false
-  }
-  return true
-}
-
-const removeFile = () => {
-  data.form.file = null
-  ElMessage.success('文件已移除')
-}
-
-const getFileName = (filePath) => {
-  if (!filePath) return ''
-  return filePath.split('/').pop() || filePath.split('\\').pop() || filePath
-}
-
-const downloadFile = (filePath) => {
-  if (!filePath) {
-    ElMessage.warning('文件不存在')
+const openLink = (url) => {
+  if (!url) {
+    ElMessage.warning('链接地址不存在')
     return
   }
-  // 这里应该调用后端接口下载文件
-  // 暂时使用模拟下载
-  const link = document.createElement('a')
-  link.href = filePath
-  link.download = getFileName(filePath)
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  ElMessage.success('开始下载文件')
+  // 验证链接格式
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    ElMessage.warning('请输入有效的网址链接（需要以 http:// 或 https:// 开头）')
+    return
+  }
+  // 在新窗口中打开链接
+  window.open(url, '_blank')
+  ElMessage.success('正在打开链接')
 }
 
-// 对话框打开时的处理
-const handleDialogOpened = () => {
-  securityAlertManager.show()
-}
 
-// 对话框关闭时的处理
-const handleDialogClose = () => {
-  securityAlertManager.hide()
-}
-
-// 安全提醒确认处理
-const handleSecurityConfirm = () => {
-  data.showSecurityAlert = false
-}
 
 load()
 </script>
