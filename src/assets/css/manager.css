@@ -14,10 +14,10 @@
     width: 200px;
     background-color: #3969b2;
     height: calc(100vh - 10px);
-    position: fixed;
+
     left: 0;
     top: 0;
-    z-index: 1000;
+
     box-shadow: 2px 0 4px rgba(0, 21, 41, .08);
     display: flex;
     flex-direction: column;
@@ -25,7 +25,7 @@
     /* 隐藏滚动条 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 和 Edge */
-    transition: width 0.3s ease;
+    transition: width 0.3s ease-in-out;
 
     margin: 5px;
     border-radius: 5px;
@@ -36,10 +36,6 @@
     width: 64px;
 }
 
-.manager-header.collapsed {
-    margin-left: 10px;
-}
-
 /* 隐藏 Webkit 浏览器的滚动条 */
 .manager-main-left::-webkit-scrollbar {
     display: none;
@@ -48,7 +44,6 @@
 /* 右侧内容区域 - 独立滚动 */
 .manager-main-right {
     flex: 1;
-    margin-left: 210px; /* 为侧边栏留出空间 */
     background-color: #f8f8ff;
     height: 100vh;
     display: flex;
@@ -58,12 +53,6 @@
     /* 隐藏滚动条 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE 和 Edge */
-    transition: margin-left 0.3s ease;
-}
-
-/* 侧边栏折叠时右侧内容区的样式 */
-.manager-main-right.sidebar-collapsed {
-    margin-left: 64px;
 }
 
 /* 隐藏 Webkit 浏览器的滚动条 */
@@ -127,7 +116,9 @@
 
     /* 使用背景图片，遮罩层通过伪元素实现 */
     position: relative;
-    background-image: url('../imgs/content-bg.png');
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.815), rgba(255, 255, 255, 0.815)),
+        url('../imgs/content-bg.png');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
@@ -139,28 +130,10 @@
     display: none;
 }
 
-/* 内容区域的遮罩层 - 修复滚动时遮罩层覆盖不全的问题 */
-.content-area::before {
-    content: '';
-    position: fixed;
-    top: 64px; /* 页头高度59px + 上边距5px + 下边距5px */
-    left: 210px; /* 为侧边栏留出空间 */
-    right: 0; /* 为右边距留出空间 */
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.815);
-    pointer-events: none; /* 确保遮罩层不会阻挡鼠标事件 */
-    z-index: 1;
-}
-
 /* 确保内容在遮罩层之上 */
 .content-area > * {
     position: relative;
     z-index: 2;
-}
-
-/* 侧边栏折叠时调整遮罩层位置 */
-.manager-main-right.sidebar-collapsed .content-area::before {
-    left: 60px; /* 折叠后侧边栏宽度 + 10px 边距 */
 }
 
 /* 菜单头部样式 - 固定在顶部 */
@@ -175,7 +148,7 @@
     flex-shrink: 0; /* 防止被压缩 */
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 1;
 }
 
 /* 折叠时菜单头部居中 */

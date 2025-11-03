@@ -7,7 +7,7 @@
         <el-menu 
           :default-active="router.currentRoute.value.path" 
           :collapse="isCollapse"
-          :default-openeds="['1','2']"
+          :default-openeds="['1','2','3']"
           router>
           <!-- 菜单头部区域 -->
           <div class="menu-header">
@@ -16,7 +16,7 @@
           </div>
           <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY'">
             <el-icon>
-              <Odometer />
+              <DataAnalysis />
             </el-icon>
             <span>数据统计</span>
           </el-menu-item>
@@ -30,16 +30,24 @@
             <el-icon>
               <Bell />
             </el-icon>
-            <span>通知</span>
+            <span>消息</span>
           </el-menu-item>
-          <el-sub-menu index="1" v-if="data.user.role !== 'TEACHER'">
+          <el-sub-menu index="1" v-if="data.user.role === 'ADMIN'">
+            <template #title>
+              <el-icon><Setting /></el-icon>
+              <span>系统管理</span>
+            </template>
+            <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">公告管理</el-menu-item>
+            <el-menu-item index="/manager/notification" v-if="data.user.role === 'ADMIN'">通知管理</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="2" v-if="data.user.role !== 'TEACHER'">
             <template #title>
               <el-icon>
-                <Menu />
+                <Memo />
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply" v-if="data.user.role !== 'ADMIN' && data.user.role === 'NORMAL_LABORATORY'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY'">重点实验室申请</el-menu-item>
             <!-- 先测试 -->
             <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
 
@@ -62,13 +70,12 @@
             <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item> -->
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
-            <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">公告管理</el-menu-item>
-            <el-menu-item index="/manager/notification" v-if="data.user.role === 'ADMIN'">通知管理</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="1" v-else>
+          <!--教师的信息管理-->
+          <el-sub-menu index="2" v-else>
             <template #title>
               <el-icon>
-                <Menu />
+                <Memo />
               </el-icon>
               <span>信息管理</span>
             </template>
@@ -78,10 +85,10 @@
             <el-menu-item index="/manager/achievement" v-if="data.laboratoryLevel === 2">科研成果管理</el-menu-item>
             <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="2" v-if="data.user.role === 'ADMIN'">
+          <el-sub-menu index="3" v-if="data.user.role === 'ADMIN'">
             <template #title>
               <el-icon>
-                <Menu />
+                <User />
               </el-icon>
               <span>用户管理</span>
             </template>
@@ -89,10 +96,10 @@
             <el-menu-item index="/manager/laboratory">实验室信息</el-menu-item>
             <el-menu-item index="/manager/admin">管理员信息</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="2" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
+          <el-sub-menu index="3" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
             <template #title>
               <el-icon>
-                <Menu />
+                <User />
               </el-icon>
               <span>用户管理</span>
             </template>
@@ -101,7 +108,7 @@
         </el-menu>
       </div>
       <!-- 右侧内容区 -->
-      <div class="manager-main-right" :class="{ 'sidebar-collapsed': isCollapse }">
+      <div class="manager-main-right">
         <!-- 头部区域 -->
         <div class="manager-header" :class="{ 'collapsed': isCollapse }">
           <div class="manager-header-left" @click="isCollapse = !isCollapse">
@@ -122,8 +129,8 @@
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item @click="router.push('/manager/person')">个人资料</el-dropdown-item>
-                  <el-dropdown-item @click="router.push('/manager/password')">修改密码</el-dropdown-item>
+                  <el-dropdown-item @click="showPersonDialog = true">个人资料</el-dropdown-item>
+                  <el-dropdown-item @click="showPasswordDialog = true">修改密码</el-dropdown-item>
                   <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -137,6 +144,11 @@
       </div>
     </div>
 
+    <!-- 个人资料对话框 -->
+    <PersonDialog v-model="showPersonDialog" @updateUser="updateUser" />
+    
+    <!-- 修改密码对话框 -->
+    <PasswordDialog v-model="showPasswordDialog" />
 
   </div>
 </template>
@@ -147,7 +159,11 @@ import router from "@/router/index.js";
 import { ElMessage } from "@/utils/element-plus";
 import request from "@/utils/request.js";
 // 按需引入 Element Plus 图标
-import { Odometer, Bell, Menu, Fold, Expand, ArrowDown } from "@element-plus/icons-vue";
+import { DataAnalysis, Bell, Menu, Fold, Expand, ArrowDown, Setting, User, Memo } from "@element-plus/icons-vue";
+// 引入个人资料对话框组件
+import PersonDialog from "@/views/manager/Person.vue";
+// 引入修改密码对话框组件
+import PasswordDialog from "@/views/manager/Password.vue";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -156,6 +172,10 @@ const data = reactive({
 
 // 侧边栏折叠状态，初始为展开
 const isCollapse = ref(false)
+// 个人资料对话框显示状态
+const showPersonDialog = ref(false)
+// 修改密码对话框显示状态
+const showPasswordDialog = ref(false)
 
 const logout = () => {
   localStorage.removeItem('xm-user')
@@ -189,6 +209,9 @@ if (!data.user.id) {
   logout()
   ElMessage.error('请登录！')
 }
+
+getLaboratoryLevel()
+
 </script>
 
 <style scoped>

@@ -33,7 +33,7 @@ const router = createRouter({
         { path: 'laboratory', meta: { name: '实验室信息' }, component: () => import('@/views/manager/Laboratory.vue'), },
         { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue'), },
         { path: 'notification', meta: { name: '通知管理' }, component: () => import('@/views/manager/Notification.vue'), },
-        { path: 'myNotification', meta: { name: '我的通知' }, component: () => import('@/views/manager/MyNotification.vue'), },
+        { path: 'myNotification', meta: { name: '我的消息' }, component: () => import('@/views/manager/MyNotification.vue'), },
       ]
     },
     {

@@ -1,6 +1,11 @@
 <template>
-  <div style="width: 50%" class="card">
-    <el-form ref="user" :model="data.user" label-width="70px" style="padding: 20px">
+  <el-dialog
+    v-model="dialogVisible"
+    title="个人资料"
+    width="500px"
+    :before-close="handleClose"
+  >
+    <el-form ref="user" :model="data.user" label-width="70px">
       <el-form-item prop="avatar" label="头像">
         <el-upload
             :action="baseUrl + '/files/upload'"
@@ -26,18 +31,22 @@
       <el-form-item prop="email" label="邮箱">
         <el-input v-model="data.user.email" placeholder="请输入邮箱"></el-input>
       </el-form-item>
-      <div style="text-align: center">
+    </el-form>
+    
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="handleClose">取 消</el-button>
         <el-button type="primary" @click="update">保 存</el-button>
       </div>
-    </el-form>
+    </template>
 
     <!-- 安全提醒组件 -->
     <SecurityAlert v-model="data.showSecurityAlert" @confirm="handleSecurityConfirm" />
-  </div>
+  </el-dialog>
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, ref, watch } from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 // 按需引入 Element Plus 图标
@@ -46,10 +55,42 @@ import SecurityAlert from "@/components/SecurityAlert.vue";
 
 const baseUrl = import.meta.env.VITE_BASE_URL
 
+// 定义props和emits
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'updateUser'])
+
+// 对话框显示状态
+const dialogVisible = ref(false)
+
+// 监听props变化
+watch(() => props.modelValue, (newVal) => {
+  dialogVisible.value = newVal
+  if (newVal) {
+    // 每次打开对话框时重新获取用户信息
+    data.user = JSON.parse(localStorage.getItem('xm-user') || '{}')
+  }
+})
+
+// 监听对话框状态变化
+watch(dialogVisible, (newVal) => {
+  emit('update:modelValue', newVal)
+})
+
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   showSecurityAlert: true // 控制安全提醒弹窗的显示
 })
+
+// 关闭对话框
+const handleClose = () => {
+  dialogVisible.value = false
+}
 
 // 头像上传前的验证函数
 const beforeAvatarUpload = (file) => {
@@ -79,7 +120,6 @@ const handleSecurityConfirm = () => {
   data.showSecurityAlert = false
 }
 
-const emit = defineEmits(['updateUser'])
 const update = () => {
   let url = data.user.role === 'ADMIN' ? '/admin/update' : '/teacher/update'
   request.put(url, data.user).then(res => {
@@ -87,6 +127,7 @@ const update = () => {
       ElMessage.success('保存成功')
       localStorage.setItem('xm-user', JSON.stringify(data.user))
       emit('updateUser')
+      handleClose() // 保存成功后关闭对话框
     } else {
       ElMessage.error(res.msg)
     }

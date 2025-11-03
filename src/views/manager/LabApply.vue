@@ -90,8 +90,8 @@
                                 <el-col :span="13">
                                     <el-form-item label="实验室类别" prop="labCategory" label-width="135px">
                                         <el-radio-group v-model="formData.basicInfo.labCategory">
-                                            <el-radio label="重点建设">重点建设</el-radio>
-                                            <el-radio label="培育建设">培育建设</el-radio>
+                                            <el-radio value="重点建设">重点建设</el-radio>
+                                            <el-radio value="培育建设">培育建设</el-radio>
                                         </el-radio-group>
                                     </el-form-item>
                                 </el-col>
@@ -107,8 +107,8 @@
                                 <el-col :span="13">
                                     <el-form-item label="是否实体" prop="isEntity" label-width="135px">
                                         <el-radio-group v-model="formData.basicInfo.isEntity">
-                                            <el-radio label="1">是</el-radio>
-                                            <el-radio label="0">否</el-radio>
+                                            <el-radio value="1">是</el-radio>
+                                            <el-radio value="0">否</el-radio>
                                         </el-radio-group>
                                     </el-form-item>
                                 </el-col>
@@ -278,6 +278,238 @@
                                 </template>
                             </template>
                         </el-form>
+
+                        <!-- 人员队伍统计表格 -->
+                        <div style="margin-top: 30px;">
+                            <h4>人员队伍</h4>
+                            <div class="team-table-container">
+                                <table class="team-table">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" class="category-header">人员队伍数量</th>
+                                            <th rowspan="2" class="total-header">合计</th>
+                                            <th colspan="3" class="teacher-header">教学科研人员</th>
+                                            <th colspan="3" class="tech-header">实验技术人员</th>
+                                            <th rowspan="2" class="other-header">其他</th>
+                                        </tr>
+                                        <tr>
+                                            <th class="sub-header">正高级</th>
+                                            <th class="sub-header">副高级</th>
+                                            <th class="sub-header">中级及以下</th>
+                                            <th class="sub-header">正高级</th>
+                                            <th class="sub-header">副高级</th>
+                                            <th class="sub-header">中级及以下</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- 合计行 -->
+                                        <tr>
+                                            <td class="category-cell">合计</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].seniorTeacher" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].associateTeacher" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].middleTeacher" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].seniorTech" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].associateTech" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].middleTech" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[0].others" size="small" placeholder="0" disabled />
+                                            </td>
+                                        </tr>
+                                        <!-- 专职行 -->
+                                        <tr>
+                                            <td class="category-cell">专职</td>
+                                            <td class="input-cell">
+                                                <!-- 合计（自动计算） -->
+                                                <el-input v-model="formData.teamStatistics[1].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].seniorTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].associateTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].middleTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].seniorTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].associateTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].middleTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[1].others" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                        </tr>
+                                        <!-- 兼职行 -->
+                                        <tr>
+                                            <td class="category-cell">兼职</td>
+                                            <td class="input-cell">
+                                                <!-- 合计（自动计算） -->
+                                                <el-input v-model="formData.teamStatistics[2].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].seniorTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].associateTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].middleTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].seniorTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].associateTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].middleTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[2].others" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                        </tr>
+                                        <!-- 61岁及以上行 -->
+                                        <tr>
+                                            <td class="category-cell">61岁及以上</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].seniorTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].associateTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].middleTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].seniorTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].associateTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].middleTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[3].others" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                        </tr>
+                                        <!-- 45-60岁行 -->
+                                        <tr>
+                                            <td class="category-cell">45-60岁</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].seniorTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].associateTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].middleTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].seniorTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].associateTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].middleTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[4].others" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                        </tr>
+                                        <!-- 45岁以下行 -->
+                                        <tr>
+                                            <td class="category-cell">45岁以下</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].total" size="small" placeholder="0" disabled />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].seniorTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].associateTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].middleTeacher" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].seniorTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].associateTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].middleTech" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.teamStatistics[5].others" size="small" placeholder="0" @input="calculateTeamStatistics" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 人才数量表格 -->
+                        <div class="form-section">
+                            <div class="table-container">
+                                <table class="statistics-table">
+                                    <tbody>
+                                        <!-- 第一行：人才数量标题和国家级高层次人才、国家级青年人才 -->
+                                        <tr>
+                                            <td style="font-weight: bold;background-color: #f0f5f9; width: 96px;" rowspan="2">人才数量</td>
+                                            <td class="label-cell">国家级高层次人才</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.talentStatistics[0].nationalHighLevel" size="small" placeholder="0" @input="calculateTalentTotal" />
+                                                <span style="margin-left: 5px; font-size: 12px; color: #666;">人</span>
+                                            </td>
+                                            <td class="label-cell">国家级青年人才</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.talentStatistics[0].nationalYoung" size="small" placeholder="0" @input="calculateTalentTotal" />
+                                                <span style="margin-left: 5px; font-size: 12px; color: #666;">人</span>
+                                            </td>
+                                        </tr>
+                                        <!-- 第二行：省部级人才 -->
+                                        <tr>
+                                            <td class="label-cell">省部级人才</td>
+                                            <td class="input-cell">
+                                                <el-input v-model="formData.talentStatistics[0].provincial" size="small" placeholder="0" @input="calculateTalentTotal" />
+                                                <span style="margin-left: 5px; font-size: 12px; color: #666;">人</span>
+                                            </td>
+                                            <td class="empty-cell"></td>
+                                            <td class="empty-cell"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
                     </div>
 
@@ -489,6 +721,9 @@ import LabApplicationForm from './componets/LabCom.vue';
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";
 
+// 定义组件事件
+const emit = defineEmits(['updateUser']);
+
 // 读取环境变量
 const baseUrl = import.meta.env?.VITE_BASE_URL || '';
 
@@ -572,6 +807,107 @@ const formData = ref({
         { name: '', birthDate: '', title: '', discipline: '', researchDirection: '' }, // 管理委员会主任
         { name: '', birthDate: '', title: '', discipline: '', researchDirection: '' } // 学术委员会主任
     ],
+    // 人员队伍统计表
+    teamStatistics: [
+        { 
+            category: '人员队伍', 
+            isMainCategory: true,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '合计', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '专职', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '兼职', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '61岁及以上', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '45-60岁', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        },
+        { 
+            category: '45岁以下', 
+            isMainCategory: false,
+            total: '', 
+            seniorTeacher: '', 
+            associateTeacher: '', 
+            middleTeacher: '', 
+            seniorTech: '', 
+            associateTech: '', 
+            middleTech: '', 
+            others: '' 
+        }
+    ],
+    // 人才数量统计
+    talentStatistics: [
+        { 
+            category: '', 
+            total: '0', // 合计人数
+            nationalHighLevel: '0', // 国家级高层次人才
+            nationalYoung: '0', // 国家级青年人才
+            provincial: '0', // 省部级人才
+            placeholder1: '0',
+            placeholder2: '0',
+            placeholder3: '0',
+            placeholder4: '0'
+        }
+    ],
     // 步骤2：建设基础和建设目标
     foundation: {
         foundation: '', // 建设基础
@@ -624,7 +960,8 @@ const rules = ref({
         totalArea: [{ required: true, message: '总面积不能为空', trigger: 'blur' }],
         labArea: [{ required: true, message: '实验室面积不能为空', trigger: 'blur' }],
         averageFunding: [{ required: true, message: '近3年年均经费不能为空', trigger: 'blur' }],
-        mainFundingSource: [{ required: true, message: '主要经费来源不能为空', trigger: 'blur' }]
+        mainFundingSource: [{ required: true, message: '主要经费来源不能为空', trigger: 'blur' }],
+        mainDiscipline: [{ required: true, message: '主要依托学科不能为空', trigger: 'blur' }]
     },
     "basicInfo.direction.disciplines": [
         {
@@ -833,8 +1170,13 @@ const nextTab = () => {
 
     // 如果有表单引用，进行表单验证
     if (formRef) {
-        formRef.validate((valid) => {
+        formRef.validate((valid, invalidFields) => {
             console.log('formRef validation:', valid);
+            console.log('当前步骤:', activeStep.value);
+            console.log('表单引用:', formRef);
+            if (invalidFields) {
+                console.log('校验失败的字段:', invalidFields);
+            }
             if (valid && canProceed) {
                 activeStep.value += 1;
                 // 如果进入第7步（其他材料步骤），显示安全提醒
@@ -898,6 +1240,70 @@ const calculateColumnTotals = () => {
     formData.value.budget.grandTotal = grandTotal.toString();
 };
 
+// **人员统计计算函数**
+const calculateTeamStatistics = () => {
+    // 首先计算每行的合计（除了第一行总合计行）
+    for (let i = 1; i <= 5; i++) {
+        calculateRowTeamTotal(i);
+    }
+    
+    // 然后计算总合计行（索引0）
+    const totalRow = formData.value.teamStatistics[0];
+    
+    // 初始化合计行的所有字段为0
+    totalRow.total = '0';
+    totalRow.seniorTeacher = '0';
+    totalRow.associateTeacher = '0';
+    totalRow.middleTeacher = '0';
+    totalRow.seniorTech = '0';
+    totalRow.associateTech = '0';
+    totalRow.middleTech = '0';
+    totalRow.others = '0';
+    
+    // 计算专职、兼职和年龄段的合计（索引1-5）
+    for (let i = 1; i <= 5; i++) {
+        const row = formData.value.teamStatistics[i];
+        totalRow.total = (parseFloat(totalRow.total) + (parseFloat(row.total) || 0)).toString();
+        totalRow.seniorTeacher = (parseFloat(totalRow.seniorTeacher) + (parseFloat(row.seniorTeacher) || 0)).toString();
+        totalRow.associateTeacher = (parseFloat(totalRow.associateTeacher) + (parseFloat(row.associateTeacher) || 0)).toString();
+        totalRow.middleTeacher = (parseFloat(totalRow.middleTeacher) + (parseFloat(row.middleTeacher) || 0)).toString();
+        totalRow.seniorTech = (parseFloat(totalRow.seniorTech) + (parseFloat(row.seniorTech) || 0)).toString();
+        totalRow.associateTech = (parseFloat(totalRow.associateTech) + (parseFloat(row.associateTech) || 0)).toString();
+        totalRow.middleTech = (parseFloat(totalRow.middleTech) + (parseFloat(row.middleTech) || 0)).toString();
+        totalRow.others = (parseFloat(totalRow.others) + (parseFloat(row.others) || 0)).toString();
+    }
+};
+
+// 计算单行的合计
+const calculateRowTeamTotal = (rowIndex) => {
+    const row = formData.value.teamStatistics[rowIndex];
+    
+    // 计算该行各列的总和
+    const seniorTeacher = parseFloat(row.seniorTeacher) || 0;
+    const associateTeacher = parseFloat(row.associateTeacher) || 0;
+    const middleTeacher = parseFloat(row.middleTeacher) || 0;
+    const seniorTech = parseFloat(row.seniorTech) || 0;
+    const associateTech = parseFloat(row.associateTech) || 0;
+    const middleTech = parseFloat(row.middleTech) || 0;
+    const others = parseFloat(row.others) || 0;
+    
+    // 更新该行的合计
+    row.total = (seniorTeacher + associateTeacher + middleTeacher + seniorTech + associateTech + middleTech + others).toString();
+};
+
+// 人才数量自动计算函数
+const calculateTalentTotal = () => {
+    const talentData = formData.value.talentStatistics[0];
+    
+    // 计算三种人才类型的总和
+    const nationalHighLevel = parseFloat(talentData.nationalHighLevel) || 0;
+    const nationalYoung = parseFloat(talentData.nationalYoung) || 0;
+    const provincial = parseFloat(talentData.provincial) || 0;
+    
+    // 更新合计人数
+    talentData.total = (nationalHighLevel + nationalYoung + provincial).toString();
+};
+
 // **文件上传成功**
 const handleFileUpload = (res, file) => {
     if (res.code === "200") {
@@ -927,6 +1333,7 @@ const submitForm = () => {
     if (pageStatus.value === 'add') {
         request.post('/laboratory_apply_for/add', formData.value).then((res) => {
             // 如果请求成功，显示成功消息
+            console.log('formData.value', formData.value)
             ElMessage({
                 message: '提交成功！',
                 type: 'success',
@@ -1043,6 +1450,102 @@ const labAddHandle = () => {
             { name: '', birthDate: '', title: '', labTenure: '', discipline: '', researchDirection: '', academicHonors: '', phone: '' }, // 实验室副主任(含学术带头人)
             { name: '', birthDate: '', title: '', discipline: '', researchDirection: '' }, // 管理委员会主任
             { name: '', birthDate: '', title: '', discipline: '', researchDirection: '' } // 学术委员会主任
+        ],
+        // 人员队伍统计表
+        teamStatistics: [
+            { 
+                category: '人员队伍', 
+                isMainCategory: true,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '合计', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '专职', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '兼职', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '61岁及以上', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '45-60岁', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            },
+            { 
+                category: '45岁以下', 
+                isMainCategory: false,
+                total: '', 
+                seniorTeacher: '', 
+                associateTeacher: '', 
+                middleTeacher: '', 
+                seniorTech: '', 
+                associateTech: '', 
+                middleTech: '', 
+                others: '' 
+            }
+        ],
+        // 人才数量统计
+        talentStatistics: [
+            { 
+                category: '', 
+                nationalHighLevel: '', 
+                nationalYoung: '', 
+                provincial: '' 
+            }
         ],
         // 步骤2: 建设基础
         foundation: {
@@ -1170,14 +1673,14 @@ const handleSecurityConfirm = () => {
 .budget-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1px solid #666;
+    border: 1px solid #c4c4c4;
     font-size: 14px;
     margin-bottom: 20px;
 }
 
 .budget-table th,
 .budget-table td {
-    border: 1px solid #666;
+    border: 1px solid #c4c4c4;
     padding: 8px 12px;
     text-align: center;
     vertical-align: middle;
@@ -1259,6 +1762,143 @@ const handleSecurityConfirm = () => {
 
 .budget-note p {
     margin: 2px 0;
+}
+
+/* 人员队伍统计表格样式 */
+.team-table-container {
+    margin-top: 20px;
+}
+
+.team-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #c4c4c4;
+    font-size: 14px;
+}
+
+.team-table th,
+.team-table td {
+    border: 1px solid #c4c4c4;
+    padding: 8px 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.team-table th {
+    background-color: #f0f5f9;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.category-header {
+    width: 120px;
+    background-color: #f0f5f9;
+}
+
+.teacher-header,
+.tech-header {
+    background-color: #f0f5f9;
+}
+
+.other-header {
+    width: 80px;
+    background-color: #f0f5f9;
+}
+
+.category-cell {
+    font-weight: bold;
+    background-color: #f0f5f9;
+    width: 160px;
+}
+
+.team-table .input-cell {
+    padding: 4px;
+}
+
+.team-table .input-cell .el-input {
+    width: 100%;
+}
+
+.team-table .input-cell .el-input__wrapper {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.team-table .input-cell .el-input__inner {
+    text-align: center;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.section-header {
+    background-color: #e6f3ff;
+}
+
+/* 人才数量表格样式 */
+.statistics-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #c4c4c4;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.statistics-table th,
+.statistics-table td {
+    border: 1px solid #c4c4c4;
+    padding: 8px 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.statistics-table .category-cell {
+    font-weight: bold;
+    background-color: #f0f5f9;
+    width: 120px;
+}
+
+.statistics-table .label-cell {
+    background-color: #f0f5f9;
+    font-size: 13px;
+    color: #333;
+    width: 150px;
+}
+
+.statistics-table .input-cell {
+    padding: 4px;
+    width: 120px;
+}
+
+.statistics-table .input-cell .el-input {
+    width: 80px;
+    display: inline-block;
+}
+
+.statistics-table .input-cell .el-input__wrapper {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.statistics-table .input-cell .el-input__inner {
+    text-align: center;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.statistics-table .empty-cell {
+    background-color: #f9f9f9;
+}
+
+.section-title {
+    font-weight: bold;
+    color: #1890ff;
+    background-color: #e6f3ff;
+}
+
+.empty-cell {
+    background-color: #f9f9f9;
 }
 
 

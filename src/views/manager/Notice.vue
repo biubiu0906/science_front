@@ -47,7 +47,7 @@
             <span v-else class="no-file">无附件</span>
           </template>
         </el-table-column>
-        <el-table-column prop="time" label="发布时间" width="160" sortable />
+        <el-table-column prop="createTime" label="发布时间" width="160" sortable />
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="编辑公告" placement="bottom" effect="light">

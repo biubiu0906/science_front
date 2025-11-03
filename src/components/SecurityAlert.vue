@@ -1,22 +1,24 @@
 <template>
-  <Transition name="security-alert" appear>
-    <div v-if="visible" class="security-alert-container">
-      <div class="security-alert-content">
-        <div class="alert-icon">⚠️</div>
-        <div class="alert-text">
-          <div class="alert-title">重要提示</div>
-          <div class="alert-message">
-            本平台为互联网非涉密平台，严禁处理传输国家秘密、工作秘密。
+  <Teleport to="body">
+    <Transition name="security-alert" appear>
+      <div v-if="visible" class="security-alert-container">
+        <div class="security-alert-content">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-text">
+            <div class="alert-title">重要提示</div>
+            <div class="alert-message">
+              本平台为互联网非涉密平台，严禁处理传输国家秘密、工作秘密。
+            </div>
+          </div>
+          <div class="alert-actions">
+            <el-button type="danger" size="small" @click="handleConfirm" class="confirm-btn">
+              我知道了
+            </el-button>
           </div>
         </div>
-        <div class="alert-actions">
-          <el-button type="danger" size="small" @click="handleConfirm" class="confirm-btn">
-            我知道了
-          </el-button>
-        </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -61,7 +63,7 @@ const handleConfirm = () => {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3000;
+  z-index: 9999;
   pointer-events: none;
 }
 

@@ -33,9 +33,9 @@
               :key="index"
               @click="showNotificationDetail(item)"
               style="
-                padding: 4px 8px; 
-                margin-bottom: 5px;
-                border-left: 3px solid #67c23a; 
+                padding: 5px 8px; 
+                margin-bottom: 7px;
+                border-left: 3px solid #409eff; 
                 background: #f5f7fa; 
                 cursor: pointer;
                 border-radius: 4px;
@@ -54,13 +54,23 @@
                 effect="light"
                 popper-style="max-width: 400px;"
               >
-                <el-text style="font-size: 12px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
+                <el-text style="font-size: 13px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
                   {{ getNotificationTitle(item) }}
                 </el-text>
               </el-tooltip>
-              <span style="font-size: 10px; color: #999; white-space: nowrap;">
-                {{ formatDate(item.createTime) }}
-              </span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span :style="{ 
+                  'font-size': '12px', 
+                  'color': '#999', 
+                  'white-space': 'nowrap',
+                  'margin-right': item.isVisible === false ? '15px' : '0'
+                }">
+                  {{ formatDate(item.createTime) }}
+                </span>
+                <el-icon v-if="item.isVisible" style="color: red; font-size: 12px;">
+                  <WarningFilled />
+                </el-icon>
+              </div>
             </div>
             <div v-if="(data.notificationData || []).length === 0" style="text-align: center; color: #999; padding: 20px">
               暂无通知
@@ -73,8 +83,8 @@
               :key="index"
               @click="showNoticeDetail(item)"
               style="
-                padding: 4px 8px; 
-                margin-bottom: 5px;
+                padding: 5px 8px; 
+                margin-bottom: 7px;
                 border-left: 3px solid #409eff; 
                 background: #f5f7fa; 
                 cursor: pointer;
@@ -94,11 +104,11 @@
                 effect="light"
                 popper-style="max-width: 400px;"
               >
-                <el-text style="font-size: 12px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
+                <el-text style="font-size: 13px; color: #333; font-weight: 500; flex: 1; margin-right: 8px;" line-clamp="1">
                   {{ getNoticeTitle(item) }}
                 </el-text>
               </el-tooltip>
-              <span style="font-size: 10px; color: #999; white-space: nowrap;">
+              <span style="font-size: 12px; color: #999; white-space: nowrap;">
                 {{ formatDate(item.createTime) }}
               </span>
             </div>
@@ -425,7 +435,7 @@
     <!-- 公告详情弹窗 -->
     <el-dialog 
       v-model="data.noticeDetailVisible" 
-      width="800px"
+      width="700px"
       :before-close="() => data.noticeDetailVisible = false"
     >
       <div style="padding: 0 15px;">
@@ -473,49 +483,54 @@
     <!-- 查看全部公告弹窗 -->
     <el-dialog 
       v-model="data.allNoticesVisible" 
-      title="全部公告" 
-      width="800px"
+      width="700px"
+      title="全部公告"
       :before-close="() => data.allNoticesVisible = false"
     >
-      <el-table 
-         :data="data.noticeData" 
-         style="width: 100%"
-         :show-header="false"
-         @row-click="showNoticeDetailFromTable"
-         :row-style="{ cursor: 'pointer' }"
-       >
-         <el-table-column 
-           prop="title" 
-           min-width="300"
-         >
-           <template #default="scope">
-             <span style="color: #333; font-weight: 500;">
-               {{ getNoticeTitle(scope.row) }}
-             </span>
-           </template>
-         </el-table-column>
-         <el-table-column 
-           prop="createTime" 
-           label="发布时间"
-           width="100"
-           align="center"
-         >
-           <template #default="scope">
-             {{ formatDate(scope.row.createTime) }}
-           </template>
-         </el-table-column>
-       </el-table>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="data.allNoticesVisible = false" size="small">关闭</el-button>
-        </span>
-      </template>
+      <div style="max-height: 500px; overflow-y: auto;">
+        <div 
+          v-for="(item, index) in data.noticeData" 
+          :key="index"
+          @click="showNoticeDetail(item)"
+          style="
+            padding: 12px 16px; 
+            margin-bottom: 8px;
+            background: #f5f7fa; 
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+          "
+          :style="{ 'background': hoveredAllNotice === index ? '#fff7e6' : '#f5f7fa' }"
+          @mouseenter="hoveredAllNotice = index"
+          @mouseleave="hoveredAllNotice = -1"
+        >
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-size: 14px; color: #333; font-weight: 500; margin-bottom: 4px; display: flex; align-items: flex-start;">
+                <span style="width: 8px; height: 8px; background-color: #ff8c00; border-radius: 50%; margin-right: 8px; flex-shrink: 0; margin-top: 6px;"></span>
+                {{ getNoticeTitle(item) }}
+              </div>
+              <div style="font-size: 12px; color: #666;" v-if="item.content">
+                {{ item.content.length > 80 ? item.content.substring(0, 80) + '...' : item.content }}
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px;">
+              <span style="font-size: 11px; color: #999; white-space: nowrap;">
+                {{ formatDate(item.createTime) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div v-if="data.noticeData.length === 0" style="text-align: center; color: #999; padding: 40px;">
+          暂无公告数据
+        </div>
+      </div>
     </el-dialog>
 
     <!-- 通知详情弹窗 -->
     <el-dialog 
       v-model="data.notificationDetailVisible" 
-      width="800px"
+      width="700px"
       :before-close="() => data.notificationDetailVisible = false"
     >
       <div style="padding: 0 15px;">
@@ -539,43 +554,51 @@
     <!-- 查看全部通知弹窗 -->
     <el-dialog 
       v-model="data.allNotificationsVisible" 
-      title="全部通知" 
-      width="800px"
+      width="700px"
+      title="全部通知"
       :before-close="() => data.allNotificationsVisible = false"
     >
-      <el-table 
-         :data="data.notificationData" 
-         style="width: 100%"
-         :show-header="false"
-         @row-click="showNotificationDetailFromTable"
-         :row-style="{ cursor: 'pointer' }"
-       >
-         <el-table-column 
-           prop="title" 
-           min-width="300"
-         >
-           <template #default="scope">
-             <span style="color: #333; font-weight: 500;">
-               {{ getNotificationTitle(scope.row) }}
-             </span>
-           </template>
-         </el-table-column>
-         <el-table-column 
-           prop="createTime" 
-           label="发布时间"
-           width="100"
-           align="center"
-         >
-           <template #default="scope">
-             {{ formatDate(scope.row.createTime) }}
-           </template>
-         </el-table-column>
-       </el-table>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="data.allNotificationsVisible = false" size="small">关闭</el-button>
-        </span>
-      </template>
+      <div style="max-height: 500px; overflow-y: auto;">
+        <div 
+          v-for="(item, index) in data.notificationData" 
+          :key="index"
+          @click="showNotificationDetail(item)"
+          style="
+            padding: 12px 16px; 
+            margin-bottom: 8px;
+            background: #f5f7fa; 
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+          "
+          :style="{ 'background': hoveredAllNotification === index ? '#f0f9f0' : '#f5f7fa' }"
+          @mouseenter="hoveredAllNotification = index"
+          @mouseleave="hoveredAllNotification = -1"
+        >
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-size: 14px; color: #333; font-weight: 500; margin-bottom: 4px; display: flex; align-items: flex-start;">
+                <span style="width: 8px; height: 8px; background-color: #67c23a; border-radius: 50%; margin-right: 8px; flex-shrink: 0; margin-top: 6px;"></span>
+                {{ getNotificationTitle(item) }}
+              </div>
+              <div style="font-size: 12px; color: #666;" v-if="item.content">
+                {{ item.content.length > 80 ? item.content.substring(0, 80) + '...' : item.content }}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; flex-direction: column;">
+                <div v-if="item.isVisible">
+                  <el-icon style="color: red; font-size: 16px;"><WarningFilled /></el-icon>
+                </div>
+              <span style="font-size: 11px; color: #999; white-space: nowrap;">
+                {{ formatDate(item.createTime) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div v-if="data.notificationData.length === 0" style="text-align: center; color: #999; padding: 40px;">
+          暂无通知数据
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -587,13 +610,14 @@ import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import echarts from "@/utils/echarts.js";
 // 导入图标组件
-import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download, Link } from '@element-plus/icons-vue';
+import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download, Link, WarningFilled } from '@element-plus/icons-vue';
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   baseData: {},
   noticeData: [], // 公告数据
   hoveredNotice: -1, // 鼠标悬停的公告索引
+  hoveredAllNotice: -1, // 鼠标悬停的全部公告索引
   noticeDetailVisible: false, // 公告详情弹窗显示状态
   currentNotice: {}, // 当前查看的公告详情
   allNoticesVisible: false, // 查看全部公告弹窗显示状态
@@ -602,6 +626,7 @@ const data = reactive({
   // 通知相关数据
   notificationData: [], // 通知数据，从接口获取
   hoveredNotification: -1, // 鼠标悬停的通知索引
+  hoveredAllNotification: -1, // 鼠标悬停的全部通知索引
   notificationDetailVisible: false, // 通知详情弹窗显示状态
   currentNotification: {}, // 当前查看的通知详情
   allNotificationsVisible: false, // 查看全部通知弹窗显示状态
@@ -666,18 +691,12 @@ const getNoticeTitle = (notice) => {
 const showNoticeDetail = (notice) => {
   data.currentNotice = notice
   data.noticeDetailVisible = true
+  data.allNoticesVisible = false // 关闭全部公告弹窗
 }
 
 // 显示全部公告
 const showAllNotices = () => {
   data.allNoticesVisible = true
-}
-
-// 从表格中查看公告详情
-const showNoticeDetailFromTable = (notice) => {
-  data.allNoticesVisible = false // 关闭全部公告弹窗
-  data.currentNotice = notice
-  data.noticeDetailVisible = true // 打开公告详情弹窗
 }
 
 // 获取通知标题（如果有title字段则使用，否则取content前几个字）
@@ -696,19 +715,13 @@ const getNotificationTitle = (notification) => {
 const showNotificationDetail = (notification) => {
   data.currentNotification = notification
   data.notificationDetailVisible = true
+  data.allNotificationsVisible = false // 关闭全部通知弹窗
 }
 
 // 显示全部通知
 const showAllNotifications = () => {
   // 直接显示已加载的通知数据
   data.allNotificationsVisible = true
-}
-
-// 从表格中查看通知详情
-const showNotificationDetailFromTable = (notification) => {
-  data.allNotificationsVisible = false // 关闭全部通知弹窗
-  data.currentNotification = notification
-  data.notificationDetailVisible = true // 打开通知详情弹窗
 }
 
 // 处理查看全部按钮点击事件
