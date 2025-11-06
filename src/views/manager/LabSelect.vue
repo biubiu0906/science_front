@@ -7,7 +7,6 @@
                 <el-table-column prop="id" label="申请编号" width="150" sortable />
                 <el-table-column prop="institutionName" label="实验室名称" min-width="120" sortable />
                 <el-table-column prop="establishmentDate" label="成立日期" width="110" sortable />
-                <el-table-column prop="totalStaff" label="人数" width="80" sortable />
                 <el-table-column label="附件" min-width="150" sortable>
                     <template v-slot="scope">
                         <div v-if="scope.row.attachments?.files?.length">

@@ -7,7 +7,6 @@
                 <el-table-column prop="id" label="申请编号" />
                 <el-table-column prop="institutionName" label="实验室名称" />
                 <el-table-column prop="establishmentDate" label="成立日期" width="120" />
-                <el-table-column prop="totalStaff" label="人员总数" width="120" />
                 <el-table-column label="附件">
                     <template v-slot="scope">
                         <div v-if="scope.row.attachments?.files?.length">
@@ -50,9 +49,9 @@
                             <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
                         </el-tooltip>
                         <!-- 只有审核完毕的状态，才允许修改 -->
-                        <el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2"  content="修改申请信息" placement="bottom" effect="light">
+                        <!--<el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0"  content="修改申请信息" placement="bottom" effect="light">
                             <el-button @click="updateDetails(scope.row.id)" size="small" type="primary">修改</el-button>
-                        </el-tooltip>
+                        </el-tooltip>-->
                     </template>
                 </el-table-column>
             </el-table>

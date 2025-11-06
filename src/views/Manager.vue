@@ -69,7 +69,7 @@
 
             <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item> -->
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
-            <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
+            <el-menu-item index="/manager/report">科研报告管理</el-menu-item>
           </el-sub-menu>
           <!--教师的信息管理-->
           <el-sub-menu index="2" v-else>
@@ -83,7 +83,7 @@
             <el-menu-item index="/manager/project" v-if="data.laboratoryLevel === 2">科研项目管理</el-menu-item>
             <el-menu-item index="/manager/process" v-if="data.laboratoryLevel === 2">科研过程管理</el-menu-item>
             <el-menu-item index="/manager/achievement" v-if="data.laboratoryLevel === 2">科研成果管理</el-menu-item>
-            <el-menu-item index="/manager/report">报告信息管理</el-menu-item>
+            <el-menu-item index="/manager/report">科研报告管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="3" v-if="data.user.role === 'ADMIN'">
             <template #title>

@@ -84,7 +84,7 @@
               <el-button type="primary" circle :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip v-if="data.user.role === 'ADMIN'" content="审核成果" placement="bottom" effect="light">
-              <el-button type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
+              <el-button type="warning" circle :icon="Tickets" size="small" @click="handleCheck(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除成果" placement="bottom" effect="light">
               <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
@@ -225,7 +225,7 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
-import { Delete, Edit, View } from "@element-plus/icons-vue";
+import { Delete, Edit, Tickets } from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";
