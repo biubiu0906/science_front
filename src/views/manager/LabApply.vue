@@ -33,6 +33,9 @@
                         <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 2" type="danger">
                             审批拒绝
                         </el-tag>
+                        <el-tag v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 3" type="info">
+                            未提交
+                        </el-tag>
                     </template>
                 </el-table-column>
 
@@ -48,10 +51,9 @@
                         <el-tooltip content="查看申请详情" placement="bottom" effect="light">
                             <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
                         </el-tooltip>
-                        <!-- 只有审核完毕的状态，才允许修改 -->
-                        <!--<el-tooltip v-if="scope.row.applicationRecordList?.[0]?.applyStatus === 0"  content="修改申请信息" placement="bottom" effect="light">
+                        <el-tooltip  content="修改申请信息" placement="bottom" effect="light">
                             <el-button @click="updateDetails(scope.row.id)" size="small" type="primary">修改</el-button>
-                        </el-tooltip>-->
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>
@@ -79,7 +81,7 @@
                 <div class="right-content">
                     <div v-if="activeStep === 0">
                         <h3>基本情况</h3>
-                        <el-form ref="basicForm" :model="formData.basicInfo" :rules="rules.basicInfo">
+                        <el-form ref="basicForm" :model="formData.basicInfo">
                             <el-row :gutter="15">
                                 <el-col :span="11">
                                     <el-form-item label="实验室名称" prop="institutionName" label-width="110px">
@@ -179,46 +181,24 @@
                                     </el-form-item>
                                 </el-col>
                                 <el-col :span="13">
-                                    <el-form-item label="其他依托学科" prop="direction.disciplines" label-width="135px">
-                                        <div class="discipline-container">
-                                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                                                <el-input v-model="data.newDiscipline" placeholder="请输入其他依托学科" style="flex: 1;"></el-input>
-                                                <el-button type="primary" circle size="small" @click="addDiscipline" style="margin-left: 10px;">
-                                                    <el-icon><Plus /></el-icon>
-                                                </el-button>
-                                            </div>
-                                            <div v-for="(discipline, index) in formData.basicInfo.direction.disciplines" :key="index" class="discipline-input-row" style="display: flex; margin-bottom: 5px; align-items: center;">
-                                                <el-input v-model="discipline.name" placeholder="请输入其他依托学科" style="flex: 1;"></el-input>
-                                                <el-button type="danger" circle size="small" @click="removeRow('1', index)" style="margin-left: 10px;">
-                                                    <el-icon><Delete /></el-icon>
-                                                </el-button>
-                                            </div>
-                                        </div>
-                                    </el-form-item>
+                            <el-form-item label="其他依托学科" prop="otherDisciplines" label-width="135px">
+                                <!-- 改为单一输入框，数据以字符串格式提交，使用中文分号（;）分割 -->
+                                <el-input v-model="formData.basicInfo.otherDisciplines"
+                                          placeholder="请输入其他依托学科（请使用；分割）"></el-input>
+                            </el-form-item>
                                 </el-col>
                             </el-row>
-                            <el-form-item label="研究方向" prop="direction.researches" label-width="110px">
-                                <div class="research-container">
-                                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                                        <el-input v-model="data.newResearch" placeholder="请输入研究方向" style="flex: 1;"></el-input>
-                                        <el-button type="primary" circle size="small" @click="addResearch" style="margin-left: 10px;">
-                                            <el-icon><Plus /></el-icon>
-                                        </el-button>
-                                    </div>
-                                    <div v-for="(research, index) in formData.basicInfo.direction.researches" :key="index" class="research-input-row" style="display: flex; margin-bottom: 5px; align-items: center;">
-                                        <el-input v-model="research.name" :placeholder="`请输入研究方向${index + 1}`" style="flex: 1;"></el-input>
-                                        <el-button type="danger" circle size="small" @click="removeRow('2', index)" style="margin-left: 10px;">
-                                            <el-icon><Delete /></el-icon>
-                                        </el-button>
-                                    </div>
-                                </div>
+                            <el-form-item label="研究方向" prop="labResearchDirection" label-width="110px">
+                                <!-- 改为单一输入框，数据以字符串格式提交，使用中文分号（;）分割 -->
+                                <el-input v-model="formData.basicInfo.labResearchDirection"
+                                          placeholder="请输入研究方向（请使用；分割）"></el-input>
                             </el-form-item>
                         </el-form>
                     </div>
 
                     <div v-if="activeStep === 1">
                         <h3>实验室成员</h3>
-                        <el-form label-width="100px" :model="formData.members" :rules="rules" ref="membersForm">
+                        <el-form label-width="100px" :model="formData.members" ref="membersForm">
                             <template v-for="(item, index) in formData.members" :key="index">
                                 <h4 v-if="index === 0">实验室主任</h4>
                                 <h4 v-if="index === 1">实验室副主任</h4>
@@ -231,7 +211,7 @@
                                     <el-row v-if="field.prop === 'researchDirection' || field.prop === 'academicHonors'" :gutter="10">
                                         <el-col :span="24">
                                             <el-form-item :label="field.label"
-                                                :prop="`${index}.${field.prop}`" :rules="getFieldRules(field, index)">
+                                                :prop="`${index}.${field.prop}`">
                                                 <el-input v-if="field.type !== 'date'"
                                                     v-model="formData.members[index][field.prop]"
                                                     :placeholder="'请输入' + field.label"></el-input>
@@ -249,7 +229,7 @@
                                             <!-- 第一个字段 -->
                                             <el-col :span="12">
                                                 <el-form-item :label="field.label"
-                                                    :prop="`${index}.${field.prop}`" :rules="getFieldRules(field, index)">
+                                                    :prop="`${index}.${field.prop}`">
                                                     <el-input v-if="field.type !== 'date'"
                                                         v-model="formData.members[index][field.prop]"
                                                         :placeholder="'请输入' + field.label"></el-input>
@@ -262,8 +242,7 @@
                                             <!-- 第二个字段（如果存在且不是独占字段） -->
                                             <el-col :span="12" v-if="getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex)">
                                                 <el-form-item :label="getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).label"
-                                                    :prop="`${index}.${getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).prop}`" 
-                                                    :rules="getFieldRules(getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex), index)">
+                                                    :prop="`${index}.${getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).prop}`">
                                                     <el-input v-if="getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).type !== 'date'"
                                                         v-model="formData.members[index][getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).prop]"
                                                         :placeholder="'请输入' + getNextPairedField(formFields.filter(f => shouldShowField(index, f)), fieldIndex).label"></el-input>
@@ -514,94 +493,94 @@
 
                     <div v-if="activeStep === 2">
                         <h3>建设基础</h3>
-                        <el-form ref="foundationForm" :model="formData.foundation" :rules="rules.foundation">
+                        <el-form ref="foundationForm" :model="formData.foundation">
                             <el-form-item prop="foundation">
                                 <el-input
                                     v-model="formData.foundation.foundation"
                                     type="textarea"
                                     :rows="8"
                                     maxlength="1000"
-                                    show-word-limit
                                     placeholder="现有基础、功能定位、主要特色、标志性成果及国内外影响等综述（限1000字）"
                                     style="width: 100%;">
                                 </el-input>
+                                <div class="word-counter">字数：{{ countText(formData.foundation.foundation) }}/1000</div>
                             </el-form-item>
                         </el-form>
                         
                         <h3>建设目标和发展思路</h3>
-                        <el-form :model="formData.foundation" :rules="rules.foundation">
+                        <el-form :model="formData.foundation">
                             <el-form-item prop="goals">
                                 <el-input
                                     v-model="formData.foundation.goals"
                                     type="textarea"
                                     :rows="8"
                                     maxlength="1000"
-                                    show-word-limit
                                     placeholder="围绕国家（区域、行业）重大战略需求，聚焦哲学社会科学领域重大理论和现实问题，坚持学科交叉融合，坚持研究范式革新，提出建设期内本实验室整体建设目标和发展思路（限1000字）"
                                     style="width: 100%;">
                                 </el-input>
+                                <div class="word-counter">字数：{{ countText(formData.foundation.goals) }}/1000</div>
                             </el-form-item>
                         </el-form>
                     </div>
 
                     <div v-if="activeStep === 3">
                         <h3>重点任务和建设举措</h3>
-                        <el-form ref="keyTasksForm" :model="formData.keyTasks" :rules="rules.keyTasks">
+                        <el-form ref="keyTasksForm" :model="formData.keyTasks">
                             <el-form-item prop="keyTasks">
                                 <el-input
                                     v-model="formData.keyTasks.keyTasks"
                                     type="textarea"
                                     :rows="15"
                                     :maxlength="3000"
-                                    show-word-limit
                                     placeholder="围绕建设目标，在哲学社会科学自主知识体系建构、咨政服务能力提升、高层次团队建设、高质量人才培养、高水平科研创新、开放共享与社会服务（包括但不限于）等方面逐条提出拟开展的重点任务和建设举措（限3000字）。"
                                 />
+                                <div class="word-counter">字数：{{ countText(formData.keyTasks.keyTasks) }}/3000</div>
                             </el-form-item>
                         </el-form>
                     </div>
 
                     <div v-if="activeStep === 4">
                         <h3>制度建设</h3>
-                        <el-form ref="systemBuildingForm" :model="formData.systemBuilding" :rules="rules.systemBuilding">
+                        <el-form ref="systemBuildingForm" :model="formData.systemBuilding">
                             <el-form-item prop="systemBuilding">
                                 <el-input
                                     v-model="formData.systemBuilding.systemBuilding"
                                     type="textarea"
                                     :rows="8"
                                     :maxlength="1000"
-                                    show-word-limit
                                     placeholder="简述实验室管理制度建设和内部运行机制建设主要内容，重点突出制度创新（限1000字）。"
                                 />
+                                <div class="word-counter">字数：{{ countText(formData.systemBuilding.systemBuilding) }}/1000</div>
                             </el-form-item>
                         </el-form>
                         
                         <h3>预期成效及标志性成果</h3>
-                        <el-form :model="formData.systemBuilding" :rules="rules.systemBuilding">
+                        <el-form :model="formData.systemBuilding">
                             <el-form-item prop="expectedResults">
                                 <el-input
                                     v-model="formData.systemBuilding.expectedResults"
                                     type="textarea"
                                     :rows="12"
                                     :maxlength="2000"
-                                    show-word-limit
                                     placeholder="对照重点任务提出建设期内预期成效，并以2024-2026年、2027-2028年两个时间段列出预期标志性成果及其学术价值和实际贡献（限2000字）。"
                                 />
+                                <div class="word-counter">字数：{{ countText(formData.systemBuilding.expectedResults) }}/2000</div>
                             </el-form-item>
                         </el-form>
                     </div>
 
                     <div v-if="activeStep === 5">
                         <h3>组织保障</h3>
-                        <el-form ref="organizationForm" :model="formData.organization" :rules="rules.organization">
+                        <el-form ref="organizationForm" :model="formData.organization">
                             <el-form-item prop="organizationalSupport">
                                 <el-input
                                     v-model="formData.organization.organizationalSupport"
                                     type="textarea"
                                     :rows="12"
                                     :maxlength="1000"
-                                    show-word-limit
                                     placeholder="学校在人、财、物等方面对本实验室建设给予的政策保障与支持措施（限1000字）。"
                                 />
+                                <div class="word-counter">字数：{{ countText(formData.organization.organizationalSupport) }}/1000</div>
                             </el-form-item>
                         </el-form>
                     </div>
@@ -681,7 +660,8 @@
                         <el-icon :size="200" color="#67c23a">
                             <Check />
                         </el-icon>
-                        <h1>提交成功</h1>
+                        <!-- 根据 state 显示不同的成功文案：state=1 暂存成功；state=0 提交成功 -->
+                        <h1>{{ formData.state === 1 ? '暂存成功' : '提交成功' }}</h1>
                     </div>
 
                     <!-- 页面底部的导航按钮 -->
@@ -692,7 +672,8 @@
                         </el-button>
                         <el-button v-if="activeStep !== 7" type="primary"
                             @click="nextTab" size="small">下一页</el-button>
-                        <!-- 添加的时候 -->
+                        <el-button v-if="activeStep === 7" type="warning"
+                            @click="saveDraft" size="small">暂存</el-button>
                         <el-button v-if="activeStep === 7" type="success" @click="submitForm" size="small">提交</el-button>
                     </div>
                 </div>
@@ -764,11 +745,11 @@ const data = reactive({
     newResearch: ''
 })
 
-// 定义一个方法来获取数据
+// 获取申请数据
 const fetchLabApplyList = async () => {
     try {
-        const response = await request.get('/application_record/selectById/' + data.user.id); // 假设这是获取数据的接口
-        labApplyList.value = response.data; // 假设返回的数据是一个数组
+        const response = await request.get('/application_record/selectById/' + data.user.id);
+        labApplyList.value = response.data;
     } catch (error) {
         console.error('获取实验室申请列表失败', error);
         ElMessage.error('获取实验室申请列表失败，请稍后再试');
@@ -779,6 +760,8 @@ const fetchLabApplyList = async () => {
 onMounted(fetchLabApplyList);
 
 const formData = ref({
+    // 申请记录主键ID：用于区分首次暂存和后续暂存（首次为空，后端新增后返回并写入）
+    id: null,
     // 步骤0：基本情况
     basicInfo: {
         institutionName: '',
@@ -794,10 +777,8 @@ const formData = ref({
         averageFunding: '',
         mainFundingSource: '',
         mainDiscipline: '',
-        direction: {
-            disciplines: [],
-            researches: []
-        }
+        otherDisciplines: '',
+        labResearchDirection: '',
     },
     // 步骤1：实验室成员
     members: [
@@ -943,107 +924,12 @@ const formData = ref({
     // 步骤7：其他材料
     attachments: { 
         files: [] 
-    }
+    },
+    // 标识暂停还是提交
+    state: null
 });
 
-const rules = ref({
-    basicInfo: {
-        institutionName: [{ required: true, message: '机构名称不能为空', trigger: 'blur' }],
-        labCategory: [{ required: true, message: '实验室类别不能为空', trigger: 'change' }],
-        buildPeriod: [{ required: true, message: '建设周期不能为空', trigger: 'change' }],
-        affiliatedSchool: [{ required: true, message: '依托学校不能为空', trigger: 'blur' }],
-        establishmentDate: [{ required: true, message: '成立时间不能为空', trigger: 'blur' }],
-        totalStaff: [{ required: true, message: '人员总数不能为空', trigger: 'blur' }],
-        fullTimeStaff: [{ required: true, message: '专职人员总数不能为空', trigger: 'blur' }],
-        isEntity: [{ required: true, message: '是否实体不能为空', trigger: 'blur' }],
-        totalArea: [{ required: true, message: '总面积不能为空', trigger: 'blur' }],
-        labArea: [{ required: true, message: '实验室面积不能为空', trigger: 'blur' }],
-        averageFunding: [{ required: true, message: '近3年年均经费不能为空', trigger: 'blur' }],
-        mainFundingSource: [{ required: true, message: '主要经费来源不能为空', trigger: 'blur' }],
-        mainDiscipline: [{ required: true, message: '主要依托学科不能为空', trigger: 'blur' }]
-    },
-    "basicInfo.direction.disciplines": [
-        {
-            validator: (rule, value, callback) => {
-                if (!value || value.length === 0) {
-                    callback(new Error("至少需要添加一个依托学科"));
-                } else {
-                    callback();
-                }
-            },
-            trigger: "change" // 监听数组变化
-        }
-    ],
-    "basicInfo.direction.researches": [
-        {
-            validator: (rule, value, callback) => {
-                if (!value || value.length === 0) {
-                    callback(new Error("至少需要添加一个研究方向"));
-                } else {
-                    callback();
-                }
-            },
-            trigger: "change" // 监听数组变化
-        }
-    ],
-    // 步骤2：建设基础验证规则
-    foundation: {
-        foundation: [{ required: true, message: '建设基础不能为空', trigger: 'blur' }],
-        goals: [{ required: true, message: '建设目标和发展思路不能为空', trigger: 'blur' }]
-    },
-    // 步骤3：重点任务验证规则
-    keyTasks: {
-        keyTasks: [{ required: true, message: '重点任务和建设举措不能为空', trigger: 'blur' }]
-    },
-    // 步骤4：制度建设验证规则
-    systemBuilding: {
-        systemBuilding: [{ required: true, message: '制度建设不能为空', trigger: 'blur' }],
-        expectedResults: [{ required: true, message: '预期成效及标志性成果不能为空', trigger: 'blur' }]
-    },
-    // 步骤5：组织保障验证规则
-    organization: {
-        organizationalSupport: [{ required: true, message: '组织保障不能为空', trigger: 'blur' }]
-    },
-    // 实验室主任验证规则
-    "0.name": [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-    "0.birthDate": [{ required: true, message: "出生年月不能为空", trigger: "change" }],
-    "0.title": [{ required: true, message: "职务/职称不能为空", trigger: "blur" }],
-    "0.discipline": [{ required: true, message: "所在学科不能为空", trigger: "blur" }],
-    "0.researchDirection": [{ required: true, message: "研究方向不能为空", trigger: "blur" }],
-    "0.phone": [
-        { required: true, message: "手机号码不能为空", trigger: "blur" },
-    ],
-
-    // 实验室副主任(含学术带头人)验证规则
-
-    // 管理委员会主任验证规则
-    "2.name": [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-    "2.birthDate": [{ required: true, message: "出生年月不能为空", trigger: "change" }],
-    "2.title": [{ required: true, message: "职务/职称不能为空", trigger: "blur" }],
-    "2.discipline": [{ required: true, message: "所在学科不能为空", trigger: "blur" }],
-    "2.researchDirection": [{ required: true, message: "研究方向不能为空", trigger: "blur" }],
-    "2.phone": [
-        { required: true, message: "手机号码不能为空", trigger: "blur" },
-    ],
-
-    // 学术委员会主任验证规则
-    "3.name": [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-    "3.birthDate": [{ required: true, message: "出生年月不能为空", trigger: "change" }],
-    "3.title": [{ required: true, message: "职务/职称不能为空", trigger: "blur" }],
-    "3.discipline": [{ required: true, message: "所在学科不能为空", trigger: "blur" }],
-    "3.researchDirection": [{ required: true, message: "研究方向不能为空", trigger: "blur" }],
-    "3.phone": [
-        { required: true, message: "手机号码不能为空", trigger: "blur" },
-    ],
-    // todo 待完成
-    buildings: {
-        construacts: {
-            name: [{ required: true, message: '子机构名称不能为空', trigger: 'blur' }],
-            leader: [{ required: true, message: '负责人不能为空', trigger: 'blur' }],
-            position: [{ required: true, message: '职务职称不能为空', trigger: 'blur' }]
-        }
-    }
-});
+// 申请表单不再使用内置校验规则，移除 rules 配置
 
 const shouldShowField = (index, field) => {
     // 根据索引和字段类型决定是否显示
@@ -1057,72 +943,6 @@ const shouldShowField = (index, field) => {
     return false;
 };
 
-const getFieldRules = (field, memberIndex) => {
-    // 根据字段和成员索引生成规则
-    // 实验室副主任(index=1)的所有字段都不是必填项
-    if (memberIndex === 1) {
-        return [];
-    }
-    
-    // 其他成员按照字段的required属性决定
-    if (field.required) {
-        return [{ required: true, message: `${field.label}不能为空`, trigger: 'blur' }];
-    }
-    return [];
-};
-
-// 添加一行
-const addRow = (type) => {
-    var limit = 5;
-    if (type === '1') {
-        if (formData.value.direction.disciplines.length < limit) {
-            formData.value.direction.disciplines.push({ name: '', description: '' });
-        } else {
-            ElMessage.warning('依托学科最多只能添加' + limit + '行');
-        }
-    }
-    else if (type == '2') {
-        if (formData.value.direction.researches.length < limit) {
-            formData.value.direction.researches.push({ name: '' });
-        } else {
-            ElMessage.warning('主要研究方向最多只能添加' + limit + '行');
-        }
-
-    }
-    else {
-        if (formData.value.buildings.construacts.length < limit) {
-            formData.value.buildings.construacts.push({ name: '' });
-        } else {
-            ElMessage.warning('下属子机构最多只能添加' + limit + '行');
-        }
-
-    }
-};
-
-// 添加依托学科
-const addDiscipline = () => {
-    formData.value.basicInfo.direction.disciplines.push({ name: '', description: '' });
-};
-
-// 添加研究方向
-const addResearch = () => {
-    formData.value.basicInfo.direction.researches.push({ name: '' });
-};
-
-// 删除一行
-const removeRow = (type, index) => {
-    if (type === '1') {
-        formData.value.basicInfo.direction.disciplines.splice(index, 1);
-    }
-    else if (type === '2') {
-        formData.value.basicInfo.direction.researches.splice(index, 1);
-    }
-    else {
-        formData.value.buildings.construacts.splice(index, 1);
-    }
-
-};
-
 
 // 切换 Tab
 const nextTab = () => {
@@ -1131,61 +951,60 @@ const nextTab = () => {
 
     switch (activeStep.value) {
         case 0:
-            // 步骤0：基本情况 - 有表单验证
+            // 步骤0：基本情况
             formRef = basicForm.value;
             break;
         case 1:
-            // 步骤1：实验室成员 - 有表单验证
+            // 步骤1：实验室成员
             formRef = membersForm.value;
             break;
         case 2:
-            // 步骤2：建设基础 & 建设目标和发展思路 - 检查必填内容
+            // 步骤2：建设基础 & 建设目标和发展思路
             formRef = foundationForm.value;
             break;
         case 3:
-            // 步骤3：重点任务和建设举措 - 检查必填内容
+            // 步骤3：重点任务和建设举措
             formRef = keyTasksForm.value;
             break;
         case 4:
-            // 步骤4：制度建设 & 预期成效及标志性成果 - 检查必填内容
+            // 步骤4：制度建设 & 预期成效及标志性成果
             formRef = systemBuildingForm.value;
             break;
         case 5:
-            // 步骤5：组织保障 - 检查必填内容
+            // 步骤5：组织保障 
             formRef = organizationForm.value;
             break;
         case 6:
-            // 步骤6：经费预算 - 检查是否填写了预算数据
-            const hasValidBudget = formData.value.budget.yearlyBudgets.some(budget => 
-                (budget.provincialFunds && budget.provincialFunds.trim() !== '') ||
-                (budget.schoolFunds && budget.schoolFunds.trim() !== '') ||
-                (budget.otherFunds && budget.otherFunds.trim() !== '')
-            );
+            // 步骤6：经费预算
             formRef = budgetForm.value;
             break;
         default:
             formRef = null;
     }
 
-    // 如果有表单引用，进行表单验证
-    if (formRef) {
-        formRef.validate((valid, invalidFields) => {
-            console.log('formRef validation:', valid);
-            console.log('当前步骤:', activeStep.value);
-            console.log('表单引用:', formRef);
-            if (invalidFields) {
-                console.log('校验失败的字段:', invalidFields);
-            }
-            if (valid && canProceed) {
-                activeStep.value += 1;
-                // 如果进入第7步（其他材料步骤），显示安全提醒
-                if (activeStep.value === 7) {
-                    securityAlertManager.show();
+    // 如果有表单引用，进行表单验证；若无校验规则或方法不可用，则直接放行
+    if (formRef && typeof formRef.validate === 'function') {
+        try {
+            formRef.validate((valid, invalidFields) => {
+                if (valid && canProceed) {
+                    activeStep.value += 1;
+                    if (activeStep.value === 7) {
+                        securityAlertManager.show();
+                    }
+                } else {
+                    // 无规则时 Element Plus 也会返回 true，这里仅在明确 false 时提示
+                    if (valid === false) {
+                        ElMessage.error('表单校验失败，请检查输入内容');
+                    }
                 }
-            } else {
-                ElMessage.error('表单校验失败，请检查输入内容');
+            });
+        } catch (e) {
+            // 当 validate 抛错或不可用时，直接放行，避免阻断导航
+            activeStep.value += 1;
+            if (activeStep.value === 7) {
+                securityAlertManager.show();
             }
-        });
+        }
     } else if (canProceed) {
         // 没有表单引用但可以继续的情况
         activeStep.value += 1;
@@ -1198,7 +1017,6 @@ const nextTab = () => {
 
 const prevTab = () => {
     if (activeStep.value > 0) {
-        // 如果从第7步（其他材料步骤）退出，隐藏安全提醒
         if (activeStep.value === 7) {
             securityAlertManager.hide();
         }
@@ -1206,7 +1024,7 @@ const prevTab = () => {
     }
 };
 
-// **经费预算计算函数**
+// 经费预算计算函数
 const calculateRowTotal = (index) => {
     const budget = formData.value.budget.yearlyBudgets[index];
     const provincial = parseFloat(budget.provincialFunds) || 0;
@@ -1239,7 +1057,7 @@ const calculateColumnTotals = () => {
     formData.value.budget.grandTotal = grandTotal.toString();
 };
 
-// **人员统计计算函数**
+// 人员统计计算函数
 const calculateTeamStatistics = () => {
     // 首先计算每行的合计（除了第一行总合计行）
     for (let i = 1; i <= 5; i++) {
@@ -1251,17 +1069,21 @@ const calculateTeamStatistics = () => {
     
     // 初始化合计行的所有字段为0
     totalRow.total = '0';
+
+    // 教学科研人员
     totalRow.seniorTeacher = '0';
     totalRow.associateTeacher = '0';
     totalRow.middleTeacher = '0';
+    // 实验科研人员
     totalRow.seniorTech = '0';
     totalRow.associateTech = '0';
     totalRow.middleTech = '0';
     totalRow.others = '0';
     
-    // 计算专职、兼职和年龄段的合计（索引1-5）
-    for (let i = 1; i <= 5; i++) {
+    // 仅汇总专职与兼职两行（索引1-2），不包含年龄段三行（索引3-5）
+    for (let i = 1; i <= 2; i++) {
         const row = formData.value.teamStatistics[i];
+        if (!row) continue; // 防御式判断，避免越界
         totalRow.total = (parseFloat(totalRow.total) + (parseFloat(row.total) || 0)).toString();
         totalRow.seniorTeacher = (parseFloat(totalRow.seniorTeacher) + (parseFloat(row.seniorTeacher) || 0)).toString();
         totalRow.associateTeacher = (parseFloat(totalRow.associateTeacher) + (parseFloat(row.associateTeacher) || 0)).toString();
@@ -1303,7 +1125,7 @@ const calculateTalentTotal = () => {
     talentData.total = (nationalHighLevel + nationalYoung + provincial).toString();
 };
 
-// **文件上传成功**
+// 文件上传成功
 const handleFileUpload = (res, file) => {
     if (res.code === "200") {
         const url = res.data;
@@ -1321,56 +1143,67 @@ const handleFileUpload = (res, file) => {
     }
 };
 
-// **删除文件**
+// 删除文件
 const handleRemove = (file) => {
     formData.value.attachments.files = formData.value.attachments.files.filter(url => url !== file.url);
     fileList.value = fileList.value.filter(item => item.url !== file.url);
 };
 
+/**
+ * 暂存申请信息
+ */
+const saveDraft = () => {
+    // 标记为暂存
+    formData.value.state = 1;
+    request.post('/laboratory_apply_for/add', formData.value)
+        .then((res) => {
+            if (res.code === '200') {
+                ElMessage({
+                    message: '已暂存！',
+                    type: 'success',
+                    duration: 1500,
+                    onClose: () => {
+                        // 暂存完成后跳转至步骤8，显示“暂存成功”提示
+                        activeStep.value = 8;
+                        fetchLabApplyList();
+                    },
+                });
+            }
+        })
+        .catch((error) => {
+            ElMessage.error('暂存失败，请稍后重试或联系管理员');
+            console.error('暂存失败', error);
+        });
+}
 
+
+/**
+ * 提交申请（state=0）
+ */
 const submitForm = () => {
-    if (pageStatus.value === 'add') {
-        request.post('/laboratory_apply_for/add', formData.value).then((res) => {
-            // 如果请求成功，显示成功消息
-            console.log('formData.value', formData.value)
-            ElMessage({
-                message: '提交成功！',
-                type: 'success',
-                duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
-                onClose: () => {
-                    // 消息关闭后的回调函数
-                    activeStep.value++; // 跳转到下一步
-                    securityAlertManager.hide(); // 隐藏安全提醒
-                    fetchLabApplyList();
-                },
-            });
-        }).catch((error) => {
+    // 标记为正式提交
+    formData.value.state = 0;
+    request.post('/laboratory_apply_for/add', formData.value)
+        .then((res) => {
+            if (res && res.code === '200') {
+                // 如果请求成功，显示成功消息
+                ElMessage({
+                    message: '提交成功！',
+                    type: 'success',
+                    duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
+                    onClose: () => {
+                        activeStep.value++; // 跳转到下一步
+                        securityAlertManager.hide(); // 隐藏安全提醒
+                        fetchLabApplyList();
+                    },
+                });
+            }
+        })
+        .catch((error) => {
             // 如果请求失败，显示错误消息
             ElMessage.error('提交失败，请检查输入内容或联系管理员');
             console.error('提交失败', error);
         });
-    }
-    else {
-        request.put('/laboratory_apply_for/update', formData.value).then((res) => {
-            // 如果请求成功，显示成功消息
-            ElMessage({
-                message: '修改成功！',
-                type: 'success',
-                duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
-                onClose: () => {
-                    // 消息关闭后的回调函数
-                    activeStep.value++; // 跳转到下一步
-                    securityAlertManager.hide(); // 隐藏安全提醒
-                    fetchLabApplyList();
-                },
-            });
-        }).catch((error) => {
-            // 如果请求失败，显示错误消息
-            ElMessage.error('修改失败，请检查输入内容或联系管理员');
-            console.error('修改失败', error);
-        });
-    }
-
 };
 
 
@@ -1379,14 +1212,17 @@ const viewDetails = (id) => {
     selectedApplicationId.value = id; // 只传递 ID
 }
 
-const updateDetails = (id) => {
+const updateDetails = async (id) => {
     pageStatus.value = 'update';
-    // 回到开头
-    activeStep.value = 0;
-    // 隐藏安全提醒
-    securityAlertManager.hide();
-    // 但是要填充内容
-    fetchApplicationDetails(id);
+    selectedApplicationId.value = id; // 只传递 ID
+    formData.value.id = id;
+    activeStep.value = 0; // 从第一步开始编辑
+    try {
+        await fetchApplicationDetails(id);
+    } catch (e) {
+        console.error('进入修改流程失败', e);
+        ElMessage.error('进入修改流程失败，请稍后重试');
+    }
 }
 
 const fetchApplicationDetails = async (id) => {
@@ -1394,16 +1230,12 @@ const fetchApplicationDetails = async (id) => {
         ElMessage({
             message: '查询编号为：' + id + '的申请记录！',
             type: 'success',
-            duration: 1000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
+            duration: 1000,
         });
         const response = await request.get(`/laboratory_apply_for/select/${id}`);
         formData.value = response.data;
-        formData.value.attachments.files.forEach(url => {
-            fileList.value.push({
-                name: url.split("-").pop(),
-                url
-            });
-        });
+        // 回填上传文件列表用于预览
+        fileList.value = (formData.value.attachments.files || []).map(url => ({ name: getFileName(url), url }));
     } catch (error) {
         console.error('获取详细信息失败', error);
     }
@@ -1416,7 +1248,7 @@ const labAddHandle = () => {
         ElMessage({
             message: '你已经是重点实验室，无需再次提交！',
             type: 'warning',
-            duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
+            duration: 2000,
         });
         return;
     }
@@ -1548,7 +1380,9 @@ const labAddHandle = () => {
         ],
         // 步骤2: 建设基础
         foundation: {
-            foundation: ''
+            foundation: '',
+            // 建设目标和发展思路：新增字段以匹配模板 v-model 使用
+            goals: ''
         },
         // 步骤3: 重点任务
         keyTasks: {
@@ -1556,11 +1390,15 @@ const labAddHandle = () => {
         },
         // 步骤4: 制度建设
         systemBuilding: {
-            systemBuilding: ''
+            systemBuilding: '',
+            // 预期成效及标志性成果：新增字段以匹配模板 v-model 使用
+            expectedResults: ''
         },
         // 步骤5: 组织保障
         organization: {
-            organization: ''
+            organization: '',
+            // 组织保障：新增字段以匹配模板 v-model 使用
+            organizationalSupport: ''
         },
         // 步骤6: 预算安排
          budget: {
@@ -1619,6 +1457,18 @@ const getNextPairedField = (fields, currentIndex) => {
 const handleSecurityConfirm = () => {
     showSecurityAlert.value = false;
 };
+
+// 统计文本字数（不包含空格、制表符、换行等所有空白字符）
+const countText = (text) => {
+    // 提前返回：当文本为空时直接返回 0，避免不必要计算
+    if (!text) return 0;
+    // 将输入统一转为字符串，兼容非字符串输入
+    const str = String(text);
+    // 移除所有空白字符（含空格、制表符、回车换行等）与中文全角空格
+    const cleaned = str.replace(/\s+/g, '').replace(/\u3000/g, '');
+    // 返回剩余字符长度
+    return cleaned.length;
+};
 </script>
 
 
@@ -1652,9 +1502,9 @@ const handleSecurityConfirm = () => {
 
 .navigation-buttons {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 10px 0;
-    /* 添加一些内边距 */
+    gap:10px;
 }
 
 .content-wrapper {
@@ -1933,5 +1783,10 @@ const handleSecurityConfirm = () => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+.word-counter {
+    font-size: 13px;
+    color: #333;
 }
 </style>

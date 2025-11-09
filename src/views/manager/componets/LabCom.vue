@@ -118,35 +118,18 @@
                             </el-col>
                             <el-col :span="13">
                                 <el-form-item label="其他依托学科">
-                                    <div v-if="(formData.basicInfo?.direction?.disciplines || formData.direction?.disciplines)?.length">
-                                        <div style="margin: 0;">
-                                            <div 
-                                                v-for="(discipline, index) in (formData.basicInfo?.direction?.disciplines || formData.direction?.disciplines)" 
-                                                :key="index"
-                                            >
-                                                <span>{{ discipline.name }}</span>
-                                                <span v-if="discipline.description"> - {{ discipline.description }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span v-else class="form-value">暂无</span>
+                                    <span class="form-value">
+                                        {{ formData.basicInfo?.otherDisciplines|| '暂无' }}
+                                    </span>
                                 </el-form-item>
                             </el-col>
                         </el-row>
 
                         <!-- 研究方向 -->
                         <el-form-item label="研究方向">
-                            <div v-if="(formData.basicInfo?.direction?.researches || formData.direction?.researches)?.length">
-                                <div style="margin: 0;">
-                                    <div 
-                                        v-for="(research, index) in (formData.basicInfo?.direction?.researches || formData.direction?.researches)" 
-                                        :key="index"
-                                    >
-                                        {{ research.name || research }}
-                                    </div>
-                                </div>
-                            </div>
-                            <span v-else class="form-value">暂无</span>
+                            <span class="form-value">
+                                {{ formData.basicInfo?.labResearchDirection || '暂无' }}
+                            </span>
                         </el-form-item>
                     </el-form>
                 </div>
