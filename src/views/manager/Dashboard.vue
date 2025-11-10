@@ -541,7 +541,8 @@
         <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
           发布时间：{{ formatDate(data.currentNotification.createTime) }}
         </div>
-        <div style="line-height: 1.8; color: #666; text-align: justify">
+        <!-- 内容区域：保留后端返回的换行符（\n/\r\n）并自动换行 -->
+        <div style="line-height: 1.8; color: #666; text-align: justify; white-space: pre-line; word-break: break-word;">
           {{ data.currentNotification.content }}
         </div>
       </div>
