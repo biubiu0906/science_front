@@ -40,10 +40,12 @@
 
 <script setup>
   import router from "@/router/index.js";
-  import { reactive } from "vue";
+  import { reactive, onUnmounted } from "vue";
   import request from "@/utils/request.js";
   // 按需引入 Element Plus 图标
   import { Bell, ArrowDown } from "@element-plus/icons-vue";
+  // 关闭标签页/浏览器自动退出注册函数
+  import { registerAutoLogoutOnClose, ensureLogoutIfClosed } from "@/utils/autoLogout.js";
 
   const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -51,10 +53,18 @@
     noticeData: []
   })
 
+  // 页面加载即检查：若上次关闭时已标记退出且此次为“重新打开”（非刷新），则清理登录态
+  ensureLogoutIfClosed()
+
   const logout = () => {
     localStorage.removeItem('xm-user')
     router.push('/login')
   }
+
+  // 注册“关闭标签页/浏览器时自动退出”，不影响站内跳转与刷新
+  // 关键节点：页面挂载时注册，卸载时清理，避免内存泄漏
+  const cleanupAutoLogout = registerAutoLogoutOnClose(router)
+  onUnmounted(() => cleanupAutoLogout())
 
   const updateUser = () => {
     data.user =  JSON.parse(localStorage.getItem('xm-user') || '{}')

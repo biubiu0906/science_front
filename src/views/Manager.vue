@@ -154,10 +154,12 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, ref } from "vue";
+import { reactive, onMounted, onUnmounted, ref } from "vue";
 import router from "@/router/index.js";
 import { ElMessage } from "@/utils/element-plus";
 import request from "@/utils/request.js";
+// 关闭标签页/浏览器自动退出注册函数
+import { registerAutoLogoutOnClose, ensureLogoutIfClosed } from "@/utils/autoLogout.js";
 // 按需引入 Element Plus 图标
 import { DataAnalysis, Bell, Menu, Fold, Expand, ArrowDown, Setting, User, Memo } from "@element-plus/icons-vue";
 // 引入个人资料对话框组件
@@ -170,6 +172,9 @@ const data = reactive({
   laboratoryLevel: null
 })
 
+// 页面加载即检查：若上次关闭时已标记退出且此次为“重新打开”（非刷新），则清理登录态
+ensureLogoutIfClosed()
+
 // 侧边栏折叠状态，初始为展开
 const isCollapse = ref(false)
 // 个人资料对话框显示状态
@@ -181,6 +186,11 @@ const logout = () => {
   localStorage.removeItem('xm-user')
   router.push('/login')
 }
+
+// 注册“关闭标签页/浏览器时自动退出”，不影响站内跳转与刷新
+// 关键节点：页面挂载时注册，卸载时清理，避免内存泄漏
+const cleanupAutoLogout = registerAutoLogoutOnClose(router)
+onUnmounted(() => cleanupAutoLogout())
 
 
 const getLaboratoryLevel = () => {

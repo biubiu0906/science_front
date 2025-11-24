@@ -499,11 +499,10 @@
                                     v-model="formData.foundation.foundation"
                                     type="textarea"
                                     :rows="8"
-                                    maxlength="1000"
-                                    placeholder="现有基础、功能定位、主要特色、标志性成果及国内外影响等综述（限1000字）"
+                                    placeholder="现有基础、功能定位、主要特色、标志性成果及国内外影响等综述"
                                     style="width: 100%;">
                                 </el-input>
-                                <div class="word-counter">字数：{{ countText(formData.foundation.foundation) }}/1000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.foundation.foundation) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
                         
@@ -514,11 +513,10 @@
                                     v-model="formData.foundation.goals"
                                     type="textarea"
                                     :rows="8"
-                                    maxlength="1000"
-                                    placeholder="围绕国家（区域、行业）重大战略需求，聚焦哲学社会科学领域重大理论和现实问题，坚持学科交叉融合，坚持研究范式革新，提出建设期内本实验室整体建设目标和发展思路（限1000字）"
+                                    placeholder="围绕国家（区域、行业）重大战略需求，聚焦哲学社会科学领域重大理论和现实问题，坚持学科交叉融合，坚持研究范式革新，提出建设期内本实验室整体建设目标和发展思路"
                                     style="width: 100%;">
                                 </el-input>
-                                <div class="word-counter">字数：{{ countText(formData.foundation.goals) }}/1000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.foundation.goals) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
                     </div>
@@ -531,10 +529,9 @@
                                     v-model="formData.keyTasks.keyTasks"
                                     type="textarea"
                                     :rows="15"
-                                    :maxlength="3000"
-                                    placeholder="围绕建设目标，在哲学社会科学自主知识体系建构、咨政服务能力提升、高层次团队建设、高质量人才培养、高水平科研创新、开放共享与社会服务（包括但不限于）等方面逐条提出拟开展的重点任务和建设举措（限3000字）。"
+                                    placeholder="围绕建设目标，在哲学社会科学自主知识体系建构、咨政服务能力提升、高层次团队建设、高质量人才培养、高水平科研创新、开放共享与社会服务（包括但不限于）等方面逐条提出拟开展的重点任务和建设举措"
                                 />
-                                <div class="word-counter">字数：{{ countText(formData.keyTasks.keyTasks) }}/3000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.keyTasks.keyTasks) }}/3000</div>-->
                             </el-form-item>
                         </el-form>
                     </div>
@@ -547,10 +544,9 @@
                                     v-model="formData.systemBuilding.systemBuilding"
                                     type="textarea"
                                     :rows="8"
-                                    :maxlength="1000"
-                                    placeholder="简述实验室管理制度建设和内部运行机制建设主要内容，重点突出制度创新（限1000字）。"
+                                    placeholder="简述实验室管理制度建设和内部运行机制建设主要内容，重点突出制度创新"
                                 />
-                                <div class="word-counter">字数：{{ countText(formData.systemBuilding.systemBuilding) }}/1000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.systemBuilding.systemBuilding) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
                         
@@ -561,10 +557,9 @@
                                     v-model="formData.systemBuilding.expectedResults"
                                     type="textarea"
                                     :rows="12"
-                                    :maxlength="2000"
-                                    placeholder="对照重点任务提出建设期内预期成效，并以2024-2026年、2027-2028年两个时间段列出预期标志性成果及其学术价值和实际贡献（限2000字）。"
+                                    placeholder="对照重点任务提出建设期内预期成效，并以2024-2026年、2027-2028年两个时间段列出预期标志性成果及其学术价值和实际贡献"
                                 />
-                                <div class="word-counter">字数：{{ countText(formData.systemBuilding.expectedResults) }}/2000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.systemBuilding.expectedResults) }}/2000</div>-->
                             </el-form-item>
                         </el-form>
                     </div>
@@ -577,10 +572,9 @@
                                     v-model="formData.organization.organizationalSupport"
                                     type="textarea"
                                     :rows="12"
-                                    :maxlength="1000"
-                                    placeholder="学校在人、财、物等方面对本实验室建设给予的政策保障与支持措施（限1000字）。"
+                                    placeholder="学校在人、财、物等方面对本实验室建设给予的政策保障与支持措施"
                                 />
-                                <div class="word-counter">字数：{{ countText(formData.organization.organizationalSupport) }}/1000</div>
+                                <!--<div class="word-counter">字数：{{ countText(formData.organization.organizationalSupport) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
                     </div>

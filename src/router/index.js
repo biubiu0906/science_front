@@ -51,4 +51,29 @@ const router = createRouter({
   ]
 })
 
+// 全局路由守卫：未登录时强制跳转到登录页
+router.beforeEach((to, from, next) => {
+  // 白名单路由直接放行
+  const whiteList = ['/login', '/register', '/404']
+  if (whiteList.includes(to.path)) {
+    return next()
+  }
+
+  // 读取本地登录态
+  let user
+  try {
+    user = JSON.parse(localStorage.getItem('xm-user') || '{}')
+  } catch (_) {
+    user = null
+  }
+
+  // 未登录：统一跳转到登录页
+  if (!user || !user.id) {
+    return next('/login')
+  }
+
+  // 已登录：正常放行
+  next()
+})
+
 export default router

@@ -65,6 +65,8 @@ const login = () => {
           ElMessage.success('登录成功')
           // 存储用户信息到浏览器的缓存
           localStorage.setItem('xm-user', JSON.stringify(res.data))
+          // 关键节点：移除“关闭退出”标记，避免再次登录后被 ensureLogoutIfClosed 误清除登录态
+          try { localStorage.removeItem('xm-will-logout') } catch (_) { /* 忽略 */ }
           
           const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
           setTimeout(() => {
