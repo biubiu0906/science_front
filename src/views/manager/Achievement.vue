@@ -17,50 +17,84 @@
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
-        <el-table-column prop="projectName" label="项目名称" min-width="150"show-overflow-tooltip sortable />
-        <el-table-column prop="projectCode" label="立项编号" min-width="120" show-overflow-tooltip sortable />
-        <el-table-column prop="typeName" label="成果类型" min-width="110" show-overflow-tooltip sortable />
         <el-table-column prop="name" label="成果名称" min-width="110" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.name)">
+            <div v-if="scope.row.name" :class="getContentAlignClass(scope.row.name)">
               {{ scope.row.name }}
             </div>
+            <span v-else style="color: #999;">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="typeName" label="成果类型" min-width="110" show-overflow-tooltip sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.typeName">{{ scope.row.typeName }}</span>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="成果描述" min-width="110" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.description)">
+            <div v-if="scope.row.description" :class="getContentAlignClass(scope.row.description)">
               {{ scope.row.description }}
             </div>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="teacherName" label="教师" min-width="100" sortable />
+        <el-table-column prop="teacherName" label="教师" min-width="100" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.teacherName">{{ scope.row.teacherName }}</span>
+            <span v-else style="color: #999;">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="projectName" label="项目名称" min-width="150" show-overflow-tooltip sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.projectName">{{ scope.row.projectName }}</span>
+            <span v-else style="color: #999;">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="projectCode" label="立项编号" min-width="120" show-overflow-tooltip sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.projectCode">{{ scope.row.projectCode }}</span>
+            <span v-else style="color: #999;">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="process" label="科研过程" min-width="110" sortable>
           <template v-slot="scope">
-            <el-tooltip content="查看科研过程" placement="bottom" effect="light">
-              <el-button type="primary" size="small" @click="handleViewProcess(scope.row.projectId)">查看</el-button>
-            </el-tooltip>
+            <template v-if="scope.row.projectId">
+              <el-tooltip content="查看科研过程" placement="bottom" effect="light">
+                <el-button type="primary" size="small" @click="handleViewProcess(scope.row.projectId)">查看</el-button>
+              </el-tooltip>
+            </template>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
         <el-table-column prop="openFile" label="立项文件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-tooltip content="下载立项文件" placement="bottom" effect="light">
-              <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
-            </el-tooltip>
+            <template v-if="scope.row.openFile">
+              <el-tooltip content="下载立项文件" placement="bottom" effect="light">
+                <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
+              </el-tooltip>
+            </template>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
         <el-table-column prop="closeFile" label="结项文件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-tooltip content="下载结项文件" placement="bottom" effect="light">
-              <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
-            </el-tooltip>
+            <template v-if="scope.row.closeFile">
+              <el-tooltip content="下载结项文件" placement="bottom" effect="light">
+                <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
+              </el-tooltip>
+            </template>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
         <el-table-column prop="file" label="附件" min-width="120" sortable>
           <template v-slot="scope">
-            <el-tooltip content="下载附件文件" placement="bottom" effect="light">
-              <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
-            </el-tooltip>
+            <template v-if="scope.row.file">
+              <el-tooltip content="下载附件文件" placement="bottom" effect="light">
+                <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
+              </el-tooltip>
+            </template>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="审核状态" min-width="120" sortable>
@@ -72,12 +106,18 @@
         </el-table-column>
         <el-table-column prop="reason" label="审核原因" min-width="110" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.reason)">
+            <div v-if="scope.row.reason" :class="getContentAlignClass(scope.row.reason)">
               {{ scope.row.reason }}
             </div>
+            <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="time" label="审核时间" min-width="110" show-overflow-tooltip sortable />
+        <el-table-column prop="time" label="审核时间" min-width="110" show-overflow-tooltip sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.time">{{ scope.row.time }}</span>
+            <span v-else style="color: #999;">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-tooltip v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" content="编辑成果" placement="bottom" effect="light">
@@ -99,7 +139,7 @@
     </div>
 
     <el-dialog title="科研成果提交" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
-      <el-form ref="formRef" :rules="rules" :model="data.form" label-width="80px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" label-width="80px" style="padding: 20px">
         <el-form-item prop="openFile" label="立项文件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
             <el-button type="primary" size="small" >点击上传</el-button>
@@ -250,25 +290,6 @@ const data = reactive({
   currentProjectId: null, // 当前查看的项目ID
   processData: [], // 科研过程数据
   showSecurityAlert: false // 控制安全提醒弹窗的显示
-})
-
-const rules = reactive({
-  openFile: [
-    { required: true, message: '请上传立项文件', trigger: 'blur' },
-  ],
-  name: [
-    { required: true, message: '请输入项目名称', trigger: 'blur' },
-  ],
-  closeFile: [
-    { required: true, message: '请上传结项文件', trigger: 'blur' },
-  ],
-  projectId: [
-    { required: true, message: '请选择科研项目', trigger: 'blur' },
-  ],
-  typeId: [
-    { required: true, message: '请选择成果类型', trigger: 'blur' },
-  ]
-  
 })
 
 const indexMethod = (index) => {
