@@ -97,6 +97,12 @@
             <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
+        <el-table-column prop="visible" label="是否公开" min-width="120" sortable v-if="data.user.role === 'TEACHER'">
+          <template v-slot="scope">
+            <el-tag v-if="scope.row.visible === 1" type="success">公开</el-tag>
+            <el-tag v-else type="warning">不公开</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="审核状态" min-width="120" sortable>
           <template v-slot="scope">
             <el-tag v-if="scope.row.status === '审核通过'" type="success">{{ scope.row.status }}</el-tag>
@@ -138,8 +144,17 @@
         v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="科研成果提交" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
+    <el-dialog :title="data.form.id ? '科研成果编辑' : '科研成果提交'" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
       <el-form ref="formRef" :model="data.form" label-width="80px" style="padding: 20px">
+        <el-form-item prop="visible" label="是否公开">
+            <el-switch
+              :model-value="data.form.visible === 1"
+              @update:model-value="data.form.visible = $event ? 1 : 0"
+              inline-prompt
+              active-text="是"
+              inactive-text="否"
+            />
+        </el-form-item>
         <el-form-item prop="openFile" label="立项文件">
           <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
             <el-button type="primary" size="small" >点击上传</el-button>
@@ -155,22 +170,22 @@
             <el-button type="primary" size="small" >点击上传</el-button>
           </el-upload>
         </el-form-item>
-        <el-form-item prop="projectId" label="科研项目">
+        <el-form-item prop="projectId" label="科研项目" class="custom-form-item">
           <el-select v-model="data.form.projectId" placeholder="请选择科研项目">
             <el-option v-for="item in data.projectData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item prop="typeId" label="成果类型">
+        <el-form-item prop="typeId" label="成果类型" class="custom-form-item">
           <el-select v-model="data.form.typeId" placeholder="请选择成果类型">
             <el-option v-for="item in data.typeData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item prop="name" label="成果名称">
+        <el-form-item prop="name" label="成果名称" class="custom-form-item">
           <el-input v-model="data.form.name" placeholder="请输入成果名称"></el-input>
         </el-form-item>
-        <el-form-item prop="description" label="成果描述">
+        <el-form-item prop="description" label="成果描述" class="custom-form-item">
           <el-input type="textarea" :rows="4" v-model="data.form.description" placeholder="请输入成果描述"></el-input>
         </el-form-item>
       </el-form>
@@ -338,7 +353,7 @@ const load = () => {
   })
 }
 const handleAdd = () => {
-  data.form = {}
+  data.form = { visible: 0 }
   data.formVisible = true
 }
 const handleEdit = (row) => {
@@ -579,5 +594,13 @@ loadType()
 
 :deep(.el-card.is-always-shadow) {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.351) !important;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 5px;
+}
+
+:deep(.el-form-item.custom-form-item) {
+  margin-bottom: 15px !important;
 }
 </style>
