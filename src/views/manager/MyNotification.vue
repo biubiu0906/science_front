@@ -142,7 +142,7 @@
         <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
           发布时间：{{ formatDate(data.currentNotification.createTime) }}
         </div>
-        <div style="line-height: 1.8; color: #666; text-align: justify">
+        <div class="content-display">
           {{ data.currentNotification.content }}
         </div>
       </div>
@@ -166,7 +166,7 @@
         <div style="font-size: 12px; color: #999; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px">
           发布时间：{{ formatDate(data.currentNotice.createTime) }}
         </div>
-        <div style="line-height: 1.8; color: #666; text-align: justify">
+        <div class="content-display">
           {{ data.currentNotice.content }}
         </div>
         
@@ -509,6 +509,39 @@ onMounted(() => {
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #ebeef5;
+}
+
+/* 内容显示样式 - 支持换行和格式 */
+.content-display {
+  white-space: pre-line;
+  word-break: break-word;
+  line-height: 1.8;
+  color: #666;
+  text-align: justify;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.content-display::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content-display::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.content-display::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.content-display::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* 滚动条样式 */
