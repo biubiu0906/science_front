@@ -8,8 +8,8 @@
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
-        <el-table-column prop="taskId" label="编号" min-width="200" />
-        <el-table-column prop="url" label="报告内容" min-width="120">
+        <el-table-column prop="taskId" label="编号" min-width="200" sortable/>
+        <el-table-column prop="url" label="报告内容" min-width="120" sortable>
           <template v-slot="scope">
             <span v-if="!scope.row.url">暂无数据</span>
             <el-link 
@@ -23,9 +23,9 @@
             </el-link>
           </template>
         </el-table-column>
-        <el-table-column prop="subject" label="报告对象" min-width="100" />
-        <el-table-column prop="comment" label="报告类型" min-width="100" />
-        <el-table-column prop="status" label="报告状态" min-width="100">
+        <el-table-column prop="subject" label="报告对象" min-width="100" sortable/>
+        <el-table-column prop="comment" label="报告类型" min-width="100" sortable/>
+        <el-table-column prop="status" label="报告状态" min-width="100" sortable>
           <template v-slot="scope">
             <el-tag 
               :type="scope.row.status === 'RUNNING' ? 'primary' : 
@@ -41,7 +41,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" min-width="160"/>
+        <el-table-column prop="createdAt" label="创建时间" min-width="160" sortable/>
         <el-table-column label="操作" width="80" text-align="center" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="删除报告" placement="bottom" effect="light">

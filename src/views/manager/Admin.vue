@@ -23,10 +23,30 @@
                       preview-teleported></el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="姓名" sortable />
-        <el-table-column prop="phone" label="电话" sortable />
-        <el-table-column prop="email" label="邮箱" sortable />
-        <el-table-column prop="username" label="用户名" sortable />
+        <el-table-column prop="name" label="姓名" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.name">{{ scope.row.name }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="电话" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.phone">{{ scope.row.phone }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.email">{{ scope.row.email }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.username">{{ scope.row.username }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="password" label="密码" min-width="150" sortable>
           <template #header>
             <span>密码</span>
@@ -271,3 +291,10 @@ const handleSecurityConfirm = () => {
 
 load()
 </script>
+
+<style scoped>
+.no-data-text {
+  color: #909399;
+  font-size: 12px;
+}
+</style>

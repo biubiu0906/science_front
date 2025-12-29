@@ -23,16 +23,42 @@
                       preview-teleported></el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="姓名" min-width="100" sortable />
-        <el-table-column prop="gender" label="性别" width="80" sortable>
+        <el-table-column prop="name" label="姓名" min-width="100" sortable>
           <template v-slot="scope">
-            {{ scope.row.gender === 'boy' ? '男' : scope.row.gender === 'girl' ? '女' : scope.row.gender === 'Male' ? '男' : scope.row.gender === 'Female' ? '女' : scope.row.gender }}
+            <span v-if="scope.row.name">{{ scope.row.name }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="phone" label="电话" min-width="120" sortable />
-        <el-table-column prop="email" label="邮箱" min-width="120" sortable />
-        <el-table-column prop="unit" label="单位" min-width="120" sortable />
-        <el-table-column prop="ofLab" label="所属实验室" min-width="180" sortable />
+        <el-table-column prop="gender" label="性别" width="80" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.gender">{{ scope.row.gender === 'boy' ? '男' : scope.row.gender === 'girl' ? '女' : scope.row.gender === 'Male' ? '男' : scope.row.gender === 'Female' ? '女' : scope.row.gender }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="phone" label="电话" min-width="120" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.phone">{{ scope.row.phone }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" min-width="120" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.email">{{ scope.row.email }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="unit" label="单位" min-width="120" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.unit">{{ scope.row.unit }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="ofLab" label="所属实验室" min-width="180" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.ofLab">{{ scope.row.ofLab }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="employmentType" label="全职/非全职" min-width="130" sortable>
           <template v-slot="scope">
             <el-tag 
@@ -43,7 +69,12 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" min-width="100" sortable />
+        <el-table-column prop="username" label="用户名" min-width="100" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.username">{{ scope.row.username }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="password" label="密码" min-width="150" sortable>
           <template #header>
             <span>密码</span>
@@ -666,5 +697,10 @@ loadLabOptions()
 }
 .template-link:hover {
   text-decoration: underline;
+}
+
+.no-data-text {
+  color: #909399;
+  font-size: 12px;
 }
 </style>

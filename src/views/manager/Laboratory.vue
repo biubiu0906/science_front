@@ -14,9 +14,24 @@
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
-        <el-table-column prop="laboratoryName" label="实验室名称" sortable />
-        <el-table-column prop="laboratoryDescription" label="实验室描述" sortable />
-        <el-table-column prop="laboratoryAddress" label="实验室地址" sortable />
+        <el-table-column prop="laboratoryName" label="实验室名称" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.laboratoryName">{{ scope.row.laboratoryName }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="laboratoryDescription" label="实验室描述" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.laboratoryDescription">{{ scope.row.laboratoryDescription }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="laboratoryAddress" label="实验室地址" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.laboratoryAddress">{{ scope.row.laboratoryAddress }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="type" label="实验室类别" sortable>
           <template v-slot="scope">
             <el-tag 
@@ -27,7 +42,12 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="账号" sortable />
+        <el-table-column prop="username" label="账号" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.username">{{ scope.row.username }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="password" label="密码" width="150" sortable>
           <template #header>
             <span>密码</span>
@@ -361,5 +381,10 @@ load()
   background-color: #f0f9ff;
   border-color: #c6f6d5;
   color: #38a169;
+}
+
+.no-data-text {
+  color: #909399;
+  font-size: 12px;
 }
 </style>

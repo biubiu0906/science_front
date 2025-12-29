@@ -35,7 +35,7 @@
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" min-width="110" show-overflow-tooltip sortable>
+        <el-table-column prop="reason" label="审核信息" min-width="110" show-overflow-tooltip sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.reason)">
               {{ scope.row.reason }}
