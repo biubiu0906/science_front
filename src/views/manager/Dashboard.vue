@@ -607,19 +607,23 @@
 
 <script setup>
 
-import {reactive, onMounted, nextTick} from "vue";
+import {reactive, onMounted, nextTick, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import echarts from "@/utils/echarts.js";
 // 导入图标组件
 import { Platform, HelpFilled, Comment, Avatar, Paperclip, Document, Download, Link, WarningFilled } from '@element-plus/icons-vue';
 
+// 悬停状态
+const hoveredNotice = ref(-1)
+const hoveredAllNotice = ref(-1)
+const hoveredNotification = ref(-1)
+const hoveredAllNotification = ref(-1)
+
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   baseData: {},
   noticeData: [], // 公告数据
-  hoveredNotice: -1, // 鼠标悬停的公告索引
-  hoveredAllNotice: -1, // 鼠标悬停的全部公告索引
   noticeDetailVisible: false, // 公告详情弹窗显示状态
   currentNotice: {}, // 当前查看的公告详情
   allNoticesVisible: false, // 查看全部公告弹窗显示状态
@@ -627,8 +631,6 @@ const data = reactive({
   activeNoticeTab: 'notification', // 当前激活的通知/公告标签页，默认为通知
   // 通知相关数据
   notificationData: [], // 通知数据，从接口获取
-  hoveredNotification: -1, // 鼠标悬停的通知索引
-  hoveredAllNotification: -1, // 鼠标悬停的全部通知索引
   notificationDetailVisible: false, // 通知详情弹窗显示状态
   currentNotification: {}, // 当前查看的通知详情
   allNotificationsVisible: false, // 查看全部通知弹窗显示状态

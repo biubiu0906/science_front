@@ -229,6 +229,7 @@
 
 .el-menu--inline .el-menu-item {
     background-color: #3969b2 !important;
+    letter-spacing: 1px;
 }
 
 .el-menu-item.is-active {

@@ -50,7 +50,7 @@ import { reactive, ref, watch } from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 // 按需引入 Element Plus 图标
-import { Plus } from "@element-plus/icons-vue";
+import { Plus, Delete, Search } from "@element-plus/icons-vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 
 const baseUrl = import.meta.env.VITE_BASE_URL

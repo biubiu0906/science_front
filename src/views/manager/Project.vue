@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.code" prefix-icon="Search" style="width: 200px; margin-right: 10px"
+      <el-input v-model="data.code" :prefix-icon="Search" style="width: 200px; margin-right: 10px"
         placeholder="请输入立项编号查询"></el-input>
-      <el-input v-model="data.name" prefix-icon="Search" style="width: 200px; margin-right: 10px"
+      <el-input v-model="data.name" :prefix-icon="Search" style="width: 200px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
       <el-button type="info" plain size="small" @click="load">查询</el-button>
       <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
@@ -494,7 +494,7 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
-import { Delete, Edit, View, Tickets, Loading, SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
+import { Delete, Edit, View, Tickets, Loading, SuccessFilled, CircleCloseFilled, Search } from "@element-plus/icons-vue";
 import FilePreviewCom from "./componets/FilePreviewCom.vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";

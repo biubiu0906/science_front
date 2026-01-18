@@ -95,7 +95,7 @@
 <script setup>
 import { ref, reactive, toRaw, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding } from '@element-plus/icons-vue';
+import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus, Delete, Search } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 import LabApplicationForm from './componets/LabCom.vue';
 

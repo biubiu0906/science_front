@@ -495,13 +495,11 @@
                         <h3>建设基础</h3>
                         <el-form ref="foundationForm" :model="formData.foundation">
                             <el-form-item prop="foundation">
-                                <el-input
+                                <Editor
                                     v-model="formData.foundation.foundation"
-                                    type="textarea"
-                                    :rows="8"
                                     placeholder="现有基础、功能定位、主要特色、标志性成果及国内外影响等综述"
-                                    style="width: 100%;">
-                                </el-input>
+                                    style="width: 100%;"
+                                />
                                 <!--<div class="word-counter">字数：{{ countText(formData.foundation.foundation) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
@@ -509,13 +507,11 @@
                         <h3>建设目标和发展思路</h3>
                         <el-form :model="formData.foundation">
                             <el-form-item prop="goals">
-                                <el-input
+                                <Editor
                                     v-model="formData.foundation.goals"
-                                    type="textarea"
-                                    :rows="8"
                                     placeholder="围绕国家（区域、行业）重大战略需求，聚焦哲学社会科学领域重大理论和现实问题，坚持学科交叉融合，坚持研究范式革新，提出建设期内本实验室整体建设目标和发展思路"
-                                    style="width: 100%;">
-                                </el-input>
+                                    style="width: 100%;"
+                                />
                                 <!--<div class="word-counter">字数：{{ countText(formData.foundation.goals) }}/1000</div>-->
                             </el-form-item>
                         </el-form>
@@ -525,11 +521,10 @@
                         <h3>重点任务和建设举措</h3>
                         <el-form ref="keyTasksForm" :model="formData.keyTasks">
                             <el-form-item prop="keyTasks">
-                                <el-input
+                                <Editor
                                     v-model="formData.keyTasks.keyTasks"
-                                    type="textarea"
-                                    :rows="15"
                                     placeholder="围绕建设目标，在哲学社会科学自主知识体系建构、咨政服务能力提升、高层次团队建设、高质量人才培养、高水平科研创新、开放共享与社会服务（包括但不限于）等方面逐条提出拟开展的重点任务和建设举措"
+                                    style="width: 100%;"
                                 />
                                 <!--<div class="word-counter">字数：{{ countText(formData.keyTasks.keyTasks) }}/3000</div>-->
                             </el-form-item>
@@ -540,11 +535,10 @@
                         <h3>制度建设</h3>
                         <el-form ref="systemBuildingForm" :model="formData.systemBuilding">
                             <el-form-item prop="systemBuilding">
-                                <el-input
+                                <Editor
                                     v-model="formData.systemBuilding.systemBuilding"
-                                    type="textarea"
-                                    :rows="8"
                                     placeholder="简述实验室管理制度建设和内部运行机制建设主要内容，重点突出制度创新"
+                                    style="width: 100%;"
                                 />
                                 <!--<div class="word-counter">字数：{{ countText(formData.systemBuilding.systemBuilding) }}/1000</div>-->
                             </el-form-item>
@@ -553,11 +547,10 @@
                         <h3>预期成效及标志性成果</h3>
                         <el-form :model="formData.systemBuilding">
                             <el-form-item prop="expectedResults">
-                                <el-input
+                                <Editor
                                     v-model="formData.systemBuilding.expectedResults"
-                                    type="textarea"
-                                    :rows="12"
                                     placeholder="对照重点任务提出建设期内预期成效，并以2024-2026年、2027-2028年两个时间段列出预期标志性成果及其学术价值和实际贡献"
+                                    style="width: 100%;"
                                 />
                                 <!--<div class="word-counter">字数：{{ countText(formData.systemBuilding.expectedResults) }}/2000</div>-->
                             </el-form-item>
@@ -568,11 +561,10 @@
                         <h3>组织保障</h3>
                         <el-form ref="organizationForm" :model="formData.organization">
                             <el-form-item prop="organizationalSupport">
-                                <el-input
+                                <Editor
                                     v-model="formData.organization.organizationalSupport"
-                                    type="textarea"
-                                    :rows="12"
                                     placeholder="学校在人、财、物等方面对本实验室建设给予的政策保障与支持措施"
+                                    style="width: 100%;"
                                 />
                                 <!--<div class="word-counter">字数：{{ countText(formData.organization.organizationalSupport) }}/1000</div>-->
                             </el-form-item>
@@ -689,11 +681,12 @@
 <script setup>
 import { ref, reactive, toRaw, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus, Delete } from '@element-plus/icons-vue';
+import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus, Delete, Search } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 import LabApplicationForm from './componets/LabCom.vue';
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";
+import Editor from '@/components/Editor.vue'
 
 // 定义组件事件
 const emit = defineEmits(['updateUser']);

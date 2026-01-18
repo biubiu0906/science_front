@@ -100,7 +100,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
 import request from '@/utils/request.js'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, Search } from '@element-plus/icons-vue'
 
 // 表单引用
 const reportFormRef = ref(null)

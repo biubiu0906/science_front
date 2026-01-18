@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.projectCode" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+      <el-input v-model="data.projectCode" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
         placeholder="请输入项目编号查询"></el-input>
-      <el-input v-model="data.projectName" prefix-icon="Search" style="width: 240px; margin-right: 10px"
+      <el-input v-model="data.projectName" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
       <el-button size="small" type="info" plain @click="load">查询</el-button>
       <el-button size="small" type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
@@ -110,7 +110,7 @@
             <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="reason" label="审核原因" min-width="110" sortable>
+        <el-table-column prop="reason" label="审核信息" min-width="110" sortable>
           <template v-slot="scope">
             <div v-if="scope.row.reason" :class="getContentAlignClass(scope.row.reason)">
               {{ scope.row.reason }}
@@ -280,7 +280,7 @@
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
-import { Delete, Edit, Tickets } from "@element-plus/icons-vue";
+import { Delete, Edit, Tickets, Search } from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";

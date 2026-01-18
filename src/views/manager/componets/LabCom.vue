@@ -352,8 +352,7 @@
                     <h3>建设基础</h3>
                     <el-form label-width="0px" style="margin-bottom: 30px;">
                         <el-form-item>
-                            <div class="content-display" style="height: 35vh; overflow-y: auto;">
-                                {{ formData.foundation?.foundation || '暂无内容' }}
+                            <div class="content-display" style="height: 35vh; overflow-y: auto;" v-html="formData.foundation?.foundation || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -361,8 +360,7 @@
                     <h3>建设目标和发展思路</h3>
                     <el-form label-width="0px">
                         <el-form-item>
-                            <div class="content-display" style="height: 35vh; overflow-y: auto;">
-                                {{ formData.foundation?.goals || '暂无内容' }}
+                            <div class="content-display" style="height: 35vh; overflow-y: auto;" v-html="formData.foundation?.goals || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -373,8 +371,7 @@
                     <h3 style="margin-bottom: 20px;">重点任务和建设举措</h3>
                     <el-form label-width="0px">
                         <el-form-item>
-                            <div class="content-display" style="height: 40vh; overflow-y: auto;">
-                                {{ formData.keyTasks?.keyTasks || '暂无内容' }}
+                            <div class="content-display" style="height: auto; overflow-y: auto;" v-html="formData.keyTasks?.keyTasks || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -385,8 +382,7 @@
                     <h3>制度建设</h3>
                     <el-form label-width="0px" style="margin-bottom: 30px;">
                         <el-form-item>
-                            <div class="content-display" style="height: 35vh; overflow-y: auto;">
-                                {{ formData.systemBuilding?.systemBuilding || '暂无内容' }}
+                            <div class="content-display" style="height: 35vh; overflow-y: auto;" v-html="formData.systemBuilding?.systemBuilding || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -394,8 +390,7 @@
                     <h3>预期成效及标志性成果</h3>
                     <el-form label-width="0px">
                         <el-form-item>
-                            <div class="content-display" style="height: 35vh; overflow-y: auto;">
-                                {{ formData.systemBuilding?.expectedResults || '暂无内容' }}
+                            <div class="content-display" style="height: 35vh; overflow-y: auto;" v-html="formData.systemBuilding?.expectedResults || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -406,8 +401,7 @@
                     <h3>组织保障</h3>
                     <el-form label-width="0px">
                         <el-form-item>
-                            <div class="content-display" style="height: 40vh; overflow-y: auto;">
-                                {{ formData.organization?.organizationalSupport || '暂无内容' }}
+                            <div class="content-display" style="height: auto; overflow-y: auto;" v-html="formData.organization?.organizationalSupport || '暂无内容'">
                             </div>
                         </el-form-item>
                     </el-form>
@@ -786,14 +780,20 @@ watch(() => props.id, (newId) => {
 
 .content-display {
     background-color: #f8f9fa;
-    padding: 12px;
+    padding: 0 12px;
     border-radius: 3px;
     border: 1px solid #e4e7ed;
     height: 18vh;
-    white-space: pre-wrap;
     line-height: 1.3;
     width: 100%;
     font-size: 12px;
+}
+
+:deep(.content-display img) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
 }
 
 .budget-section {

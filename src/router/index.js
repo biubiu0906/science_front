@@ -34,6 +34,9 @@ const router = createRouter({
         { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue'), },
         { path: 'notification', meta: { name: '通知管理' }, component: () => import('@/views/manager/Notification.vue'), },
         { path: 'myNotification', meta: { name: '我的消息' }, component: () => import('@/views/manager/MyNotification.vue'), },
+        { path: 'labStage', meta: { name: '实验室阶段管理' }, component: () => import('@/views/manager/labStage.vue'), },
+        { path: 'labStageApply', meta: { name: '实验室阶段报告' }, component: () => import('@/views/manager/labStageApply.vue'), },
+
       ]
     },
     {

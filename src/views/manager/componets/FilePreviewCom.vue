@@ -86,7 +86,8 @@ import {
   ArrowRight, 
   ZoomIn, 
   ZoomOut, 
-  Download 
+  Download,
+  Search
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 

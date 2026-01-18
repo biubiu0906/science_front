@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入操作名称查询"></el-input>
+      <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入操作名称查询"></el-input>
       <el-button type="info" plain @click="load" size="small">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>

@@ -303,7 +303,7 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Bell, Document, Link, WarningFilled } from '@element-plus/icons-vue'
+import { Bell, Document, Link, WarningFilled, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
 
 // 响应式数据

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.name" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
+      <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
       <el-button type="info" plain @click="load" size="small">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>
@@ -127,7 +127,7 @@
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
-import {Delete, Edit, View, Hide} from "@element-plus/icons-vue";
+import {Delete, Edit, View, Hide, Search} from "@element-plus/icons-vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 
 // 表单引用

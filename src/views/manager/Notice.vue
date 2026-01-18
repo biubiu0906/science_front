@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.title" prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入公告标题查询"></el-input>
+      <el-input v-model="data.title" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入公告标题查询"></el-input>
       <el-button type="info" plain size="small" @click="load">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
@@ -101,7 +101,7 @@
 import {reactive} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
-import {Delete, Edit, Link} from "@element-plus/icons-vue";
+import {Delete, Edit, Link, Search} from "@element-plus/icons-vue";
 
 
 const data = reactive({
