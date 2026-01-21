@@ -30,7 +30,7 @@
         </el-table-column>
         <el-table-column prop="laboratoryNames" label="通知对象" width="200" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.laboratoryNames)">
+            <div>
               <template v-if="Array.isArray(scope.row.laboratoryNames)">
                 <el-tag 
                   v-for="(lab, index) in scope.row.laboratoryNames" 
