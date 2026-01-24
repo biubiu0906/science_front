@@ -34,11 +34,12 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { User, Lock } from "@element-plus/icons-vue";
 import request from "@/utils/request.js";
 import { ElMessage } from "@/utils/element-plus";
 import router from "@/router/index.js";
+import { encrypt, getSecurityParams, getPublicKey, removePublicKey } from '@/utils/rsa.js'
 
 const data = reactive({
   form: {
@@ -57,34 +58,58 @@ const data = reactive({
 
 const formRef = ref()
 
+onMounted(() => {
+  // 预取公钥
+  getPublicKey()
+})
+
 const login = () => {
-  formRef.value.validate(valid => {
-    if (valid) { // 表示表单校验通过
-      request.post('/login', data.form).then(res => {
-        if (res.code === '200') {
-          ElMessage.success('登录成功')
-          // 存储用户信息到浏览器的缓存
-          localStorage.setItem('xm-user', JSON.stringify(res.data))
-          // 关键节点：移除“关闭退出”标记，避免再次登录后被 ensureLogoutIfClosed 误清除登录态
-          try { localStorage.removeItem('xm-will-logout') } catch (_) { /* 忽略 */ }
-          
-          const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
-          setTimeout(() => {
-            if(userInfo.role === 'ADMIN' || userInfo.role === 'KEY_LABORATORY') {
-              // 管理员和实验室用户跳转到数据统计页
-              location.href = '/manager/dashboard'
-            } else if(userInfo.role === 'TEACHER' || userInfo.role === 'NORMAL_LABORATORY') {
-              // 教师用户跳转到通知页
-              location.href = '/manager/myNotification'
+  formRef.value.validate(async valid => {
+    if (valid) {
+      try {
+        // 1. 构造基础数据
+        const loginData = { ...data.form }
+        
+        // 2. 尝试加密（可能会自动获取公钥）
+        loginData.password = await encrypt(loginData.password)
+        
+        // 3. 获取安全参数 (ts, nonce, keyId)
+        const securityParams = await getSecurityParams()
+        Object.assign(loginData, securityParams)
+        
+        // 4. 发送请求
+        request.post('/login', loginData).then(res => {
+          if (res.code === '200') {
+            ElMessage.success('登录成功')
+            localStorage.setItem('xm-user', JSON.stringify(res.data))
+            try { localStorage.removeItem('xm-will-logout') } catch (_) { /* 忽略 */ }
+            const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
+            setTimeout(() => {
+              if(userInfo.role === 'ADMIN' || userInfo.role === 'KEY_LABORATORY') {
+                location.href = '/manager/dashboard'
+              } else if(userInfo.role === 'TEACHER' || userInfo.role === 'NORMAL_LABORATORY') {
+                location.href = '/manager/myNotification'
+              } else {
+                location.href = '/manager/home'
+              }
+            }, 500)
+          } else {
+            // 处理特定的安全错误（如公钥过期/解密失败）
+            if (res.code === '400' && (res.msg.includes('公钥') || res.msg.includes('解密'))) {
+              removePublicKey() // 清除本地缓存
+              
+              // 延迟 500ms 后自动重试一次
+              setTimeout(() => {
+                login() // 递归调用（注意：仅当再次点击或简单的重试逻辑。若需防死循环，可加参数控制）
+              }, 500)
             } else {
-              // 其他情况跳转到首页
-              location.href = '/manager/home'
+              ElMessage.error(res.msg)
             }
-          }, 500)
-        } else {
-          ElMessage.error(res.msg)
-        }
-      })
+          }
+        })
+      } catch (e) {
+        ElMessage.error(e.message || '登录处理失败')
+      }
     }
   })
 }

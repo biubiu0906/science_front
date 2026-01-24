@@ -29,6 +29,7 @@ import { User, Lock } from "@element-plus/icons-vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import router from "@/router/index.js";
+import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 
 const validatePass = (rule, value, callback) => {
   if (!value) {
@@ -58,18 +59,39 @@ const data = reactive({
 const formRef = ref()
 
 const login = () => {
-  formRef.value.validate(valid => {
+  formRef.value.validate(async valid => {
     if (valid) { // 表示表单校验通过
-      request.post('/register', data.form).then(res => {
-        if (res.code === '200') {
-          ElMessage.success('注册成功')
-          setTimeout(() => {
-            location.href = '/login'
-          }, 500)
-        } else {
-          ElMessage.error(res.msg)
+      try {
+        const registerData = { ...data.form }
+        // 加密密码
+        registerData.password = await encrypt(registerData.password)
+        // confirmPassword 不需要传给后端，或者后端不解密它，但如果后端校验一致性，这里也加密比较好。
+        // 不过通常后端只校验 password。前端已经校验了一致性。
+        // 这里假设后端不需要 confirmPassword，或者只需要 password。
+        // 但为了保险，如果 confirmPassword 也传，也加密一下。
+        if (registerData.confirmPassword) {
+           // 注意：通常不需要加密 confirmPassword 发送，因为前端已经验证了。
+           // 但为了避免明文传输，还是加密吧。
+           registerData.confirmPassword = await encrypt(registerData.confirmPassword)
         }
-      })
+        
+        // 获取安全参数
+        const securityParams = await getSecurityParams()
+        Object.assign(registerData, securityParams)
+
+        request.post('/register', registerData).then(res => {
+          if (res.code === '200') {
+            ElMessage.success('注册成功')
+            setTimeout(() => {
+              location.href = '/login'
+            }, 500)
+          } else {
+            ElMessage.error(res.msg)
+          }
+        })
+      } catch (e) {
+        ElMessage.error(e.message || '注册处理失败')
+      }
     }
   })
 }

@@ -31,6 +31,7 @@ import {reactive, ref, watch} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import router from "@/router/index.js";
+import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 
 // 定义props和emits
 const props = defineProps({
@@ -103,23 +104,41 @@ const data = reactive({
       { required: true, message: '请输入新密码', trigger: 'blur' },
     ],
     confirmPassword: [
+      { required: true, message: '请确认新密码', trigger: 'blur' },
       { validator: validatePass, trigger: 'blur' }
     ]
   }
 })
 
 const updatePassword = () => {
-  formRef.value.validate(valid => {
+  formRef.value.validate(async valid => {
     if (valid) {
-      request.put('/updatePassword', data.user).then(res => {
-        if (res.code === '200') {
-          ElMessage.success('密码修改成功，请重新登录')
-          handleClose() // 关闭对话框
-          logout()
-        } else {
-          ElMessage.error(res.msg)
+      try {
+        const updateData = { ...data.user }
+        // 加密原密码和新密码
+        updateData.password = await encrypt(updateData.password)
+        updateData.newPassword = await encrypt(updateData.newPassword)
+        // confirmPassword 不需要传，或者加密
+        if (updateData.confirmPassword) {
+           updateData.confirmPassword = await encrypt(updateData.confirmPassword)
         }
-      })
+        
+        // 获取安全参数
+        const securityParams = await getSecurityParams()
+        Object.assign(updateData, securityParams)
+
+        request.put('/updatePassword', updateData).then(res => {
+          if (res.code === '200') {
+            ElMessage.success('密码修改成功，请重新登录')
+            handleClose() // 关闭对话框
+            logout()
+          } else {
+            ElMessage.error(res.msg)
+          }
+        })
+      } catch (e) {
+        ElMessage.error(e.message || '操作失败')
+      }
     }
   })
 }

@@ -47,25 +47,6 @@
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="password" label="密码" min-width="150" sortable>
-          <template #header>
-            <span>密码</span>
-            <el-button 
-              :icon="data.showPassword ? View : Hide" 
-              @click="togglePasswordVisibility" 
-              size="small" 
-              text 
-              style="margin-left: 8px"
-              :title="data.showPassword ? '隐藏密码' : '显示密码'"
-            >
-              {{ data.showPassword ? '隐藏' : '显示' }}
-            </el-button>
-          </template>
-          <template v-slot="scope">
-            <span v-if="data.showPassword">{{ scope.row.password }}</span>
-            <span v-else>******</span>
-          </template>
-        </el-table-column>
         <el-table-column label="操作" width="100" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="编辑管理员" placement="bottom" effect="light">
@@ -87,7 +68,7 @@
         <el-form-item prop="username" label="用户名">
           <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
         </el-form-item>
-        <el-form-item prop="password" label="密码">
+        <el-form-item prop="password" label="密码" v-if="!data.form.id">
           <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
         <el-form-item prop="name" label="姓名">
@@ -129,6 +110,7 @@ import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Search} from "@element-plus/icons-vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
+import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 
 // 表单引用
 const formRef = ref(null)
@@ -144,7 +126,6 @@ const data = reactive({
   total: 0,
   name: null,
   ids: [],
-  showPassword: false, // 控制密码显示状态
   showSecurityAlert: false
 })
 
@@ -189,16 +170,27 @@ const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
   data.formVisible = true
 }
-const add = () => {
-  request.post('/admin/add', data.form).then(res => {
-    if (res.code === '200') {
-      ElMessage.success('操作成功')
-      data.formVisible = false
-      load()
-    } else {
-      ElMessage.error(res.msg)
-    }
-  })
+const add = async () => {
+  try {
+    const addData = { ...data.form }
+    // 加密密码
+    addData.password = await encrypt(addData.password)
+    // 获取安全参数
+    const securityParams = await getSecurityParams()
+    Object.assign(addData, securityParams)
+
+    request.post('/admin/add', addData).then(res => {
+      if (res.code === '200') {
+        ElMessage.success('操作成功')
+        data.formVisible = false
+        load()
+      } else {
+        ElMessage.error(res.msg)
+      }
+    })
+  } catch (e) {
+    ElMessage.error(e.message || '操作失败')
+  }
 }
 
 const update = () => {
@@ -273,10 +265,6 @@ const handleFileUpload = (res) => {
 const reset = () => {
   data.name = null
   load()
-}
-
-const togglePasswordVisibility = () => {
-  data.showPassword = !data.showPassword
 }
 
 // 处理对话框打开事件
