@@ -121,7 +121,7 @@ const handleSecurityConfirm = () => {
 }
 
 const update = () => {
-  let url = data.user.role === 'ADMIN' ? '/admin/update' : '/teacher/update'
+  let url = data.user.role === 'SUPER_ADMIN' ? '/admin/update' : '/teacher/update'
   request.put(url, data.user).then(res => {
     if (res.code === '200') {
       ElMessage.success('保存成功')

@@ -15,7 +15,7 @@
             placeholder="请输入密码"></el-input>
         </el-form-item>
         <el-form-item prop="role">
-          <div style="font-size: 15px; margin-right: 10px; margin-left: 10px;">角色：</div>
+          <div style="font-size: 15px; margin-right: 10px; margin-left: 10px;">身份：</div>
           <el-radio-group v-model="data.form.role">
             <el-radio value="TEACHER">教师</el-radio>
             <el-radio value="LAB">实验室</el-radio>
@@ -85,7 +85,7 @@ const login = () => {
             try { localStorage.removeItem('xm-will-logout') } catch (_) { /* 忽略 */ }
             const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
             setTimeout(() => {
-              if(userInfo.role === 'ADMIN' || userInfo.role === 'KEY_LABORATORY') {
+              if(userInfo.role === 'SUPER_ADMIN' || userInfo.role === 'SCHOOL_ADMIN' || userInfo.role === 'KEY_LABORATORY') {
                 location.href = '/manager/dashboard'
               } else if(userInfo.role === 'TEACHER' || userInfo.role === 'NORMAL_LABORATORY') {
                 location.href = '/manager/myNotification'

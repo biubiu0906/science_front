@@ -6,7 +6,7 @@
       <el-button type="info" plain size="small" @click="load">查询</el-button>
       <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
-    <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'ADMIN'">
+    <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'SUPER_ADMIN'">
       <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
     </div>
 
@@ -31,7 +31,7 @@
             <el-tooltip v-if="scope.row.status === '待审核' && data.user.role ==='TEACHER'" content="编辑申请" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
-            <el-tooltip v-if="scope.row.status === '待审核' && data.user.role ==='ADMIN'" content="审核申请" placement="bottom" effect="light">
+            <el-tooltip v-if="scope.row.status === '待审核' && data.user.role ==='SUPER_ADMIN'" content="审核申请" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="View" @click="handleCheck(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除申请" placement="bottom" effect="light">

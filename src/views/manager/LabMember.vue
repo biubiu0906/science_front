@@ -8,12 +8,12 @@
       </div>
       <div style="margin-bottom: 10px">
         <el-button v-if="data.user.role === 'KEY_LABORATORY'" type="primary" plain size="small" @click="handleAdd">新增</el-button>
-        <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+        <el-button v-if="data.user.role === 'SUPER_ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
         </div>
 
         <div class="card" style="margin-bottom: 5px">
             <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
-                <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
+                <el-table-column v-if="data.user.role === 'SUPER_ADMIN'" type="selection" width="55" />
                 <el-table-column prop="projectName" label="项目名称" />
                 <el-table-column prop="projectCode" label="项目编号" />
                 <el-table-column prop="teacherName" label="教师姓名" />
@@ -26,7 +26,7 @@
                         <el-tooltip v-if="data.user.role === 'KEY_LABORATORY'" content="编辑实验室成员" placement="bottom" effect="light">
                             <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
                         </el-tooltip>
-                        <el-tooltip v-if="data.user.role === 'ADMIN'" content="删除实验室成员" placement="bottom" effect="light">
+                        <el-tooltip v-if="data.user.role === 'SUPER_ADMIN'" content="删除实验室成员" placement="bottom" effect="light">
                             <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
                         </el-tooltip>
                     </template>

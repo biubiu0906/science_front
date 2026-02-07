@@ -14,7 +14,7 @@
             <img src="@/assets/imgs/logo.png" alt="">
             <div class="title" v-show="!isCollapse">科研管理系统</div>
           </div>
-          <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY'">
+          <el-menu-item index="/manager/dashboard" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY' || data.user.role === 'SCHOOL_ADMIN'">
             <el-icon>
               <DataAnalysis />
             </el-icon>
@@ -32,13 +32,13 @@
             </el-icon>
             <span>消息</span>
           </el-menu-item>
-          <el-sub-menu index="1" v-if="data.user.role === 'ADMIN'">
+          <el-sub-menu index="1" v-if="data.user.role === 'SUPER_ADMIN'">
             <template #title>
               <el-icon><Setting /></el-icon>
               <span>系统管理</span>
             </template>
-            <el-menu-item index="/manager/notice" v-if="data.user.role === 'ADMIN'">公告管理</el-menu-item>
-            <el-menu-item index="/manager/notification" v-if="data.user.role === 'ADMIN'">通知管理</el-menu-item>
+            <el-menu-item index="/manager/notice" v-if="data.user.role === 'SUPER_ADMIN'">公告管理</el-menu-item>
+            <el-menu-item index="/manager/notification" v-if="data.user.role === 'SUPER_ADMIN'">通知管理</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2" v-if="data.user.role !== 'TEACHER'">
             <template #title>
@@ -47,31 +47,29 @@
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY'">重点实验室申请</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY'">任务书</el-menu-item>
             <el-menu-item index="/manager/labStageApply" v-if="data.user.role === 'KEY_LABORATORY'">阶段报告</el-menu-item>
 
-            <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'ADMIN'">重点实验室审核</el-menu-item>
-            <el-menu-item index="/manager/labStage" v-if="data.user.role === 'ADMIN'">阶段报告</el-menu-item>  <!--管理员端-->
+            <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">任务书</el-menu-item>
+            <el-menu-item index="/manager/labStage" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">阶段报告</el-menu-item>  <!--管理员端-->
 
-
-            <!-- 泪飙 -->
             <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目</el-menu-item>
             <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程</el-menu-item>
-            <el-menu-item index="/manager/type" v-if="data.user.role === 'ADMIN'">成果类型</el-menu-item>
+            <el-menu-item index="/manager/type" v-if="data.user.role === 'SUPER_ADMIN'">成果类型</el-menu-item>
             <el-menu-item index="/manager/achievement"
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果</el-menu-item>
             <!--<el-menu-item index="/manager/teacherFeedback"
               v-if="data.laboratoryLevel === 2">教师反馈提交</el-menu-item>-->
-            <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'ADMIN'">教师反馈回复</el-menu-item>-->
+            <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'SUPER_ADMIN'">教师反馈回复</el-menu-item>-->
             <!-- 先修改 -->
-            <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'ADMIN'">学术活动管理</el-menu-item>
+            <!-- <el-menu-item index="/manager/activity" v-if="data.user.role === 'SUPER_ADMIN'">学术活动管理</el-menu-item>
             <el-menu-item index="/manager/teacherActivity"
               v-if="data.user.role === 'KEY_LABORATORY'">学术活动报名</el-menu-item>
             <el-menu-item index="/manager/apply" v-if="data.user.role === 'KEY_LABORATORY'">我的活动申请</el-menu-item> -->
 
 
-            <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'ADMIN'">活动申请审核</el-menu-item> -->
-            <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'ADMIN'">操作日志管理</el-menu-item>-->
+            <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'SUPER_ADMIN'">活动申请审核</el-menu-item> -->
+            <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'SUPER_ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/report">科研报告</el-menu-item>
           </el-sub-menu>
           <!--教师的信息管理-->
@@ -88,7 +86,8 @@
             <el-menu-item index="/manager/achievement" v-if="data.laboratoryLevel === 2">科研成果</el-menu-item>
             <el-menu-item index="/manager/report">科研报告</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="3" v-if="data.user.role === 'ADMIN'">
+
+          <el-sub-menu index="3" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">
             <template #title>
               <el-icon>
                 <User />
@@ -97,7 +96,9 @@
             </template>
             <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
             <el-menu-item index="/manager/laboratory">实验室信息</el-menu-item>
-            <el-menu-item index="/manager/admin">管理员信息</el-menu-item>
+            <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
+            <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
+            <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">管理员信息</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="3" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
             <template #title>
@@ -120,7 +121,7 @@
           </div>
           <div class="manager-header-center">
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="data.user.role === 'ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/home'">首页</el-breadcrumb-item>
+              <el-breadcrumb-item :to="data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/home'">首页</el-breadcrumb-item>
               <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>

@@ -10,10 +10,10 @@
     <div class="card" style="margin-bottom: 5px">
       <div style="margin-bottom: 10px; margin-left: 10px;">
         <el-button v-if="data.laboratoryLevel === 2" type="primary" plain size="small" @click="handleAdd">新增</el-button>
-        <el-button v-if="data.user.role === 'ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+        <el-button v-if="data.user.role === 'SUPER_ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
-        <el-table-column v-if="data.user.role === 'ADMIN'" type="selection" width="55" />
+        <el-table-column v-if="data.user.role === 'SUPER_ADMIN'" type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="projectName" label="项目名称" sortable />
         <el-table-column prop="projectCode" label="项目编号" sortable />

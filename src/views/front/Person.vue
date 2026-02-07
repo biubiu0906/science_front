@@ -72,7 +72,7 @@ const handleFileUpload = (res) => {
 
 const emit = defineEmits(['updateUser'])
 const update = () => {
-  if (data.user.role === 'ADMIN') {
+  if (data.user.role === 'SUPER_ADMIN') {
     request.put('/admin/update', data.user).then(res => {
       if (res.code === '200') {
         ElMessage.success('保存成功')

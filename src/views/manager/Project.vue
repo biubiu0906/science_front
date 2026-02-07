@@ -20,6 +20,7 @@
         <el-table-column prop="researchType" label="研究类型" min-width="120" sortable />
         <el-table-column prop="subjectCategory" label="学科" min-width="100" sortable />
         <el-table-column prop="projectCategory" label="项目类别" min-width="150" sortable />
+        <el-table-column prop="projectLevel" label="课题类别" min-width="120" sortable />
         <el-table-column prop="projectStatus" label="项目状态" min-width="110" sortable>
           <template v-slot="scope">
             <el-tag v-if="scope.row.projectStatus === '0'" type="primary">在研</el-tag>
@@ -51,7 +52,7 @@
             <el-tooltip v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" content="编辑项目" placement="bottom" effect="light">
               <el-button type="primary" circle :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
-            <el-tooltip v-if="data.user.role === 'ADMIN'" content="审核项目" placement="bottom" effect="light">
+            <el-tooltip v-if="data.user.role === 'SUPER_ADMIN'" content="审核项目" placement="bottom" effect="light">
               <el-button type="warning" circle :icon="Tickets" size="small" @click="handleCheck(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除项目" placement="bottom" effect="light">
@@ -132,6 +133,12 @@
               </el-form-item>
               <el-form-item prop="projectCategory" label="项目类别" :required="!data.isViewMode">
                 <el-input v-model="data.form.projectCategory" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectCategory ? '暂无信息' : '请输入项目类别'" style="width: 70%;"></el-input>
+              </el-form-item>
+              <el-form-item prop="projectLevel" label="课题类别" :required="!data.isViewMode">
+                <el-select v-model="data.form.projectLevel" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectLevel ? '暂无信息' : '请选择课题类别'" style="width: 70%;">
+                  <el-option label="省社科" value="省社科"></el-option>
+                  <el-option label="省自科" value="省自科"></el-option>
+                </el-select>
               </el-form-item>
               <el-form-item prop="expectedResults" label="预期成果">
                 <el-input v-model="data.form.expectedResults" :disabled="data.isViewMode" type="textarea" :rows="4" :placeholder="data.isViewMode && !data.form.expectedResults ? '暂无信息' : '请输入预期成果描述'" style="width: 70%;"></el-input>
@@ -530,6 +537,7 @@ const data = reactive({
     researchType: '',
     subjectCategory: '',
     projectCategory: '',
+    projectLevel: '',
     expectedResults: '',
     // 立项/结项信息
     establishmentTime: '',
@@ -572,6 +580,9 @@ const rules = reactive({
   ],
   projectCategory: [
     { required: true, message: '请选择项目类别', trigger: 'change' },
+  ],
+  projectLevel: [
+    { required: true, message: '请选择课题类别', trigger: 'change' },
   ],
   // 立项/结项信息验证规则
   establishmentTime: [
@@ -637,6 +648,7 @@ const handleAdd = () => {
       researchType: '',
       subjectCategory: '',
       projectCategory: '',
+      projectLevel: '',
       expectedResults: '',
       // 立项/结项信息
       establishmentTime: '',
@@ -1080,6 +1092,7 @@ const resetCurrentTab = () => {
         data.form.researchType = ''
         data.form.subjectCategory = ''
         data.form.projectCategory = ''
+        data.form.projectLevel = ''
         data.form.expectedResults = ''
         break
       case 'teamMembers':
@@ -1136,6 +1149,9 @@ const saveCurrentTab = () => {
       } else if (!data.form.projectCategory) {
         isValid = false
         errorMessage = '请输入项目类别'
+      } else if (!data.form.projectLevel) {
+        isValid = false
+        errorMessage = '请选择课题类别'
       }
       break
     case 'teamMembers':

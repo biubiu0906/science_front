@@ -1,6 +1,6 @@
 <template>
     <el-card class="main-card">
-        <h3 style="margin-left: 20px;">重点实验室审核</h3>
+        <h3 style="margin-left: 20px;">任务书</h3>
         <div class="card" style="margin-top: 15px">
             <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" border empty-text="暂无数据">
                 <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
@@ -66,7 +66,7 @@
         </div>
     </el-card>
 
-    <el-dialog title="重点实验室审核" v-model="formVisible" width="40%" destroy-on-close>
+    <el-dialog title="任务书" v-model="formVisible" width="40%" destroy-on-close>
         <el-form :model="reviewData" label-width="70px" style="padding: 20px">
             <el-form-item prop="applyStatus" label="提交状态">
                 <el-select v-model="reviewData.applyStatus" placeholder="请选择审核结果">

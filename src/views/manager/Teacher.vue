@@ -9,7 +9,7 @@
     <div class="card" style="margin-bottom: 5px">
       <div style="margin-bottom: 10px; margin-left: 10px;">
         <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
-        <el-button type="success" plain size="small" @click="handleBatchAdd" v-if="data.user.role !== 'ADMIN'">批量新增</el-button>
+        <el-button type="success" plain size="small" @click="handleBatchAdd" v-if="data.user.role !== 'SUPER_ADMIN'">批量新增</el-button>
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
@@ -114,7 +114,7 @@
         <el-form-item prop="unit" label="单位">
           <el-input v-model="data.form.unit" placeholder="请输入单位"></el-input>
         </el-form-item>
-        <el-form-item v-if="data.user.role==='ADMIN'" prop="ofLab" label="所属实验室">
+        <el-form-item v-if="data.user.role==='SUPER_ADMIN'" prop="ofLab" label="所属实验室">
           <el-select v-model="data.form.ofLab" placeholder="请选择所属实验室">
             <el-option
               v-for="item in data.labOptions"
@@ -322,7 +322,7 @@ const reportRules = reactive({
 })
 
 const load = () => {
-  if(data.user.role === 'ADMIN'){
+  if(data.user.role === 'SUPER_ADMIN'){
     request.get('/teacher/selectTeachers', {
       params: {
         pageNum: data.pageNum,
@@ -434,7 +434,7 @@ const save = () => {
 // 创建教师报告
 const handleReportForm = (id) => {
   data.reportFormVisible = true
-  if(data.user.role === 'ADMIN'){
+  if(data.user.role === 'SUPER_ADMIN'){
     data.reportForm.targetId = id
     data.reportForm.targetType = 'TEACHER'
   }else{
@@ -466,7 +466,7 @@ const createReport = () => {
       }
 
       // 验证通过，执行保存操作
-      if(data.user.role === 'ADMIN'){
+      if(data.user.role === 'SUPER_ADMIN'){
         request.get('/report/admin', {
           params: requestParams
         }).then(res => {

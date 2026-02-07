@@ -2,7 +2,7 @@
     <div class="card" style="margin-bottom: 5px">
       <div style="margin-bottom: 10px; margin-left: 10px;">
         <el-button type="warning" plain size="small" @click="load">刷新</el-button>
-        <el-button type="primary" plain size="small" v-if="data.user.role !== 'ADMIN'" @click="creatMyReport">生成报告</el-button>
+        <el-button type="primary" plain size="small" v-if="data.user.role !== 'SUPER_ADMIN'" @click="creatMyReport">生成报告</el-button>
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">

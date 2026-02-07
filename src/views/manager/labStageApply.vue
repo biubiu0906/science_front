@@ -48,6 +48,14 @@
     >
       <el-form :model="form" ref="formRef" label-width="auto">
         
+        <!-- 填写说明 -->
+        <div style="background-color: #ecf5ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; color: #337ecc; line-height: 1.6; font-size: 14px;">
+           <div style="font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 16px; color: #337ecc;">填 写 说 明</div>
+           <div style="margin-bottom: 5px;">一、 本表填写的成果时间限定为2025年1月—2025年12月，请在此时间范围内按照要求逐项据实填写，填报内容应与实验室研究方向一致。</div>
+           <div style="margin-bottom: 5px;">二、报告中填报人员信息应与实验室设立时任务书中的负责人和团队成员信息一致，相关内容应是以上人员工作的客观描述或量化统计。</div>
+           <div>三、根据实验室建设需要，对人员进行调整的，需在第二部分阶段性进展情况报告中进行说明。涉及变更人员的工作成果在报告中只填写加入实验室期间的内容。</div>
+        </div>
+
         <!-- 第一大类：建设基本情况表 -->
         <div class="main-title">一、建设基本情况表</div>
 
@@ -56,11 +64,11 @@
         <el-descriptions border :column="4" class="custom-descriptions">
           <el-descriptions-item label="报告起始时间" :span="2">
             <div v-if="operationType === 'view'">{{ displayValue(form.basicInfo.reportStartDate) }}</div>
-            <el-date-picker v-else v-model="form.basicInfo.reportStartDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+            <el-date-picker v-else v-model="form.basicInfo.reportStartDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" disabled />
           </el-descriptions-item>
           <el-descriptions-item label="报告结束时间" :span="2">
             <div v-if="operationType === 'view'">{{ displayValue(form.basicInfo.reportEndDate) }}</div>
-            <el-date-picker v-else v-model="form.basicInfo.reportEndDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+            <el-date-picker v-else v-model="form.basicInfo.reportEndDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" disabled />
           </el-descriptions-item>
 
           <el-descriptions-item label="实验室名称" :span="2">
@@ -416,7 +424,6 @@
               v-model="form.textReport.progress"
               placeholder="请输入建设进展情况..."
             />
-            <div class="word-counter">当前字数：{{ countText(form.textReport.progress) }} / 3000</div>
           </template>
         </div>
 
@@ -455,8 +462,10 @@
           :headers="uploadHeaders"
           :on-success="handleUploadSuccess"
           :on-remove="handleRemove"
+          :before-upload="handleBeforeUpload"
+          :on-exceed="handleExceed"
+          :limit="1"
           :file-list="fileList"
-          multiple
           class="upload-demo"
           drag
         >
@@ -465,6 +474,7 @@
             拖拽文件到此处，或 <em>点击上传</em>
           </div>
         </el-upload>
+        <div style="margin-top: 10px; color: rgb(229, 44, 44); font-size: 13px;">* 佐证材料要包含目录</div>
 
       </el-form>
 
@@ -480,7 +490,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
 import { Delete, UploadFilled, Search } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
@@ -558,8 +568,8 @@ const initForm = () => ({
     directorName: null,
     majorDiscipline: null,
     universityName: null,
-    reportStartDate: null,
-    reportEndDate: null,
+    reportStartDate: '2025-01-01',
+    reportEndDate: '2025-12-31',
     foundingDate: null,
     isEntity: null,
     areaTotal: null,
@@ -665,6 +675,40 @@ const countText = (text) => {
     return cleaned.length;
 };
 
+// 消息实例引用
+let progressWarningHandle = null
+
+// 监听建设进展字数变化，超过 3150 字提示精简
+watch(() => form.textReport.progress, (newVal) => {
+  const newLen = countText(newVal)
+  
+  if (newLen > 3150) {
+    // 关闭之前的提示（如果存在）
+    if (progressWarningHandle) {
+      progressWarningHandle.close()
+    }
+    // 显示新的提示，不自动关闭
+    progressWarningHandle = ElMessage.warning({
+      message: `字数超过3000字，请精简内容`,
+      duration: 0,
+      showClose: true
+    })
+  } else {
+    // 如果字数回到正常范围，关闭提示
+    if (progressWarningHandle) {
+      progressWarningHandle.close()
+      progressWarningHandle = null
+    }
+  }
+})
+
+// 组件销毁时关闭提示
+onUnmounted(() => {
+  if (progressWarningHandle) {
+    progressWarningHandle.close()
+  }
+})
+
 // 格式化显示值：0 应该显示为 0，而不是 '暂无数据'
 const displayValue = (val) => {
   if (val === undefined || val === null || val === '') {
@@ -725,6 +769,24 @@ const handleRemove = (file, fileListRes) => {
   if (index !== -1) {
     form.attachments.files.splice(index, 1)
   }
+}
+
+// 上传前校验
+const handleBeforeUpload = (file) => {
+  return ElMessageBox.confirm('涉密材料一律不得提交，确认继续吗？', '安全提示', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    return true
+  }).catch(() => {
+    return Promise.reject()
+  })
+}
+
+// 文件超出限制
+const handleExceed = (files) => {
+  ElMessage.warning('只能上传一个文件，请先删除已有文件')
 }
 
 // 查看详情
@@ -795,6 +857,13 @@ const handleEditOrView = (row, type) => {
 
 // 提交报告
 const submitReport = () => {
+  // 校验建设进展字数
+  const progressLength = countText(form.textReport.progress)
+  if (progressLength > 3150) {
+    ElMessage.warning(`建设进展部分字数已超过3000字，请精简内容`)
+    return
+  }
+
   loading.value = true
   
   const url = operationType.value === 'edit' ? `/lab_phase_report/update/${form.id}` : '/lab_phase_report/add'
