@@ -18,7 +18,7 @@
           <div style="font-size: 15px; margin-right: 10px; margin-left: 10px;">身份：</div>
           <el-radio-group v-model="data.form.role">
             <el-radio value="TEACHER">教师</el-radio>
-            <el-radio value="LAB">实验室</el-radio>
+            <el-radio value="LAB">组织</el-radio>
             <el-radio value="ADMIN">管理员</el-radio>
           </el-radio-group>
         </el-form-item>

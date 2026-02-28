@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.labName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入实验室名称查询"></el-input>
+      <el-input v-model="data.labName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
       <el-button type="info" plain size="small" @click="load">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
@@ -14,25 +14,31 @@
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
-        <el-table-column prop="laboratoryName" label="实验室名称" sortable>
+        <el-table-column prop="laboratoryName" label="名称" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.laboratoryName">{{ scope.row.laboratoryName }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="laboratoryDescription" label="实验室描述" sortable>
+        <el-table-column prop="laboratoryHierarchy" label="组织类别" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.laboratoryHierarchy">{{ scope.row.laboratoryHierarchy }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="laboratoryDescription" label="描述" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.laboratoryDescription">{{ scope.row.laboratoryDescription }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="laboratoryAddress" label="实验室地址" sortable>
+        <el-table-column prop="laboratoryAddress" label="地址" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.laboratoryAddress">{{ scope.row.laboratoryAddress }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="实验室类别" sortable>
+        <!--<el-table-column prop="type" label="实验室类别" sortable>
           <template v-slot="scope">
             <el-tag 
               :type="scope.row.type == 1 ? 'primary' : 'success'" 
@@ -41,7 +47,7 @@
               {{ scope.row.type == 1 ? '普通实验室' : '重点实验室' }}
             </el-tag>
           </template>
-        </el-table-column>
+        </el-table-column>-->
         <el-table-column prop="username" label="账号" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.username">{{ scope.row.username }}</span>
@@ -50,13 +56,13 @@
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template v-slot="scope">
-            <el-tooltip content="编辑实验室" placement="bottom" effect="light">
+            <el-tooltip content="编辑信息" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="生成报告" placement="bottom" effect="light">
               <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
             </el-tooltip>
-            <el-tooltip content="删除实验室" placement="bottom" effect="light">
+            <el-tooltip content="删除" placement="bottom" effect="light">
               <el-button type="danger" circle size="small" :icon="Delete" @click="del(scope.row.id)"></el-button>
             </el-tooltip>
           </template>
@@ -67,22 +73,29 @@
       <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
     </div>
 
-    <el-dialog title="实验室信息" v-model="data.formVisible" width="40%" destroy-on-close>
+    <el-dialog title="组织信息" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="rules" label-width="100px" style="padding: 20px">
         <el-form-item prop="username" label="账号">
-          <el-input v-model="data.form.username" placeholder="请输入实验室账号"></el-input>
+          <el-input v-model="data.form.username" placeholder="请输入组织账号"></el-input>
         </el-form-item>
         <el-form-item prop="password" label="密码" v-if="!data.form.id">
           <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
         </el-form-item>
-        <el-form-item prop="laboratoryName" label="实验室名称">
-          <el-input v-model="data.form.laboratoryName" placeholder="请输入实验室名称"></el-input>
+        <el-form-item prop="laboratoryName" label="组织名称">
+          <el-input v-model="data.form.laboratoryName" placeholder="请输入组织名称"></el-input>
         </el-form-item>
-        <el-form-item prop="laboratoryDescription" label="实验室描述">
-          <el-input v-model="data.form.laboratoryDescription" placeholder="请输入实验室描述"></el-input>
+        <el-form-item prop="laboratoryHierarchy" label="组织类别">
+          <el-select v-model="data.form.laboratoryHierarchy" placeholder="请选择组织类别" style="width: 100%">
+            <el-option label="实验室" value="实验室"></el-option>
+            <el-option label="基地" value="基地"></el-option>
+            <el-option label="团队" value="团队"></el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item prop="laboratoryAddress" label="实验室地址">
-          <el-input v-model="data.form.laboratoryAddress" placeholder="请输入实验室地址"></el-input>
+        <el-form-item prop="laboratoryDescription" label="组织描述">
+          <el-input v-model="data.form.laboratoryDescription" placeholder="请输入组织描述"></el-input>
+        </el-form-item>
+        <el-form-item prop="laboratoryAddress" label="组织地址">
+          <el-input v-model="data.form.laboratoryAddress" placeholder="请输入组织地址"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -169,7 +182,7 @@ const data = reactive({
 // 表单验证规则
 const rules = reactive({
   username: [
-    { required: true, message: '请输入实验室账号', trigger: 'blur' },
+    { required: true, message: '请输入账号', trigger: 'blur' },
     { min: 3, max: 20, message: '账号长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
@@ -177,8 +190,11 @@ const rules = reactive({
     { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' }
   ],
   laboratoryName: [
-    { required: true, message: '请输入实验室名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '实验室名称长度在 2 到 50 个字符', trigger: 'blur' }
+    { required: true, message: '请输入名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '名称长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  laboratoryHierarchy: [
+    { required: true, message: '请选择组织类别', trigger: 'change' }
   ],
 })
 

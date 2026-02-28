@@ -8,6 +8,7 @@
     <div class="card">
       <div class="header-actions">
         <el-button type="primary" @click="openDialog" size="small" plain>新增阶段报告</el-button>
+        <el-button type="success" @click="downloadInstruction" size="small" plain>下载填写说明</el-button>
         <el-button type="danger" @click="delBatch" size="small" plain>批量删除</el-button>
       </div>
       
@@ -492,7 +493,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
-import { Delete, UploadFilled, Search } from '@element-plus/icons-vue'
+import { Delete, UploadFilled, Search, Download } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
 import SecurityAlert from '@/components/SecurityAlert.vue'
 import Editor from '@/components/Editor.vue'
@@ -530,6 +531,11 @@ const searchReport = () => {
 const resetSearch = () => {
   searchId.value = ''
   loadReportList()
+}
+
+// 下载填写说明
+const downloadInstruction = () => {
+  window.open('http://101.37.160.218:8080/files/download/江苏省高校哲学社会科学实验室阶段性报告说明.doc')
 }
 
 // 页面加载时获取列表

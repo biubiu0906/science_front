@@ -1,0 +1,52 @@
+# 实验室层级字段（laboratoryHierarchy）前端注意事项
+
+本次新增字段用于表示实验室层级（实验室/基地/团队），后端已在 Laboratory 与 LaboratoryInfo 中透传该字段。
+
+## 字段说明
+
+- 字段名：`laboratoryHierarchy`
+- 类型：`String`
+- 取值：`实验室` / `基地` / `团队`
+
+## 接口影响范围
+
+以下接口返回数据中会包含 `laboratoryHierarchy`：
+
+- `GET /laboratory/list`
+- `GET /laboratory/selectById/{id}`
+- `GET /lab/selectPage`
+
+以下接口请求体可传 `laboratoryHierarchy`：
+
+- `POST /lab/add`
+- `PUT /lab/update`
+注意：新增实验室以及修改实验室的前端界面可能要添加一个下拉框
+
+## 前端需注意
+
+- 列表与详情展示时新增一列/一项显示实验室层级。
+- 实验室管理新增/编辑表单补充层级选择项，并在提交时携带 `laboratoryHierarchy`。
+- 若前端已有字典/枚举，请新增层级枚举项并与 `实验室/基地/团队` 对应。
+
+## 示例
+
+### 新增/更新请求体示例（部分字段）
+
+```json
+{
+  "laboratoryName": "南京大学智能软件实验室",
+  "laboratoryHierarchy": "实验室",
+  "laboratoryAddress": "江苏省南京市南京大学软件学院"
+}
+```
+
+### 列表/详情响应示例（部分字段）
+
+```json
+{
+  "id": 1897978887477002242,
+  "laboratoryName": "南京大学智能软件实验室",
+  "laboratoryHierarchy": "实验室",
+  "laboratoryAddress": "江苏省南京市南京大学软件学院"
+}
+```

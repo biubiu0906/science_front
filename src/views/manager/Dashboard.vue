@@ -192,7 +192,7 @@
               </div>
             </div>
             <div style="flex: 1">
-              <div style="font-size: 16px">实验室总数</div>
+              <div style="font-size: 16px">组织总数</div>
               <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
             </div>
           </div>
