@@ -47,7 +47,7 @@
       destroy-on-close
       @close="showSecurityAlert = false"
     >
-      <el-form :model="form" ref="formRef" label-width="auto">
+      <el-form :model="form" ref="formRef" label-width="auto" v-loading="autoFillLoading">
         
         <!-- 填写说明 -->
         <div style="background-color: #ecf5ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; color: #337ecc; line-height: 1.6; font-size: 14px;">
@@ -96,7 +96,15 @@
 
           <el-descriptions-item label="成立时间" :span="2">
             <div v-if="operationType === 'view'">{{ displayValue(form.basicInfo.foundingDate) }}</div>
-            <el-date-picker v-else v-model="form.basicInfo.foundingDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+            <el-date-picker 
+              v-else 
+              :key="foundingDateType"
+              v-model="form.basicInfo.foundingDate" 
+              :type="foundingDateType" 
+              :value-format="foundingDateType === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD'" 
+              placeholder="选择日期" 
+              style="width: 100%" 
+            />
           </el-descriptions-item>
           <el-descriptions-item label="是否实体" :span="2">
              <div v-if="operationType === 'view'">{{ form.basicInfo.isEntity === 1 ? '是' : (form.basicInfo.isEntity === 0 ? '否' : '暂无数据') }}</div>
@@ -546,6 +554,7 @@ onMounted(() => {
 // 控制弹窗显示
 const dialogVisible = ref(false)
 const loading = ref(false)
+const autoFillLoading = ref(false)
 const formRef = ref(null)
 
 const data = reactive({
@@ -667,6 +676,11 @@ const handleSelectionChange = (rows) => {
 
 const form = reactive(initForm())
 
+const foundingDateType = computed(() => {
+  const val = form.basicInfo.foundingDate
+  return (val && /^\d{4}-\d{2}$/.test(val)) ? 'month' : 'date'
+})
+
 // 统计文本字数（不包含空格、制表符、换行等所有空白字符）
 const countText = (text) => {
     // 提前返回：当文本为空时直接返回 0，避免不必要计算
@@ -731,6 +745,67 @@ const handleSecurityConfirm = () => {
   showSecurityAlert.value = false
 }
 
+// 自动填充报告数据
+const autoFillReportData = () => {
+  if (!form.basicInfo.reportStartDate || !form.basicInfo.reportEndDate) return
+  
+  autoFillLoading.value = true
+  request.post('/lab_phase_report/consume', {
+    basicInfo: {
+      reportStartDate: form.basicInfo.reportStartDate,
+      reportEndDate: form.basicInfo.reportEndDate
+    }
+  }).then(res => {
+    if (res.code === '200' && res.data && res.data.dto) {
+      const dto = res.data.dto
+      
+      // 合并基本信息
+      if (dto.basicInfo) {
+         // 保持 reportStartDate 和 reportEndDate 不变
+         const { reportStartDate, reportEndDate, ...otherInfo } = dto.basicInfo
+         Object.assign(form.basicInfo, otherInfo)
+         // 如果接口返回的研究方向是空的，保持默认的空字符串数组，否则使用接口返回的
+         if (dto.basicInfo.researchDirections && dto.basicInfo.researchDirections.length > 0) {
+           form.basicInfo.researchDirections = dto.basicInfo.researchDirections
+         }
+         // 确保 foundingDate 格式正确 (yyyy-MM-dd)
+         if (dto.basicInfo.foundingDate) {
+            form.basicInfo.foundingDate = dto.basicInfo.foundingDate
+         }
+      }
+
+      // 合并经费总额 (优先使用外层的 fundTotal，如果为 0 或不存在则使用 dto.funding.fundTotal)
+      let finalFundTotal = res.data.fundTotal
+      if (finalFundTotal === undefined || finalFundTotal === null) {
+        finalFundTotal = dto.funding?.fundTotal
+      }
+      if (finalFundTotal !== undefined && finalFundTotal !== null) {
+         form.funding.fundTotal = finalFundTotal
+      }
+
+      // 合并其他模块信息（如果 dto 中有数据则覆盖，否则保持初始空值）
+      if (dto.funding) Object.assign(form.funding, { ...dto.funding, fundTotal: form.funding.fundTotal }) // 确保 fundTotal 使用计算后的值
+      if (dto.projects) Object.assign(form.projects, dto.projects)
+      if (dto.outputs) Object.assign(form.outputs, dto.outputs)
+      if (dto.dbSoftwareTransfer) Object.assign(form.dbSoftwareTransfer, dto.dbSoftwareTransfer)
+      if (dto.talentAndCoop) Object.assign(form.talentAndCoop, dto.talentAndCoop)
+      if (dto.managementEquipSupport) Object.assign(form.managementEquipSupport, dto.managementEquipSupport)
+      if (dto.textReport) Object.assign(form.textReport, dto.textReport)
+      
+      // ElMessage.success('已自动填充实验室基本信息与经费统计')
+    } else {
+       // 非200不做强制提示，以免干扰用户，除非有明确错误信息
+       if (res.code !== '200') {
+         console.warn('自动填充失败:', res.msg)
+       }
+    }
+  }).catch(err => {
+    console.error('自动填充出错:', err)
+  }).finally(() => {
+    autoFillLoading.value = false
+  })
+}
+
 // 打开弹窗
 const openDialog = () => {
   // 重置表单
@@ -740,6 +815,9 @@ const openDialog = () => {
   dialogVisible.value = true
   // 同时显示安全提醒
   showSecurityAlert.value = true
+  
+  // 发起自动填充请求
+  autoFillReportData()
 }
 
 // 添加研究方向
