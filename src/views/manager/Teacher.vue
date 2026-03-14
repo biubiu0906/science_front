@@ -59,13 +59,13 @@
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="employmentType" label="全职/非全职" min-width="130" sortable>
+        <el-table-column prop="employmentType" label="全职/兼职" min-width="130" sortable>
           <template v-slot="scope">
             <el-tag 
               :type="scope.row.employmentType === 'FULL_TIME' ? 'success' : 'primary'" 
               class="teacher-type-tag"
             >
-              {{ scope.row.employmentType === 'FULL_TIME' ? '全职' : '非全职' }}
+              {{ scope.row.employmentType === 'FULL_TIME' ? '全职' : '兼职' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -130,10 +130,10 @@
             <el-radio value="girl">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item prop="employmentType" label="全职/非全职">
+        <el-form-item prop="employmentType" label="全职/兼职">
           <el-radio-group v-model="data.form.employmentType">
             <el-radio value="FULL_TIME">全职</el-radio>
-            <el-radio value="PART_TIME">非全职</el-radio>
+            <el-radio value="PART_TIME">兼职</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item prop="avatar" label="头像">
@@ -302,7 +302,7 @@ const rules = reactive({
     { required: true, message: '请输入邮箱', trigger: 'blur' },
   ],
   employmentType: [
-    { required: true, message: '请选择全职/非全职', trigger: 'change' }
+    { required: true, message: '请选择全职/兼职', trigger: 'change' }
   ],
   unit: [
     { required: true, message: '请输入单位', trigger: 'blur' },

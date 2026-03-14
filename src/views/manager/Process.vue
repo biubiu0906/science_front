@@ -18,7 +18,6 @@
         <el-table-column prop="projectName" label="项目名称" sortable />
         <el-table-column prop="projectCode" label="项目编号" sortable />
         <el-table-column prop="teacherName" label="教师姓名" sortable />
-        <el-table-column prop="time" label="报告日期" sortable />
         <el-table-column prop="content" label="工作内容" sortable>
           <template v-slot="scope">
             <div :class="getContentAlignClass(scope.row.content)">
@@ -74,10 +73,6 @@
         <el-form-item prop="solution" label="解决方案">
           <el-input type="textarea" :rows="4" v-model="data.form.solution" placeholder="请输入解决方案"></el-input>
         </el-form-item>
-        <el-form-item prop="time" label="报告日期">
-          <el-date-picker style="width: 100%" v-model="data.form.time" value-format="YYYY-MM-DD" type="date"
-            placeholder="请选择日期"></el-date-picker>
-        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -122,10 +117,7 @@ const rules = reactive({
   ],
   content: [
     { required: true, message: '请输入工作内容', trigger: 'blur' },
-  ],
-  time: [
-    { required: true, message: '请选择报告日期', trigger: 'blur' },
-  ],
+  ]
 })
 
 const loadProject = () => {

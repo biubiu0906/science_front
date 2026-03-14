@@ -67,31 +67,11 @@
             <span v-else style="color: #999;">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="openFile" label="立项文件" min-width="120" sortable>
+        <el-table-column prop="evidence" label="证明材料" min-width="120" sortable>
           <template v-slot="scope">
-            <template v-if="scope.row.openFile">
-              <el-tooltip content="下载立项文件" placement="bottom" effect="light">
-                <el-button type="primary" size="small" @click="down(scope.row.openFile)">下载文件</el-button>
-              </el-tooltip>
-            </template>
-            <span v-else style="color: #999;">暂无数据</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="closeFile" label="结项文件" min-width="120" sortable>
-          <template v-slot="scope">
-            <template v-if="scope.row.closeFile">
-              <el-tooltip content="下载结项文件" placement="bottom" effect="light">
-                <el-button type="primary" size="small" @click="down(scope.row.closeFile)">下载文件</el-button>
-              </el-tooltip>
-            </template>
-            <span v-else style="color: #999;">暂无数据</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="file" label="附件" min-width="120" sortable>
-          <template v-slot="scope">
-            <template v-if="scope.row.file">
-              <el-tooltip content="下载附件文件" placement="bottom" effect="light">
-                <el-button type="primary" size="small" @click="down(scope.row.file)">下载文件</el-button>
+            <template v-if="scope.row.evidence">
+              <el-tooltip content="下载证明材料" placement="bottom" effect="light">
+                <el-button type="primary" size="small" @click="down(scope.row.evidence)">下载文件</el-button>
               </el-tooltip>
             </template>
             <span v-else style="color: #999;">暂无数据</span>
@@ -145,7 +125,7 @@
     </div>
 
     <el-dialog :title="data.form.id ? '科研成果编辑' : '科研成果提交'" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened" @close="handleDialogClose">
-      <el-form ref="formRef" :model="data.form" label-width="80px" style="padding: 20px">
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="80px" style="padding: 10px 20px">
         <el-form-item prop="visible" label="是否公开">
             <el-switch
               :model-value="data.form.visible === 1"
@@ -155,25 +135,11 @@
               inactive-text="否"
             />
         </el-form-item>
-        <el-form-item prop="openFile" label="立项文件">
-          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleOpenFileUpload">
-            <el-button type="primary" size="small" >点击上传</el-button>
-          </el-upload>
-        </el-form-item>
-        <el-form-item prop="closeFile" label="结项文件">
-          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleCloseFileUpload">
-            <el-button type="primary" size="small" >点击上传</el-button>
-          </el-upload>
-        </el-form-item>
-        <el-form-item prop="file" label="附件">
-          <el-upload :action="baseUrl + '/files/upload'" :on-success="handleFileUpload">
-            <el-button type="primary" size="small" >点击上传</el-button>
-          </el-upload>
-        </el-form-item>
         <el-form-item prop="projectId" label="科研项目" class="custom-form-item">
           <el-select v-model="data.form.projectId" placeholder="请选择科研项目">
             <el-option v-for="item in data.projectData" :key="item.id" :label="item.name" :value="item.id">
             </el-option>
+            <el-option label="无依托项目" :value="0"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item prop="typeId" label="成果类型" class="custom-form-item">
@@ -187,6 +153,17 @@
         </el-form-item>
         <el-form-item prop="description" label="成果描述" class="custom-form-item">
           <el-input type="textarea" :rows="4" v-model="data.form.description" placeholder="请输入成果描述"></el-input>
+        </el-form-item>
+        <el-form-item prop="evidence" label="证明材料" class="custom-form-item">
+          <el-upload 
+            :action="baseUrl + '/files/upload'" 
+            :on-success="handleEvidenceUpload"
+            :on-remove="handleRemove"
+            :file-list="data.fileList"
+            :limit="1"
+          >
+            <el-button type="primary" size="small">点击上传</el-button>
+          </el-upload>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -286,6 +263,13 @@ import SecurityAlert from "@/components/SecurityAlert.vue";
 import { securityAlertManager } from "@/utils/securityAlert.js";
 const baseUrl = import.meta.env.VITE_BASE_URL
 const formRef = ref()
+const rules = reactive({
+  visible: [{ required: true, message: '请选择是否公开', trigger: 'change' }],
+  projectId: [{ required: true, message: '请选择科研项目', trigger: 'change' }],
+  typeId: [{ required: true, message: '请选择成果类型', trigger: 'change' }],
+  name: [{ required: true, message: '请输入成果名称', trigger: 'blur' }],
+  description: [{ required: true, message: '请输入成果描述', trigger: 'blur' }],
+})
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   formVisible: false,
@@ -300,6 +284,7 @@ const data = reactive({
   projectName: null,
   projectData: [],
   typeData: [],
+  fileList: [], // 证明材料文件列表
   ids: [],
   laboratoryLevel: null,
   currentProjectId: null, // 当前查看的项目ID
@@ -353,19 +338,32 @@ const load = () => {
   })
 }
 const handleAdd = () => {
-  data.form = { visible: 0 }
+  data.form = { visible: 0, projectId: null }
+  data.fileList = []
   data.formVisible = true
 }
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
+  if (data.form.projectId === null) {
+    data.form.projectId = 0
+  }
+  // 回显文件
+  if (data.form.evidence) {
+    data.fileList = [{
+      name: data.form.evidence.split('/').pop().replace(/^\d+-/, ''),
+      url: data.form.evidence
+    }]
+  } else {
+    data.fileList = []
+  }
   data.formVisible = true
 }
 const handleCheck = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
   data.checkVisible = true
 }
-const add = () => {
-  request.post('/achievement/add', data.form).then(res => {
+const add = (form) => {
+  request.post('/achievement/add', form).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -376,8 +374,8 @@ const add = () => {
   })
 }
 
-const update = () => {
-  request.put('/achievement/update', data.form).then(res => {
+const update = (form) => {
+  request.put('/achievement/update', form).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -389,7 +387,11 @@ const update = () => {
 const save = () => {
   formRef.value.validate(valid => {
     if (valid) {
-      data.form.id ? update() : add()
+      let submitForm = JSON.parse(JSON.stringify(data.form))
+      if (submitForm.projectId === 0) {
+        submitForm.projectId = null
+      }
+      data.form.id ? update(submitForm) : add(submitForm)
     }
   })
 }
@@ -447,14 +449,16 @@ const reset = () => {
   load()
 }
 
-const handleFileUpload = (res) => {
-  data.form.file = res.data
+const handleEvidenceUpload = (res) => {
+  data.form.evidence = res.data
+  data.fileList = [{
+    name: res.data.split('/').pop().replace(/^\d+-/, ''),
+    url: res.data
+  }]
 }
-const handleOpenFileUpload = (res) => {
-  data.form.openFile = res.data
-}
-const handleCloseFileUpload = (res) => {
-  data.form.closeFile = res.data
+const handleRemove = () => {
+  data.form.evidence = null
+  data.fileList = []
 }
 const down = (url) => {
   window.open(url)

@@ -19,7 +19,7 @@
         <el-table-column prop="code" label="立项编号" min-width="140" sortable />
         <el-table-column prop="researchType" label="研究类型" min-width="120" sortable />
         <el-table-column prop="subjectCategory" label="学科" min-width="100" sortable />
-        <el-table-column prop="projectCategory" label="项目类别" min-width="150" sortable />
+        <el-table-column prop="projectNature" label="项目性质" min-width="150" sortable />
         <el-table-column prop="projectLevel" label="课题类别" min-width="120" sortable />
         <el-table-column prop="projectStatus" label="项目状态" min-width="110" sortable>
           <template v-slot="scope">
@@ -71,7 +71,7 @@
     <el-drawer 
       v-model="data.formVisible" 
       direction="rtl" 
-      size="65%" 
+      size="55%" 
       destroy-on-close
       @close="handleDrawerClose"
       @opened="handleDrawerOpened"
@@ -129,15 +129,23 @@
                   <el-option label="军事学" value="军事学"></el-option>
                   <el-option label="管理学" value="管理学"></el-option>
                   <el-option label="艺术学" value="艺术学"></el-option>
+                  <el-option label="交叉学科" value="交叉学科"></el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item prop="projectCategory" label="项目类别" :required="!data.isViewMode">
-                <el-input v-model="data.form.projectCategory" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectCategory ? '暂无信息' : '请输入项目类别'" style="width: 70%;"></el-input>
+              <el-form-item prop="projectNature" label="项目性质" :required="!data.isViewMode">
+                <el-select v-model="data.form.projectNature" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectNature ? '暂无信息' : '请选择项目性质'" style="width: 70%;">
+                  <el-option label="纵向课题" value="纵向课题" />
+                  <el-option label="横向课题" value="横向课题" />
+                </el-select>
               </el-form-item>
               <el-form-item prop="projectLevel" label="课题类别" :required="!data.isViewMode">
                 <el-select v-model="data.form.projectLevel" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectLevel ? '暂无信息' : '请选择课题类别'" style="width: 70%;">
+                  <el-option label="国社科" value="国社科"></el-option>
+                  <el-option label="国自科" value="国自科"></el-option>
+                  <el-option label="国社科单列" value="国社科单列"></el-option>
                   <el-option label="省社科" value="省社科"></el-option>
                   <el-option label="省自科" value="省自科"></el-option>
+                  <el-option label="其他" value="其他"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item prop="expectedResults" label="预期成果">
@@ -267,7 +275,7 @@
           <!-- 项目经费预算标签页内容 -->
           <div v-show="data.activeTab === 'budgetInfo'" :key="'budgetInfo'">
             <el-form ref="formRef" :rules="data.isViewMode ? {} : rules" :model="data.form" label-width="120px">
-              <el-form-item prop="approvedFunding" label="批准经费(万元)" :required="!data.isViewMode">
+              <el-form-item prop="approvedFunding" label="获批经费(万元)" :required="!data.isViewMode">
                 <template v-if="data.isViewMode && (data.form.approvedFunding === null || data.form.approvedFunding === undefined || data.form.approvedFunding === '')">
                   <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
                 </template>
@@ -277,13 +285,10 @@
                   :disabled="data.isViewMode"
                   :min="0" 
                   :precision="2"
-                  placeholder="请输入批准经费"
+                  placeholder="请输入获批经费"
                   style="width: 70%;">
                   <template #append>万元</template>
                 </el-input-number>
-              </el-form-item>
-              <el-form-item prop="projectFinanceAccount" label="项目财务账号">
-                <el-input v-model="data.form.projectFinanceAccount" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectFinanceAccount ? '暂无信息' : '请输入项目财务账号'" style="width: 70%;"></el-input>
               </el-form-item>
               <el-form-item prop="matchingFunding" label="配套经费(万元)">
                 <template v-if="data.isViewMode && (data.form.matchingFunding === null || data.form.matchingFunding === undefined || data.form.matchingFunding === '')">
@@ -299,6 +304,54 @@
                   style="width: 70%;">
                   <template #append>万元</template>
                 </el-input-number>
+              </el-form-item>
+              <el-form-item prop="receivedFunding" label="到账经费(万元)">
+                <template v-if="data.isViewMode && (data.form.receivedFunding === null || data.form.receivedFunding === undefined || data.form.receivedFunding === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-input-number 
+                  v-else
+                  v-model="data.form.receivedFunding" 
+                  :disabled="data.isViewMode"
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入到账经费"
+                  style="width: 70%;">
+                  <template #append>万元</template>
+                </el-input-number>
+              </el-form-item>
+              <el-form-item prop="longitudinalFunding" label="纵向经费(万元)">
+                <template v-if="data.isViewMode && (data.form.longitudinalFunding === null || data.form.longitudinalFunding === undefined || data.form.longitudinalFunding === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-input-number 
+                  v-else
+                  v-model="data.form.longitudinalFunding" 
+                  :disabled="data.isViewMode"
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入纵向经费"
+                  style="width: 70%;">
+                  <template #append>万元</template>
+                </el-input-number>
+              </el-form-item>
+              <el-form-item prop="transverseFunding" label="横向经费(万元)">
+                <template v-if="data.isViewMode && (data.form.transverseFunding === null || data.form.transverseFunding === undefined || data.form.transverseFunding === '')">
+                  <el-input disabled placeholder="暂无信息" style="width: 70%;"></el-input>
+                </template>
+                <el-input-number 
+                  v-else
+                  v-model="data.form.transverseFunding" 
+                  :disabled="data.isViewMode"
+                  :min="0" 
+                  :precision="2"
+                  placeholder="请输入横向经费"
+                  style="width: 70%;">
+                  <template #append>万元</template>
+                </el-input-number>
+              </el-form-item>
+              <el-form-item prop="projectFinanceAccount" label="项目财务账号">
+                <el-input v-model="data.form.projectFinanceAccount" :disabled="data.isViewMode" :placeholder="data.isViewMode && !data.form.projectFinanceAccount ? '暂无信息' : '请输入项目财务账号'" style="width: 70%;"></el-input>
               </el-form-item>
             </el-form>
           </div>
@@ -536,7 +589,7 @@ const data = reactive({
     name: '',
     researchType: '',
     subjectCategory: '',
-    projectCategory: '',
+    projectNature: '',
     projectLevel: '',
     expectedResults: '',
     // 立项/结项信息
@@ -550,6 +603,9 @@ const data = reactive({
     approvedFunding: null,
     projectFinanceAccount: '',
     matchingFunding: null,
+    receivedFunding: null,
+    longitudinalFunding: null,
+    transverseFunding: null,
     // 数组字段
     teamMembers: [], // 团队成员
     cooperativeUnits: [], // 合作研究单位
@@ -578,8 +634,8 @@ const rules = reactive({
   subjectCategory: [
     { required: true, message: '请选择学科分类', trigger: 'change' },
   ],
-  projectCategory: [
-    { required: true, message: '请选择项目类别', trigger: 'change' },
+  projectNature: [
+    { required: true, message: '请选择项目性质', trigger: 'change' },
   ],
   projectLevel: [
     { required: true, message: '请选择课题类别', trigger: 'change' },
@@ -596,7 +652,7 @@ const rules = reactive({
   ],
   // 项目经费预算验证规则
   approvedFunding: [
-    { required: true, message: '请输入批准经费', trigger: 'blur' },
+    { required: true, message: '请输入获批经费', trigger: 'blur' },
   ],
 })
 
@@ -647,7 +703,7 @@ const handleAdd = () => {
       name: '',
       researchType: '',
       subjectCategory: '',
-      projectCategory: '',
+      projectNature: '',
       projectLevel: '',
       expectedResults: '',
       // 立项/结项信息
@@ -661,6 +717,9 @@ const handleAdd = () => {
       approvedFunding: null,
       projectFinanceAccount: '',
       matchingFunding: null,
+      receivedFunding: null,
+      longitudinalFunding: null,
+      transverseFunding: null,
       // 数组字段
       teamMembers: [],
       cooperativeUnits: [],
@@ -1091,7 +1150,7 @@ const resetCurrentTab = () => {
         data.form.name = ''
         data.form.researchType = ''
         data.form.subjectCategory = ''
-        data.form.projectCategory = ''
+        data.form.projectNature = ''
         data.form.projectLevel = ''
         data.form.expectedResults = ''
         break
@@ -1146,9 +1205,9 @@ const saveCurrentTab = () => {
       } else if (!data.form.subjectCategory) {
         isValid = false
         errorMessage = '请选择学科分类'
-      } else if (!data.form.projectCategory) {
+      } else if (!data.form.projectNature) {
         isValid = false
-        errorMessage = '请输入项目类别'
+        errorMessage = '请输入项目性质'
       } else if (!data.form.projectLevel) {
         isValid = false
         errorMessage = '请选择课题类别'
@@ -1177,7 +1236,7 @@ const saveCurrentTab = () => {
       // 验证项目经费预算必填项
       if (!data.form.approvedFunding) {
         isValid = false
-        errorMessage = '请输入批准经费'
+        errorMessage = '请输入获批经费'
       }
       break
   }
@@ -1195,7 +1254,7 @@ const saveCurrentTab = () => {
         name: data.form.name,
         researchType: data.form.researchType,
         subjectCategory: data.form.subjectCategory,
-        projectCategory: data.form.projectCategory,
+        projectNature: data.form.projectNature,
         expectedResults: data.form.expectedResults
       }
       break
@@ -1249,9 +1308,9 @@ const submitForm = () => {
   } else if (!data.form.subjectCategory) {
     isValid = false
     errorMessage = '请选择学科分类'
-  } else if (!data.form.projectCategory) {
+  } else if (!data.form.projectNature) {
     isValid = false
-    errorMessage = '请输入项目类别'
+    errorMessage = '请输入项目性质'
   }
   // 验证立项/结项信息
   else if (!data.form.establishmentTime) {
@@ -1267,7 +1326,7 @@ const submitForm = () => {
   // 验证项目经费预算
   else if (!data.form.approvedFunding) {
     isValid = false
-    errorMessage = '请输入批准经费'
+    errorMessage = '请输入获批经费'
   }
   
   if (!isValid) {
