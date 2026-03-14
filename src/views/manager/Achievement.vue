@@ -85,9 +85,9 @@
         </el-table-column>
         <el-table-column prop="status" label="审核状态" min-width="120" sortable>
           <template v-slot="scope">
-            <el-tag v-if="scope.row.status === '审核通过'" type="success">{{ scope.row.status }}</el-tag>
             <el-tag v-if="scope.row.status === '待审核'" type="warning">{{ scope.row.status }}</el-tag>
-            <el-tag v-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
+            <el-tag v-else-if="scope.row.status === '不通过'" type="danger">{{ scope.row.status }}</el-tag>
+            <el-tag v-else type="success">{{ scope.row.status }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="reason" label="审核信息" min-width="110" sortable>
@@ -109,7 +109,7 @@
             <el-tooltip v-if="data.user.role === 'TEACHER' && scope.row.status === '待审核'" content="编辑成果" placement="bottom" effect="light">
               <el-button type="primary" circle :icon="Edit" size="small" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
-            <el-tooltip v-if="data.user.role === 'SUPER_ADMIN'" content="审核成果" placement="bottom" effect="light">
+            <el-tooltip v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'" content="审核成果" placement="bottom" effect="light">
               <el-button type="warning" circle :icon="Tickets" size="small" @click="handleCheck(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除成果" placement="bottom" effect="light">

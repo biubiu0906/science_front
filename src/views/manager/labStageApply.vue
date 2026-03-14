@@ -774,17 +774,39 @@ const autoFillReportData = () => {
          }
       }
 
-      // 合并经费总额 (优先使用外层的 fundTotal，如果为 0 或不存在则使用 dto.funding.fundTotal)
-      let finalFundTotal = res.data.fundTotal
-      if (finalFundTotal === undefined || finalFundTotal === null) {
-        finalFundTotal = dto.funding?.fundTotal
+      // 合并经费统计 (优先使用外层的字段，如果不存在则使用 dto.funding 中的)
+      const extractFund = (outerKey, dtoKey) => {
+        let val = res.data[outerKey]
+        if (val === undefined || val === null) {
+          val = dto.funding?.[dtoKey]
+        }
+        return val
       }
+
+      const finalFundTotal = extractFund('fundTotal', 'fundTotal')
       if (finalFundTotal !== undefined && finalFundTotal !== null) {
          form.funding.fundTotal = finalFundTotal
       }
+      
+      const finalFundLongitudinal = extractFund('fundLongitudinal', 'fundLongitudinal')
+      if (finalFundLongitudinal !== undefined && finalFundLongitudinal !== null) {
+         form.funding.fundLongitudinal = finalFundLongitudinal
+      }
+
+      const finalFundTransverse = extractFund('fundTransverse', 'fundTransverse')
+      if (finalFundTransverse !== undefined && finalFundTransverse !== null) {
+         form.funding.fundTransverse = finalFundTransverse
+      }
 
       // 合并其他模块信息（如果 dto 中有数据则覆盖，否则保持初始空值）
-      if (dto.funding) Object.assign(form.funding, { ...dto.funding, fundTotal: form.funding.fundTotal }) // 确保 fundTotal 使用计算后的值
+      if (dto.funding) {
+        Object.assign(form.funding, { 
+          ...dto.funding, 
+          fundTotal: form.funding.fundTotal,
+          fundLongitudinal: form.funding.fundLongitudinal,
+          fundTransverse: form.funding.fundTransverse
+        }) 
+      }
       if (dto.projects) Object.assign(form.projects, dto.projects)
       if (dto.outputs) Object.assign(form.outputs, dto.outputs)
       if (dto.dbSoftwareTransfer) Object.assign(form.dbSoftwareTransfer, dto.dbSoftwareTransfer)
