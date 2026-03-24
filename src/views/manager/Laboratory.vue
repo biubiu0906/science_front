@@ -121,7 +121,7 @@
             type="datetime"
             placeholder="请选择起始时间"
             format="YYYY-MM-DD HH:mm:ss"
-            date-format="MMM DD, YYYY"
+            date-format="YYYY-MM-DD"
             time-format="HH:mm"
           />
         </el-form-item>
@@ -131,7 +131,7 @@
             type="datetime"
             placeholder="请选择结束时间"
             format="YYYY-MM-DD HH:mm:ss"
-            date-format="MMM DD, YYYY"
+            date-format="YYYY-MM-DD"
             time-format="HH:mm"
           />
         </el-form-item>

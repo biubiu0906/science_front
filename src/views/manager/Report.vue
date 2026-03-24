@@ -12,15 +12,14 @@
         <el-table-column prop="url" label="报告内容" min-width="120" sortable>
           <template v-slot="scope">
             <span v-if="!scope.row.url">暂无数据</span>
-            <el-link 
+            <el-button 
               v-else 
-              :href="scope.row.url" 
-              target="_blank" 
-              type="primary"
-              :underline="false"
+              type="primary" 
+              size="small"
+              @click="viewReport(scope.row.url)"
             >
-              点击查看报告
-            </el-link>
+              查看报告
+            </el-button>
           </template>
         </el-table-column>
         <el-table-column prop="subject" label="报告对象" min-width="100" sortable/>
@@ -72,7 +71,7 @@
             type="datetime"
             placeholder="请选择起始时间"
             format="YYYY-MM-DD HH:mm:ss"
-            date-format="MMM DD, YYYY"
+            date-format="YYYY-MM-DD"
             time-format="HH:mm"
           />
         </el-form-item>
@@ -82,7 +81,7 @@
             type="datetime"
             placeholder="请选择结束时间"
             format="YYYY-MM-DD HH:mm:ss"
-            date-format="MMM DD, YYYY"
+            date-format="YYYY-MM-DD"
             time-format="HH:mm"
           />
         </el-form-item>
@@ -132,6 +131,12 @@ const indexMethod = (index) => {
 
 const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
+}
+
+const viewReport = (url) => {
+  if (url) {
+    window.open(url, '_blank')
+  }
 }
 
 // 加载报告数据

@@ -260,7 +260,7 @@
             <div style="text-align: center; margin-bottom: 10px;">
               <div style="font-weight: bold; font-size: 18px; color: #333;">科研项目Top5</div>
               <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                <span v-if="data.user.role === 'SUPER_ADMIN'">统计维度：实验室</span>
+                <span v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">统计维度：实验室</span>
                 <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
               </div>
             </div>
@@ -272,7 +272,7 @@
               </div>
               
               <!-- 管理员角色：显示实验室排行 -->
-              <div v-else-if="data.user.role === 'SUPER_ADMIN'" 
+              <div v-else-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'" 
                    v-for="(item, index) in data.projectRanking" 
                    :key="'project-lab-' + index"
                    style="
@@ -348,7 +348,7 @@
             <div style="text-align: center; margin-bottom: 10px;">
               <div style="font-weight: bold; font-size: 18px; color: #333;">科研成果Top5</div>
               <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                <span v-if="data.user.role === 'SUPER_ADMIN'">统计维度：实验室</span>
+                <span v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">统计维度：实验室</span>
                 <span v-else-if="data.user.role === 'KEY_LABORATORY'">统计维度：教师</span>
               </div>
             </div>
@@ -360,7 +360,7 @@
               </div>
               
               <!-- 管理员：显示实验室排行 -->
-              <div v-else-if="data.user.role === 'SUPER_ADMIN'" 
+              <div v-else-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'" 
                    v-for="(item, index) in data.achievementRanking" 
                    :key="'achievement-lab-' + index"
                    style="

@@ -2,7 +2,7 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.projectCode" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
-        placeholder="请输入项目编号查询"></el-input>
+        placeholder="请输入立项编号查询"></el-input>
       <el-input v-model="data.projectName" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
       <el-button size="small" type="info" plain @click="load">查询</el-button>
@@ -175,7 +175,7 @@
     </el-dialog>
     <el-dialog title="科研项目审核" v-model="data.checkVisible" width="40%" destroy-on-close>
       <el-form :model="data.form" label-width="70px" style="padding: 20px">
-        <el-form-item prop="status" label="提交状态">
+        <el-form-item prop="status" label="审核状态">
           <el-select v-model="data.form.status" placeholder="请选择审核结果">
             <el-option label="待审核" value="待审核"></el-option>
             <el-option label="审核通过" value="审核通过"></el-option>

@@ -55,7 +55,6 @@
 
             <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目</el-menu-item>
             <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程</el-menu-item>
-            <el-menu-item index="/manager/type" v-if="data.user.role === 'SUPER_ADMIN'">成果类型</el-menu-item>
             <el-menu-item index="/manager/achievement"
               v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果</el-menu-item>
             <!--<el-menu-item index="/manager/teacherFeedback"
@@ -71,6 +70,7 @@
             <!-- <el-menu-item index="/manager/apply" v-if="data.user.role === 'SUPER_ADMIN'">活动申请审核</el-menu-item> -->
             <!--<el-menu-item index="/manager/log" v-if="data.user.role === 'SUPER_ADMIN'">操作日志管理</el-menu-item>-->
             <el-menu-item index="/manager/report">科研报告</el-menu-item>
+            <el-menu-item index="/manager/type" v-if="data.user.role === 'SUPER_ADMIN'">成果类型</el-menu-item>
           </el-sub-menu>
           <!--教师的信息管理-->
           <el-sub-menu index="2" v-else>
@@ -98,7 +98,7 @@
             <el-menu-item index="/manager/laboratory">组织信息</el-menu-item>
             <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
             <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
-            <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">管理员信息</el-menu-item>
+            <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">超级管理员信息</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="3" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
             <template #title>

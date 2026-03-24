@@ -68,7 +68,7 @@
 
     <el-dialog title="任务书" v-model="formVisible" width="40%" destroy-on-close>
         <el-form :model="reviewData" label-width="70px" style="padding: 20px">
-            <el-form-item prop="applyStatus" label="提交状态">
+            <el-form-item prop="applyStatus" label="审核状态">
                 <el-select v-model="reviewData.applyStatus" placeholder="请选择审核结果">
                     <el-option label="待审核" :value="0"></el-option>
                     <el-option label="审核通过" :value="1"></el-option>
