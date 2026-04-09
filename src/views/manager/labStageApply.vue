@@ -20,12 +20,19 @@
           <el-table-column prop="basicInfo.reportStartDate" label="报告起始时间" width="180" sortable/>
           <el-table-column prop="basicInfo.reportEndDate" label="报告结束时间" width="180" sortable/>
           <el-table-column prop="updatedAt" label="更新时间" width="180" sortable/>
+          <el-table-column prop="reviewStatus" label="状态" width="140" sortable>
+            <template #default="scope">
+              <el-tag :type="getStatusTagType(scope.row.reviewStatus)">
+                {{ getStatusText(scope.row.reviewStatus) }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="200">
             <template #default="scope">
               <el-tooltip content="查看详情" placement="bottom" effect="light">
                 <el-button @click="viewReport(scope.row)" size="small">查看</el-button>
               </el-tooltip>
-              <el-tooltip content="修改报告" placement="bottom" effect="light" v-if="scope.row.reviewStatus === 2">
+              <el-tooltip content="修改报告" placement="bottom" effect="light" v-if="scope.row.reviewStatus === 'SCHOOL_REJECTED' || scope.row.reviewStatus === 2">
                 <el-button @click="editReport(scope.row)" size="small" type="primary">修改</el-button>
               </el-tooltip>
               <el-tooltip content="删除报告" placement="bottom" effect="light">
@@ -506,6 +513,27 @@ import request from '@/utils/request.js'
 import SecurityAlert from '@/components/SecurityAlert.vue'
 import Editor from '@/components/Editor.vue'
 
+// 状态映射
+const statusMap = {
+  'DRAFT': { text: '草稿', type: 'info' },
+  'SUBMITTED': { text: '已提交', type: 'warning' },
+  'SCHOOL_APPROVED': { text: '校审通过', type: 'primary' },
+  'SCHOOL_REJECTED': { text: '校审驳回', type: 'danger' },
+  'SUPER_APPROVED': { text: '审核通过', type: 'success' },
+  'SUPER_REJECTED': { text: '审核未通过', type: 'danger' },
+  // 兜底历史数据
+  '1': { text: '已提交', type: 'warning' },
+  '2': { text: '审核通过', type: 'success' }
+}
+
+const getStatusText = (status) => {
+  return statusMap[status]?.text || '未知状态'
+}
+
+const getStatusTagType = (status) => {
+  return statusMap[status]?.type || 'info'
+}
+
 // 报告列表数据
 const reportList = ref([])
 const searchId = ref('')
@@ -745,6 +773,25 @@ const handleSecurityConfirm = () => {
   showSecurityAlert.value = false
 }
 
+const normalizeResearchDirections = (value) => {
+  if (Array.isArray(value)) {
+    const arr = value
+      .map(v => (v === undefined || v === null) ? '' : String(v))
+      .filter(v => v !== '')
+    return arr.length ? arr : ['']
+  }
+
+  if (typeof value === 'string') {
+    const arr = value
+      .split(/[,，]/)
+      .map(v => v.trim())
+      .filter(Boolean)
+    return arr.length ? arr : ['']
+  }
+
+  return ['']
+}
+
 // 自动填充报告数据
 const autoFillReportData = () => {
   if (!form.basicInfo.reportStartDate || !form.basicInfo.reportEndDate) return
@@ -764,10 +811,7 @@ const autoFillReportData = () => {
          // 保持 reportStartDate 和 reportEndDate 不变
          const { reportStartDate, reportEndDate, ...otherInfo } = dto.basicInfo
          Object.assign(form.basicInfo, otherInfo)
-         // 如果接口返回的研究方向是空的，保持默认的空字符串数组，否则使用接口返回的
-         if (dto.basicInfo.researchDirections && dto.basicInfo.researchDirections.length > 0) {
-           form.basicInfo.researchDirections = dto.basicInfo.researchDirections
-         }
+         form.basicInfo.researchDirections = normalizeResearchDirections(dto.basicInfo.researchDirections)
          // 确保 foundingDate 格式正确 (yyyy-MM-dd)
          if (dto.basicInfo.foundingDate) {
             form.basicInfo.foundingDate = dto.basicInfo.foundingDate
@@ -844,11 +888,13 @@ const openDialog = () => {
 
 // 添加研究方向
 const addResearchDirection = () => {
+  form.basicInfo.researchDirections = normalizeResearchDirections(form.basicInfo.researchDirections)
   form.basicInfo.researchDirections.push('')
 }
 
 // 移除研究方向
 const removeResearchDirection = (index) => {
+  form.basicInfo.researchDirections = normalizeResearchDirections(form.basicInfo.researchDirections)
   form.basicInfo.researchDirections.splice(index, 1)
 }
 
@@ -934,7 +980,10 @@ const handleEditOrView = (row, type) => {
     if (res.code === '200' && res.data) {
       const data = res.data
       if (data.id) form.id = data.id
-      if (data.basicInfo) Object.assign(form.basicInfo, data.basicInfo)
+      if (data.basicInfo) {
+        Object.assign(form.basicInfo, data.basicInfo)
+        form.basicInfo.researchDirections = normalizeResearchDirections(form.basicInfo.researchDirections)
+      }
       if (data.funding) Object.assign(form.funding, data.funding)
       if (data.projects) Object.assign(form.projects, data.projects)
       if (data.outputs) Object.assign(form.outputs, data.outputs)

@@ -19,16 +19,23 @@
           <el-table-column prop="basicInfo.reportStartDate" label="报告起始时间" width="135" sortable/>
           <el-table-column prop="basicInfo.reportEndDate" label="报告结束时间" width="135" sortable/>
           <el-table-column prop="updatedAt" label="更新时间" min-width="120" sortable/>
-          <el-table-column label="操作" min-width="150">
+          <el-table-column prop="reviewStatus" label="状态" min-width="140" sortable>
+            <template #default="scope">
+              <el-tag :type="getStatusTagType(scope.row.reviewStatus)">
+                {{ getStatusText(scope.row.reviewStatus) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" min-width="120">
             <template #default="scope">
               <el-tooltip content="查看详情" placement="bottom" effect="light">
-                <el-button @click="viewReport(scope.row)" size="small">查看</el-button>
+                <el-button @click="viewReport(scope.row)" size="small" type="primary" circle :icon="View"></el-button>
               </el-tooltip>
-              <el-tooltip content="驳回报告" placement="bottom" effect="light" v-if="scope.row.reviewStatus === 1">
-                <el-button @click="rejectReport(scope.row)" size="small" type="primary">驳回</el-button>
+              <el-tooltip content="审核报告" placement="bottom" effect="light" v-if="canCheck(scope.row)">
+                <el-button @click="openCheckDialog(scope.row)" size="small" type="warning" circle :icon="Tickets"></el-button>
               </el-tooltip>
               <el-tooltip content="删除报告" placement="bottom" effect="light">
-                <el-button @click="deleteReport(scope.row)" size="small" type="danger">删除</el-button>
+                <el-button @click="deleteReport(scope.row)" size="small" type="danger" circle :icon="Delete"></el-button>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -367,14 +374,58 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 审核弹窗 -->
+    <el-dialog title="报告审核" v-model="checkVisible" width="40%" destroy-on-close>
+      <el-form :model="checkForm" label-width="80px" style="padding: 20px">
+        <el-form-item prop="approvalStatus" label="审核结果">
+          <el-select v-model="checkForm.approvalStatus" placeholder="请选择审核结果" style="width: 100%">
+            <el-option v-for="item in checkOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="comment" label="审核意见">
+          <el-input type="textarea" :rows="4" v-model="checkForm.comment" placeholder="请输入审核意见（可选）"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button size="small" @click="checkVisible = false">取 消</el-button>
+          <el-button type="primary" size="small" @click="submitCheck">提 交</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
-import { Delete, Search } from '@element-plus/icons-vue'
+import { Delete, Search, View, Tickets, RefreshLeft } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
+
+const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
+const userRole = user.role || ''
+
+// 状态映射
+const statusMap = {
+  'DRAFT': { text: '草稿', type: 'info' },
+  'SUBMITTED': { text: '已提交', type: 'warning' },
+  'SCHOOL_APPROVED': { text: '校审通过', type: 'primary' },
+  'SCHOOL_REJECTED': { text: '校审驳回', type: 'danger' },
+  'SUPER_APPROVED': { text: '审核通过', type: 'success' },
+  'SUPER_REJECTED': { text: '审核未通过', type: 'danger' },
+  // 兜底历史数据
+  '1': { text: '已提交', type: 'warning' },
+  '2': { text: '审核通过', type: 'success' }
+}
+
+const getStatusText = (status) => {
+  return statusMap[status]?.text || '未知状态'
+}
+
+const getStatusTagType = (status) => {
+  return statusMap[status]?.type || 'info'
+}
 
 // 报告列表数据
 const reportList = ref([])
@@ -573,22 +624,65 @@ const viewReport = (row) => {
   })
 }
 
-// 驳回报告
-const rejectReport = (row) => {
-  ElMessageBox.confirm('确认驳回该报告吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    request.put(`/lab_phase_report/review/${row.id}?reviewStatus=2`).then(res => {
-      if (res.code === '200') {
-        ElMessage.success('驳回成功')
-        loadReportList()
-      } else {
-        ElMessage.error(res.msg || '驳回失败')
-      }
-    })
-  }).catch(() => {})
+// 审核弹窗相关
+const checkVisible = ref(false)
+const checkForm = reactive({
+  id: null,
+  approvalStatus: null,
+  comment: ''
+})
+
+// 审核选项计算属性
+const checkOptions = computed(() => {
+  if (userRole === 'SCHOOL_ADMIN') {
+    return [
+      { label: '校审通过', value: 'SCHOOL_APPROVED' },
+      { label: '校审驳回', value: 'SCHOOL_REJECTED' }
+    ]
+  } else if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return [
+      { label: '审核通过', value: 'SUPER_APPROVED' },
+      { label: '审核未通过', value: 'SUPER_REJECTED' }
+    ]
+  }
+  return []
+})
+
+// 是否可以审核
+const canCheck = (row) => {
+  const status = row.reviewStatus
+  if (userRole === 'SCHOOL_ADMIN') {
+    return status === 'SUBMITTED' || status === 1
+  }
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return status === 'SCHOOL_APPROVED' || status === 'SUBMITTED' || status === 1
+  }
+  return false
+}
+
+// 打开审核弹窗
+const openCheckDialog = (row) => {
+  checkForm.id = row.id
+  checkForm.approvalStatus = null
+  checkForm.comment = ''
+  checkVisible.value = true
+}
+
+// 提交审核
+const submitCheck = () => {
+  if (!checkForm.approvalStatus) {
+    ElMessage.warning('请选择审核结果')
+    return
+  }
+  request.put(`/lab_phase_report/review/${checkForm.id}?approvalStatus=${checkForm.approvalStatus}&comment=${checkForm.comment || ''}`).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('审核成功')
+      checkVisible.value = false
+      loadReportList()
+    } else {
+      ElMessage.error(res.msg || '审核失败')
+    }
+  })
 }
 
 // 删除报告
