@@ -228,29 +228,29 @@
       <el-tabs v-model="data.activeTab" type="border-card" @tab-change="handleTabChange" style="height: 100%;">
         <!-- 科研项目学科类别占比图 -->
         <el-tab-pane label="学科分布" name="subject">
-          <div style="height: calc(100vh - 360px); display: flex;">
-            <div id="pie" style="flex: 1; height: 100%;"></div>
+          <div style="height: 100%; display: flex;">
+            <div id="pie" style="flex: 1; height: 100%; min-height: 390px;"></div>
           </div>
         </el-tab-pane>
         
         <!-- 系统中不同老师的科研项目数量 -->
         <el-tab-pane label="项目统计" name="project">
-          <div style="height: calc(100vh - 320px); display: flex;">
-            <div id="bar1" style="flex: 1; height: 100%;"></div>
+          <div style="height: 100%; display: flex;">
+            <div id="bar1" style="flex: 1; height: 100%; min-height: 440px;"></div>
           </div>
         </el-tab-pane>
         
         <!-- 系统中不同类型下的科研成果数量 -->
         <el-tab-pane label="成果统计" name="achievement">
-          <div style="height: calc(100vh - 330px); display: flex;">
-            <div id="bar2" style="flex: 1; height: 100%;"></div>
+          <div style="height: 100%; display: flex;">
+            <div id="bar2" style="flex: 1; height: 100%; min-height: 440px;"></div>
           </div>
         </el-tab-pane>
         
         <!-- 项目状态分布图 -->
         <el-tab-pane label="状态分布" name="status">
-          <div style="height: calc(100vh - 360px); display: flex;">
-            <div id="pie2" style="flex: 1; height: 100%;"></div>
+          <div style="height: 100%; display: flex;">
+            <div id="pie2" style="flex: 1; height: 100%; min-height: 390px;"></div>
           </div>
         </el-tab-pane>
         
@@ -634,6 +634,7 @@ const data = reactive({
   notificationDetailVisible: false, // 通知详情弹窗显示状态
   currentNotification: {}, // 当前查看的通知详情
   allNotificationsVisible: false, // 查看全部通知弹窗显示状态
+  rankingLoaded: false,
   // 排行榜模拟数据 - 管理员角色（实验室维度）
   projectRanking: [
   ],
@@ -946,22 +947,23 @@ const handleTabChange = (tabName) => {
   nextTick(() => {
     switch (tabName) {
       case 'subject':
-        loadPie() // 科研项目学科类别占比图
+        loadPie()
         break
       case 'project':
-        loadBar1() // 系统中不同老师的科研项目数量
+        loadBar1()
         break
       case 'achievement':
-        loadBar2() // 系统中不同类型下的科研成果数量
+        loadBar2()
         break
       case 'status':
-        loadPie2() // 项目状态分布图
+        loadPie2()
         break
       case 'projectRank':
-        // 项目排行榜不需要加载图表，数据已在data中
-        break
       case 'achievementRank':
-        // 成果排行榜不需要加载图表，数据已在data中
+        if (!data.rankingLoaded) {
+          loadRankingData()
+          data.rankingLoaded = true
+        }
         break
     }
   })
@@ -970,7 +972,6 @@ const handleTabChange = (tabName) => {
 loadBaseData()
 loadNotice()
 loadNotification()
-loadRankingData()
 onMounted(() => {
   // 初始加载默认tab的图表
   handleTabChange(data.activeTab)
@@ -1041,15 +1042,13 @@ let bar1Options = {
   },
   xAxis: {
     type: 'category',
-    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // 示例数据：统计的维度（横坐标）
-    axisLabel: {    //重点在这一块，其余可以忽略
-      interval: 0,   //这个一定要有，别忘记了
+    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    axisLabel: {
+      interval: 0,
       rotate: 15,
-      textStyle: {
-        color: '#666666',
-        fontSize: 11
-      }
-    },
+      color: '#666666',
+      fontSize: 11
+    }
   },
   yAxis: {
     type: 'value',
@@ -1067,12 +1066,10 @@ let bar1Options = {
     {
       type: 'bar',
       itemStyle: {
-        normal: {
-          color: function(params) {
-            const colors = ['#1890ff', '#40a9ff', '#69c0ff', '#91d5ff', '#bae7ff', '#e6f7ff', '#f0f9ff'];
-            return colors[params.dataIndex % colors.length];
-          }
-        },
+        color: function(params) {
+          const colors = ['#1890ff', '#40a9ff', '#69c0ff', '#91d5ff', '#bae7ff', '#e6f7ff', '#f0f9ff'];
+          return colors[params.dataIndex % colors.length];
+        }
       },
     }
   ]
