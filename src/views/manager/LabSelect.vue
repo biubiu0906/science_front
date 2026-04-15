@@ -1,18 +1,41 @@
 <template>
     <el-card class="main-card">
-        <h3 style="margin-left: 20px;">任务书</h3>
-        <div class="card" style="margin-top: 15px">
-            <el-table stripe :data="labApplyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" border empty-text="暂无数据">
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin-left: 20px; margin-bottom: 15px;">重点组织审核</h3>
+            <div style="margin-left: 20px;">
+                <el-radio-group v-model="applyType" @change="handleTypeChange" size="small">
+                    <el-radio-button value="LAB">重点实验室申请</el-radio-button>
+                    <el-radio-button value="BASE">重点研究基地申请</el-radio-button>
+                    <el-radio-button value="TEAM">优秀创新团队申请</el-radio-button>
+                </el-radio-group>
+            </div>
+        </div>
+        <div class="card">
+            <el-table stripe :data="applyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" border empty-text="暂无数据">
                 <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
                 <el-table-column prop="id" label="申请编号" width="150" sortable />
-                <el-table-column prop="institutionName" label="实验室名称" min-width="120" sortable />
-                <el-table-column prop="establishmentDate" label="成立日期" width="110" sortable />
+                
+                <!-- 动态列名 -->
+                <el-table-column v-if="applyType === 'LAB'" prop="institutionName" label="实验室名称" min-width="120" sortable />
+                <el-table-column v-else-if="applyType === 'BASE'" prop="base_name" label="基地名称" min-width="120" sortable />
+                <el-table-column v-else-if="applyType === 'TEAM'" prop="team_name" label="团队名称" min-width="120" sortable />
+                
+                <el-table-column v-if="applyType === 'LAB'" prop="establishmentDate" label="成立日期" width="110" sortable />
+                <el-table-column v-else-if="applyType === 'BASE'" prop="establish_time" label="成立日期" width="110" sortable />
+
                 <el-table-column label="附件" min-width="150" sortable>
                     <template v-slot="scope">
-                        <div v-if="scope.row.attachments?.files?.length">
+                        <div v-if="applyType === 'LAB' && scope.row.attachments?.files?.length">
                             <div v-for="(fileUrl, index) in scope.row.attachments.files" :key="index">
                                 <a :href="fileUrl" target="_blank" download class="file-link">
                                     {{ getFileName(fileUrl) }}
+                                </a>
+                            </div>
+                        </div>
+                        <div v-else-if="(applyType === 'BASE' || applyType === 'TEAM') && scope.row.attachments_list?.length">
+                            <div v-for="(file, index) in scope.row.attachments_list" :key="index">
+                                <a :href="file.url" target="_blank" download class="file-link">
+                                    {{ file.name }}
                                 </a>
                             </div>
                         </div>
@@ -20,24 +43,18 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column prop="createTime" label="申请时间" min-width="120" sortable />
+                <el-table-column v-if="applyType === 'LAB'" prop="createTime" label="申请时间" min-width="120" sortable />
+                <el-table-column v-else-if="applyType === 'BASE' || applyType === 'TEAM'" prop="create_time" label="申请时间" min-width="120" sortable />
 
-                <el-table-column label="审核状态" width="110" sortable>
+            <el-table-column label="审核状态" width="110">
                     <template v-slot="scope">
-                        <!-- 调试信息 -->
-                        <!-- {{ console.log('审核状态数据:', scope.row.applicationRecordList) }} -->
-                        <el-tag v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0'" type="warning">
-                            待审核
-                        </el-tag>
-                        <el-tag v-else-if="getApplyStatus(scope.row) === 1 || getApplyStatus(scope.row) === '1'" type="success">
-                            审核通过
-                        </el-tag>
-                        <el-tag v-else-if="getApplyStatus(scope.row) === 2 || getApplyStatus(scope.row) === '2'" type="danger">
-                            审批拒绝
-                        </el-tag>
-                        <el-tag v-else type="info">
-                            未知状态
-                        </el-tag>
+                        <el-tag v-if="scope.row.state === 1" type="info">草稿</el-tag>
+                        <el-tag v-else-if="scope.row.state === 0 || scope.row.state === '0'" type="warning">待审核</el-tag>
+                        <el-tag v-else-if="scope.row.state === 2 || scope.row.state === '2'" type="success">校审通过</el-tag>
+                        <el-tag v-else-if="scope.row.state === 3 || scope.row.state === '3'" type="danger">校审驳回</el-tag>
+                        <el-tag v-else-if="scope.row.state === 4 || scope.row.state === '4'" type="success">终审通过</el-tag>  
+                        <el-tag v-else-if="scope.row.state === 5 || scope.row.state === '5'" type="danger">终审驳回</el-tag>
+                        <el-tag v-else type="info">未知状态</el-tag>
                     </template>
                 </el-table-column>
 
@@ -55,24 +72,32 @@
                         <el-tooltip content="查看申请详情" placement="bottom" effect="light">
                             <el-button @click="viewDetails(scope.row.id)" size="small">查看</el-button>
                         </el-tooltip>
-                        <el-tooltip v-if="getApplyStatus(scope.row) === 0 || getApplyStatus(scope.row) === '0' || !hasApplicationRecord(scope.row)" content="审核申请" placement="bottom" effect="light">
-                            <el-button @click="reviewApply(scope.row.id)" size="small" type="primary">
-                                审核
-                            </el-button>
+                        <el-tooltip v-if="[0, 2].includes(scope.row.state) || !hasApplicationRecord(scope.row)" content="审核申请" placement="bottom" effect="light">
+                            <el-button @click="reviewApply(scope.row.id)" size="small" type="primary">审核</el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>
+
+            <div style="margin-top: 15px">
+                <el-pagination 
+                    @size-change="handleSizeChange" 
+                    @current-change="handleCurrentChange" 
+                    :current-page="data.pageNum" 
+                    :page-size="data.pageSize" 
+                    layout="total, prev, pager, next, jumper" 
+                    :total="data.total">
+                </el-pagination>
+            </div>
         </div>
     </el-card>
 
-    <el-dialog title="任务书" v-model="formVisible" width="40%" destroy-on-close>
+    <el-dialog title="申请审核" v-model="formVisible" width="40%" destroy-on-close append-to-body>
         <el-form :model="reviewData" label-width="70px" style="padding: 20px">
             <el-form-item prop="applyStatus" label="审核状态">
                 <el-select v-model="reviewData.applyStatus" placeholder="请选择审核结果">
-                    <el-option label="待审核" :value="0"></el-option>
-                    <el-option label="审核通过" :value="1"></el-option>
-                    <el-option label="不通过" :value="2"></el-option>
+                    <el-option label="通过" :value="1"></el-option>
+                    <el-option label="驳回" :value="2"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item prop="reviewComments" label="审核理由">
@@ -82,142 +107,294 @@
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="formVisible = false" size="small">取 消</el-button>
-          <el-button type="primary" @click="submitReview" size="small">提 交</el-button>
+                <el-button type="primary" @click="submitReview" size="small">提 交</el-button>
             </span>
         </template>
     </el-dialog>
 
     <transition name="fade" mode="out-in">
-        <LabApplicationForm :id="selectedApplicationId" v-if="labSelect" />
+        <div v-if="labSelect">
+            <LabApplicationForm v-if="applyType === 'LAB'" :id="selectedApplicationId" />
+            <ResearchBaseCom v-else-if="applyType === 'BASE'" :id="selectedApplicationId" />
+            <InnovationTeamCom v-else-if="applyType === 'TEAM'" :id="selectedApplicationId" />
+        </div>
     </transition>
 </template>
 
 <script setup>
-import { ref, reactive, toRaw, watch, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus, Delete, Search } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 import LabApplicationForm from './componets/LabCom.vue';
+import ResearchBaseCom from './componets/ResearchBaseCom.vue';
+import InnovationTeamCom from './componets/InnovationTeamCom.vue';
 
 // 读取环境变量
 const baseUrl = import.meta.env?.VITE_BASE_URL || '';
 
 // 页面状态
-const activeTab = ref('basic');
-
-const selectedApplicationId = ref(null); // 定义 selectedApplicationId
+const applyType = ref('LAB'); // 默认实验室
+const selectedApplicationId = ref(null); 
 
 // 申请列表数据
-const labApplyList = ref([]);
-
+const applyList = ref([]);
 const formVisible = ref(false);
-
 const labSelect = ref(false);
 
 const reviewData = ref({
     labApplyForId: '',
-    applyStatus: 0, // 初始值改为数字
+    researchBaseApplyForId: '', // 为基地准备的字段
+    innovationTeamApplyForId: '', // 为团队准备的字段
+    applyStatus: 0,
     reviewComments: '',
 });
-
-const indexMethod = (index) => {
-  return (data.pageNum - 1) * data.pageSize + index + 1
-}
-
-const reviewApply = (id) => {
-    formVisible.value = true;
-    reviewData.value.labApplyForId = id;
-}
 
 const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
     pageNum: 1,
-    pageSize: 10
-})
+    pageSize: 5,
+    total: 0
+});
+
+const handleSizeChange = (val) => {
+    data.pageSize = val;
+    fetchApplyList();
+};
+
+const handleCurrentChange = (val) => {
+    data.pageNum = val;
+    fetchApplyList();
+};
+
+const indexMethod = (index) => {
+  return (data.pageNum - 1) * data.pageSize + index + 1
+};
+
 const getFileName = (fileUrl) => {
     return fileUrl.split('-').pop();
 };
 
+// 切换类型时重新加载数据
+const handleTypeChange = (val) => {
+    applyType.value = val;
+    labSelect.value = false; // 切换时关闭详情
+    selectedApplicationId.value = null; // 清空当前选中的ID，避免 watch 被触发自动请求
+    
+    // 重置分页和列表数据，避免数据污染
+    data.pageNum = 1;
+    applyList.value = [];
+    data.total = 0;
+    
+    fetchApplyList();
+};
+
 // 定义一个方法来获取数据
-const fetchLabApplyList = async () => {
-    // 管理端应该获取的是所有审核记录
+const fetchApplyList = async () => {
     try {
-        const response = await request.get('/application_record/list'); // 假设这是获取数据的接口
-        labApplyList.value = response.data; // 假设返回的数据是一个数组
+        let response;
+        if (applyType.value === 'LAB') {
+            response = await request.get('/application_record/list', {
+                params: {
+                    pageNum: data.pageNum,
+                    pageSize: data.pageSize
+                }
+            });
+        } else if (applyType.value === 'BASE') {
+            // 根据文档获取基地申请列表
+            response = await request.get('/research_base_application_record/list', {
+                params: {
+                    pageNum: data.pageNum,
+                    pageSize: data.pageSize
+                }
+            });
+        } else if (applyType.value === 'TEAM') {
+            response = await request.get('/innovation_team_application_record/list', {
+                params: {
+                    pageNum: data.pageNum,
+                    pageSize: data.pageSize
+                }
+            });
+        }
+
+        // 安全解析后端不同格式的响应，防止数据污染
+        let resData = response?.data || response;
+        let list = [];
+        let total = 0;
+
+        if (resData) {
+            if (Array.isArray(resData)) {
+                list = resData;
+                total = resData.length;
+            } else if (resData.list && Array.isArray(resData.list)) {
+                list = resData.list;
+                total = resData.total || list.length;
+            } else if (resData.records && Array.isArray(resData.records)) {
+                list = resData.records;
+                total = resData.total || list.length;
+            } else {
+                // 如果是个单独对象，包装成数组
+                list = [resData];
+                total = 1;
+            }
+        }
+
+        applyList.value = list;
+        data.total = total;
+
     } catch (error) {
-        console.error('获取实验室申请列表失败', error);
-        ElMessage.error('获取实验室申请列表失败，请稍后再试');
+        console.error('获取申请列表失败', error);
+        ElMessage.error('获取申请列表失败，请稍后再试');
+        applyList.value = [];
+        data.total = 0;
     }
 };
 
-// 在组件挂载完成后调用 fetchData 方法
-onMounted(fetchLabApplyList);
-
-
-// 数据对象
-const formData = ref({
-    basic: { institutionName: '', establishmentDate: '', totalStaff: '', fullTimeStaff: '', isEntity: '', totalArea: '', labArea: '', averageFunding: '', mainFundingSource: '' },
-    direction: { disciplines: [{ name: '', description: '' }], researches: [{ name: '' }] },
-    members: { leader: { name: '', birthDate: '', title: '', position: '', academicPartTime: '', phone: '', researchDirection: '' }, labContact: { name: '', landline: '', phone: '' }, schoolContact: { name: '', landline: '', phone: '' } },
-    buildings: { construacts: [{ name: '', leader: '', position: '' }] },
-    attachments: { files: [] }
+// 在组件挂载完成后调用
+onMounted(() => {
+    // 如果 token 中 laboratoryHierarchy 标识了当前用户的类型，可以根据它设置默认值
+    if (data.user && data.user.laboratoryHierarchy) {
+        if (data.user.laboratoryHierarchy === '基地') {
+            applyType.value = 'BASE';
+        } else if (data.user.laboratoryHierarchy === '团队') {
+            applyType.value = 'TEAM';
+        } else {
+            applyType.value = 'LAB';
+        }
+    }
+    fetchApplyList();
 });
 
 const viewDetails = (id) => {
     labSelect.value = true;
-    selectedApplicationId.value = id; // 只传递 ID
-}
+    selectedApplicationId.value = id; 
+};
+
+const reviewApply = (id) => {
+    formVisible.value = true;
+    if (applyType.value === 'LAB') {
+        reviewData.value.labApplyForId = id;
+        reviewData.value.researchBaseApplyForId = '';
+        reviewData.value.innovationTeamApplyForId = '';
+    } else if (applyType.value === 'BASE') {
+        reviewData.value.researchBaseApplyForId = id;
+        reviewData.value.labApplyForId = '';
+        reviewData.value.innovationTeamApplyForId = '';
+    } else if (applyType.value === 'TEAM') {
+        reviewData.value.innovationTeamApplyForId = id;
+        reviewData.value.labApplyForId = '';
+        reviewData.value.researchBaseApplyForId = '';
+    }
+
+    reviewData.value.applyStatus = null;
+    reviewData.value.reviewComments = '';
+};
 
 const submitReview = () => {
     console.log('res', reviewData.value);
-    request.post('/application_record/add', reviewData.value).then((res) => {
-        // 如果请求成功，显示成功消息
-        ElMessage({
-            message: '审核成功！',
-            type: 'success',
-            duration: 2000, // 消息显示的持续时间（毫秒），设置为 0 时不会自动关闭
-            onClose: () => {
-                formVisible.value = false; // 关闭对话框
-                fetchLabApplyList();
-            },
-        });
+    
+    let apiEndpoint = '';
+    let payload = {};
+    let method = request.post;
+
+    // 获取审核人角色，学校管理员传 SCHOOL_ADMIN，超级管理员传 SUPER_ADMIN
+    const reviewerRole = data.user.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'SCHOOL_ADMIN';
+
+    if (applyType.value === 'LAB') {
+        apiEndpoint = '/application_record/add';
+        payload = {
+            labApplyForId: reviewData.value.labApplyForId,
+            applyStatus: reviewData.value.applyStatus,
+            reviewComments: reviewData.value.reviewComments
+        };
+    } else if (applyType.value === 'BASE') {
+        apiEndpoint = '/research_base_application_record/check';
+        payload = {
+            researchBaseApplyForId: reviewData.value.researchBaseApplyForId,
+            applyStatus: reviewData.value.applyStatus,
+            reviewComments: reviewData.value.reviewComments,
+            role: reviewerRole
+        };
+        method = request.put;
+    } else if (applyType.value === 'TEAM') {
+        apiEndpoint = '/innovation_team_application_record/check';
+        payload = {
+            innovationTeamApplyForId: reviewData.value.innovationTeamApplyForId,
+            applyStatus: reviewData.value.applyStatus,
+            reviewComments: reviewData.value.reviewComments,
+            role: reviewerRole
+        };
+        method = request.put;
+    }
+
+    method(apiEndpoint, payload).then((res) => {
+        if (res.code === '200' || res.code === 200) {
+            ElMessage({
+                message: '审核成功！',
+                type: 'success',
+                duration: 2000,
+                onClose: () => {
+                    formVisible.value = false;
+                    fetchApplyList();
+                },
+            });
+        } else {
+            ElMessage.error(res.msg || '审核失败，请检查输入内容或联系管理员');
+        }
     }).catch((error) => {
-        // 如果请求失败，显示错误消息
         ElMessage.error('审核失败，请检查输入内容或联系管理员');
         console.error('审核失败', error);
     });
-}
+};
 
 // 根据内容长度判断对齐方式的方法
 const getContentAlignClass = (content) => {
   if (!content) return 'content-center'
-  // 判断内容是否超过一行（这里以50个字符为基准，可根据实际情况调整）
   const isMultiLine = content.length > 50 || content.includes('\n')
   return isMultiLine ? 'content-justify' : 'content-center'
-}
-
-// 获取申请状态的辅助函数
-const getApplyStatus = (row) => {
-  console.log('获取审核状态:', row.applicationRecordList)
-  if (!row.applicationRecordList || row.applicationRecordList.length === 0) {
-    return 0 // 如果没有审核记录，默认为待审核状态
-  }
-  return row.applicationRecordList[0]?.applyStatus
-}
+};
 
 // 判断是否有申请记录的辅助函数
 const hasApplicationRecord = (row) => {
-  return row.applicationRecordList && row.applicationRecordList.length > 0
-}
+  if (applyType.value === 'LAB') {
+      return row.applicationRecordList && row.applicationRecordList.length > 0;
+  } else if (applyType.value === 'BASE' || applyType.value === 'TEAM') {
+      const recordList = row.researchBaseApplicationRecordList || 
+                         row.innovationTeamApplicationRecordList || 
+                         row.applicationRecordList ||
+                         row.research_base_application_record_list ||
+                         row.innovation_team_application_record_list ||
+                         row.application_record_list;
+      return recordList && recordList.length > 0;
+  }
+  return false;
+};
 
 // 获取审核意见的辅助函数
 const getReviewComments = (row) => {
-  if (!row.applicationRecordList || row.applicationRecordList.length === 0) {
-    return ''
-  }
-  return row.applicationRecordList[0]?.reviewComments || ''
-}
+  if (applyType.value === 'LAB') {
+      if (!row.applicationRecordList || row.applicationRecordList.length === 0) {
+        return ''
+      }
+      return row.applicationRecordList[0]?.reviewComments || ''
+  } else if (applyType.value === 'BASE' || applyType.value === 'TEAM') {
+      if (row.reviewComments !== undefined) return row.reviewComments;
+      if (row.review_comments !== undefined) return row.review_comments;
+      
+      const recordList = row.researchBaseApplicationRecordList || 
+                         row.innovationTeamApplicationRecordList || 
+                         row.applicationRecordList ||
+                         row.research_base_application_record_list ||
+                         row.innovation_team_application_record_list ||
+                         row.application_record_list;
 
+      if (!recordList || recordList.length === 0) {
+        return ''
+      }
+      return recordList[0]?.reviewComments || recordList[0]?.review_comments || ''
+  }
+  return '';
+};
 </script>
 
 

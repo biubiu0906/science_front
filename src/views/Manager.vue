@@ -5,7 +5,7 @@
       <!-- 侧边栏：占满屏幕高度 -->
       <div class="manager-main-left" :class="{ 'collapsed': isCollapse }">
         <el-menu 
-          :default-active="router.currentRoute.value.path" 
+          :default-active="$route.path" 
           :collapse="isCollapse"
           :default-openeds="['1','2','3']"
           router>
@@ -47,11 +47,15 @@
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY'">任务书</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '实验室'">任务书</el-menu-item>
+            <el-menu-item index="/manager/researchBaseApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '基地'">重点研究基地申请</el-menu-item>
+            <el-menu-item index="/manager/innovationTeamApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '团队'">优秀创新团队申请</el-menu-item>
             <el-menu-item index="/manager/labStageApply" v-if="data.user.role === 'KEY_LABORATORY'">阶段报告</el-menu-item>
 
-            <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">任务书</el-menu-item>
+            <!--<el-menu-item index="/manager/entityProfile" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">学校/组织画像</el-menu-item>-->
+            <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">重点组织审核</el-menu-item>
             <el-menu-item index="/manager/labStage" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">阶段报告</el-menu-item>  <!--管理员端-->
+            
 
             <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目</el-menu-item>
             <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程</el-menu-item>
@@ -121,7 +125,7 @@
           </div>
           <div class="manager-header-center">
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/home'">首页</el-breadcrumb-item>
+              <el-breadcrumb-item :to="data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/myNotification'">首页</el-breadcrumb-item>
               <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
             </el-breadcrumb>
           </div>

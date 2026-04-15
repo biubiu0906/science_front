@@ -32,8 +32,11 @@ const router = createRouter({
         { path: 'project', meta: { name: '科研项目', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'KEY_LABORATORY', 'TEACHER'], labLevel: 2, labLevelRoles: ['TEACHER'] }, component: () => import('@/views/manager/Project.vue') },
         // 新增实验室申请
         { path: 'labApply', meta: { name: '任务书', roles: ['NORMAL_LABORATORY'] }, component: () => import('@/views/manager/LabApply.vue') },
+        // 新增研究基地申请
+        { path: 'researchBaseApply', meta: { name: '重点研究基地申请', roles: ['NORMAL_LABORATORY'] }, component: () => import('@/views/manager/ResearchBaseApply.vue') },
+        { path: 'innovationTeamApply', meta: { name: '优秀创新团队申请', roles: ['NORMAL_LABORATORY'] }, component: () => import('@/views/manager/InnovationTeamApply.vue') },
         { path: 'labMember', meta: { name: '组织成员管理', roles: ['SUPER_ADMIN', 'KEY_LABORATORY'] }, component: () => import('@/views/manager/LabMember.vue') },
-        { path: 'labSelect', meta: { name: '任务书', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/LabSelect.vue') },
+        { path: 'labSelect', meta: { name: '重点组织审核', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/LabSelect.vue') },
         { path: 'process', meta: { name: '科研过程', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'KEY_LABORATORY', 'TEACHER'], labLevel: 2, labLevelRoles: ['TEACHER'] }, component: () => import('@/views/manager/Process.vue') },
         { path: 'type', meta: { name: '成果分类', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/Type.vue') },
         { path: 'achievement', meta: { name: '科研成果', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'KEY_LABORATORY', 'TEACHER'], labLevel: 2, labLevelRoles: ['TEACHER'] }, component: () => import('@/views/manager/Achievement.vue') },
@@ -45,6 +48,7 @@ const router = createRouter({
         { path: 'apply', meta: { name: '我的申请', roles: ['KEY_LABORATORY', 'SUPER_ADMIN', 'TEACHER'] }, component: () => import('@/views/manager/Apply.vue') },
         { path: 'log', meta: { name: '日志管理', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/Log.vue') },
         { path: 'dashboard', meta: { name: '数据统计', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'KEY_LABORATORY'] }, component: () => import('@/views/manager/Dashboard.vue') },
+        //{ path: 'entityProfile', meta: { name: '学校/组织画像', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/EntityProfile.vue') },
         { path: 'laboratory', meta: { name: '组织信息', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/Laboratory.vue') },
         { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue') },
         { path: 'notification', meta: { name: '通知管理', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/Notification.vue') },

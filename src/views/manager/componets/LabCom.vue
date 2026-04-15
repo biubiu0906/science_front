@@ -17,7 +17,7 @@
                         建设基础 & 建设目标和发展思路
                     </el-menu-item>
                     <el-menu-item index="keyTasks">
-                        <el-icon><List /></el-icon>
+                        <el-icon><Collection /></el-icon>
                         重点任务和建设举措
                     </el-menu-item>
                     <el-menu-item index="system">
@@ -483,7 +483,7 @@ import { ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { 
     Document, User, Grid, Money, Paperclip, OfficeBuilding, 
-    House, List, Setting, School, DataAnalysis 
+    House, List, Setting, School, DataAnalysis, Collection 
 } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
 

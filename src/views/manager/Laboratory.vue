@@ -54,11 +54,14 @@
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="编辑信息" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
+            <!--<el-tooltip content="查看画像" placement="bottom" effect="light">
+              <el-button type="info" circle size="small" :icon="View" @click="openProfile(scope.row)"></el-button>
+            </el-tooltip>-->
             <el-tooltip content="生成报告" placement="bottom" effect="light">
               <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
             </el-tooltip>
@@ -149,10 +152,13 @@
 <script setup>
 
 import {reactive, ref} from "vue";
+import { useRouter } from "vue-router";
 import request from "@/utils/request.js";
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Collection, Search} from "@element-plus/icons-vue";
 import { encrypt, getSecurityParams } from '@/utils/rsa.js'
+
+const router = useRouter()
 
 // 表单引用
 const formRef = ref(null)
@@ -277,6 +283,11 @@ const handleReportForm = (id) => {
   data.reportFormVisible = true
   data.reportForm.targetType = 'LAB'
   data.reportForm.targetId = id
+}
+
+const openProfile = (row) => {
+  if (!row?.id) return
+  router.push({ path: '/manager/entityProfile', query: { type: 'laboratory', id: row.id } })
 }
 
 const createReport = () => {

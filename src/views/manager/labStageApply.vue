@@ -16,9 +16,9 @@
       <div style="margin-top: 15px">
         <el-table :data="reportList" stripe style="width: 100%" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据" v-if="reportList.length > 0">
           <el-table-column type="selection" width="35" />
-          <el-table-column prop="id" label="编号" min-width="80" sortable/>
-          <el-table-column prop="basicInfo.reportStartDate" label="报告起始时间" width="180" sortable/>
-          <el-table-column prop="basicInfo.reportEndDate" label="报告结束时间" width="180" sortable/>
+          <el-table-column prop="id" label="编号" min-width="120" sortable/>
+          <el-table-column prop="basicInfo.reportStartDate" label="报告起始时间" width="150" sortable/>
+          <el-table-column prop="basicInfo.reportEndDate" label="报告结束时间" width="150" sortable/>
           <el-table-column prop="updatedAt" label="更新时间" width="180" sortable/>
           <el-table-column prop="reviewStatus" label="状态" width="140" sortable>
             <template #default="scope">
@@ -29,15 +29,37 @@
           </el-table-column>
           <el-table-column label="操作" width="200">
             <template #default="scope">
-              <el-tooltip content="查看详情" placement="bottom" effect="light">
-                <el-button @click="viewReport(scope.row)" size="small">查看</el-button>
-              </el-tooltip>
-              <el-tooltip content="修改报告" placement="bottom" effect="light" v-if="scope.row.reviewStatus === 'SCHOOL_REJECTED' || scope.row.reviewStatus === 2">
-                <el-button @click="editReport(scope.row)" size="small" type="primary">修改</el-button>
-              </el-tooltip>
-              <el-tooltip content="删除报告" placement="bottom" effect="light">
-                <el-button @click="deleteReport(scope.row)" size="small" type="danger">删除</el-button>
-              </el-tooltip>
+              <div class="action-buttons">
+                <el-tooltip content="查看详情" placement="bottom" effect="light">
+                  <el-button @click="viewReport(scope.row)" size="small" type="primary" circle :icon="View"></el-button>
+                </el-tooltip>
+                <el-tooltip content="导出PDF" placement="bottom" effect="light">
+                  <el-button @click="downloadPdf(scope.row)" size="small" type="success" circle :icon="Download" :loading="pdfLoadingId === scope.row.id"></el-button>
+                </el-tooltip>
+                <el-tooltip content="上传盖章版" placement="bottom" effect="light">
+                  <el-upload
+                    :action="`${baseUrl}/lab_phase_report/upload/stamped-file/${scope.row.id}`"
+                    :headers="uploadHeaders"
+                    :show-file-list="false"
+                    name="file"
+                    :accept="stampedAccept"
+                    :before-upload="beforeStampedUpload"
+                    :on-success="(res, file, fileList) => handleStampedUploadSuccess(res, file, fileList, scope.row)"
+                    :on-error="handleStampedUploadError"
+                  >
+                    <el-button size="small" type="warning" circle :icon="UploadFilled"></el-button>
+                  </el-upload>
+                </el-tooltip>
+                <el-tooltip v-if="scope.row.stampedFileUrl" content="查看盖章版" placement="bottom" effect="light">
+                  <el-button @click="openStampedFile(scope.row.stampedFileUrl)" size="small" type="info" circle :icon="Document"></el-button>
+                </el-tooltip>
+                <el-tooltip content="修改报告" placement="bottom" effect="light" v-if="scope.row.reviewStatus === 'SCHOOL_REJECTED' || scope.row.reviewStatus === 2">
+                  <el-button @click="editReport(scope.row)" size="small" type="warning" circle :icon="Edit"></el-button>
+                </el-tooltip>
+                <el-tooltip content="删除报告" placement="bottom" effect="light">
+                  <el-button @click="deleteReport(scope.row)" size="small" type="danger" circle :icon="Delete"></el-button>
+                </el-tooltip>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -70,7 +92,7 @@
         <!-- 基本情况 -->
         <div class="section-title">基本情况</div>
         <el-descriptions border :column="4" class="custom-descriptions">
-          <el-descriptions-item label="报告起始时间" :span="2">
+          <el-descriptions-item label="报告开始时间" :span="2">
             <div v-if="operationType === 'view'">{{ displayValue(form.basicInfo.reportStartDate) }}</div>
             <el-date-picker v-else v-model="form.basicInfo.reportStartDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" disabled />
           </el-descriptions-item>
@@ -507,8 +529,9 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue'
+import axios from 'axios'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
-import { Delete, UploadFilled, Search, Download } from '@element-plus/icons-vue'
+import { Delete, UploadFilled, Search, Download, View, Edit, Document } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
 import SecurityAlert from '@/components/SecurityAlert.vue'
 import Editor from '@/components/Editor.vue'
@@ -596,6 +619,8 @@ const uploadHeaders = computed(() => {
   const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
   return { token: user.token }
 })
+
+const pdfLoadingId = ref(null)
 // 用于显示的文件列表
 const fileList = ref([])
 // 操作类型：add, edit, view
@@ -605,6 +630,7 @@ const operationType = ref('add')
 const initForm = () => ({
   id: null,
   reviewStatus: null,
+  stampedFileUrl: null,
   basicInfo: {
     labName: null,
     labCategory: null,
@@ -969,6 +995,86 @@ const deleteReport = (row) => {
   }).catch(() => {})
 }
 
+const parseFileNameFromDisposition = (disposition) => {
+  const value = String(disposition || '')
+  const utf8Match = value.match(/filename\*=UTF-8''([^;]+)/i)
+  if (utf8Match && utf8Match[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1])
+    } catch (e) {
+      return utf8Match[1]
+    }
+  }
+  const plainMatch = value.match(/filename="?([^"]+)"?/i)
+  if (plainMatch && plainMatch[1]) return plainMatch[1]
+  return '阶段性报告.pdf'
+}
+
+const downloadPdf = async (row) => {
+  if (!row?.id) return
+  if (pdfLoadingId.value) return
+  pdfLoadingId.value = row.id
+  try {
+    const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
+    const res = await axios.get(`${baseUrl}/lab_phase_report/download/pdf/${row.id}`, {
+      responseType: 'blob',
+      validateStatus: () => true,
+      headers: { token: user.token || '' }
+    })
+    if (res.status !== 200) {
+      const text = await res.data.text()
+      ElMessage.error(text || `下载失败(${res.status})`)
+      return
+    }
+    const disposition = res.headers?.['content-disposition'] || ''
+    const fileName = parseFileNameFromDisposition(disposition)
+    const blob = new Blob([res.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    ElMessage.error(e?.message || '下载失败')
+  } finally {
+    pdfLoadingId.value = null
+  }
+}
+
+const stampedAccept = '.pdf,.doc,.docx,.jpg,.jpeg,.png'
+
+const beforeStampedUpload = (file) => {
+  const name = String(file?.name || '').toLowerCase()
+  const ok = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'].some(ext => name.endsWith(ext))
+  if (!ok) {
+    ElMessage.warning('仅支持 pdf/doc/docx/jpg/jpeg/png')
+    return false
+  }
+  return true
+}
+
+const handleStampedUploadSuccess = (res, _file, _fileList, row) => {
+  if (String(res?.code) === '200') {
+    const url = res?.data?.stampedFileUrl
+    if (url) row.stampedFileUrl = url
+    ElMessage.success('上传成功')
+  } else {
+    ElMessage.error(res?.msg || '上传失败')
+  }
+}
+
+const handleStampedUploadError = () => {
+  ElMessage.error('上传失败')
+}
+
+const openStampedFile = (url) => {
+  if (!url) return
+  window.open(url, '_blank')
+}
+
 // 处理查看或编辑
 const handleEditOrView = (row, type) => {
   Object.assign(form, initForm()) // 先重置
@@ -980,6 +1086,7 @@ const handleEditOrView = (row, type) => {
     if (res.code === '200' && res.data) {
       const data = res.data
       if (data.id) form.id = data.id
+      if (data.stampedFileUrl) form.stampedFileUrl = data.stampedFileUrl
       if (data.basicInfo) {
         Object.assign(form.basicInfo, data.basicInfo)
         form.basicInfo.researchDirections = normalizeResearchDirections(form.basicInfo.researchDirections)
@@ -1149,5 +1256,25 @@ const delBatch = () => {
 
 .file-item {
   margin: 10px 0;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.action-buttons :deep(.el-upload) {
+  display: inline-flex;
+}
+
+.action-buttons :deep(.el-upload__trigger) {
+  display: inline-flex;
+}
+
+.action-buttons :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 </style>

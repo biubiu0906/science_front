@@ -18,8 +18,11 @@
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="name" label="学校名称" />
-        <el-table-column label="操作" width="100" fixed="right" v-if="data.user.role === 'SUPER_ADMIN'">
+        <el-table-column label="操作" width="120" fixed="right" v-if="data.user.role === 'SUPER_ADMIN'">
           <template v-slot="scope">
+            <!--<el-tooltip content="查看画像" placement="bottom" effect="light">
+              <el-button type="primary" circle :icon="View" @click="openProfile(scope.row)" size="small"></el-button>
+            </el-tooltip>-->
             <el-tooltip content="删除" placement="bottom" effect="light">
               <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
             </el-tooltip>
@@ -50,9 +53,12 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { Search, Delete } from "@element-plus/icons-vue";
+import { Search, Delete, View } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router";
 import request from "@/utils/request";
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
+
+const router = useRouter()
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -157,6 +163,11 @@ const delBatch = () => {
 
 const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
+}
+
+const openProfile = (row) => {
+  if (!row?.id) return
+  router.push({ path: '/manager/entityProfile', query: { type: 'school', id: row.id } })
 }
 
 load()

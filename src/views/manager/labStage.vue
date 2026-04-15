@@ -26,10 +26,13 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" min-width="120">
+          <el-table-column label="操作" min-width="150">
             <template #default="scope">
               <el-tooltip content="查看详情" placement="bottom" effect="light">
                 <el-button @click="viewReport(scope.row)" size="small" type="primary" circle :icon="View"></el-button>
+              </el-tooltip>
+              <el-tooltip v-if="scope.row.stampedFileUrl" content="查看盖章版" placement="bottom" effect="light">
+                <el-button @click="openStampedFile(scope.row.stampedFileUrl)" size="small" type="info" circle :icon="Document"></el-button>
               </el-tooltip>
               <el-tooltip content="审核报告" placement="bottom" effect="light" v-if="canCheck(scope.row)">
                 <el-button @click="openCheckDialog(scope.row)" size="small" type="warning" circle :icon="Tickets"></el-button>
@@ -400,7 +403,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
-import { Delete, Search, View, Tickets, RefreshLeft } from '@element-plus/icons-vue'
+import { Delete, Search, View, Tickets, RefreshLeft, Document } from '@element-plus/icons-vue'
 import request from '@/utils/request.js'
 
 const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
@@ -622,6 +625,11 @@ const viewReport = (row) => {
       ElMessage.error('获取详情失败')
     }
   })
+}
+
+const openStampedFile = (url) => {
+  if (!url) return
+  window.open(url, '_blank')
 }
 
 // 审核弹窗相关

@@ -193,7 +193,8 @@
             </div>
             <div style="flex: 1">
               <div style="font-size: 16px">组织总数</div>
-              <div style="font-size: 18px; margin-top: 5px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
+              <span style="font-size: 12px; color: #999;">(含实验室、基地、团队)</span>
+              <div style="font-size: 18px; font-weight: bold">{{ data.baseData.lab || 0 }}</div>
             </div>
           </div>
           <div style="flex: 1; margin-left: 5px; display: flex; height: 85px; align-items: center" class="card">
