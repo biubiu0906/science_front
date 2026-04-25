@@ -1,4 +1,4 @@
-修复好格式，**直接全选复制覆盖你的文件**即可：
+
 
 ```md
 # science_front
@@ -14,5 +14,4 @@ npm install
 ### 2. 启动项目
 ```bash
 npm run dev
-```
 ```
