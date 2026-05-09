@@ -2,7 +2,9 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.title" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入通知标题查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.content" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入通知内容查询"></el-input>
+      <el-input v-model="data.laboratoryName" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入通知对象查询"></el-input>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -148,11 +150,14 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, Search} from "@element-plus/icons-vue";
 
 // 创建表单引用
 const form = ref()
+const queryFields = ['title', 'content', 'laboratoryName', 'creatorName']
 
 const data = reactive({
   formVisible: false,
@@ -162,6 +167,9 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   title: null,
+  content: null,
+  laboratoryName: null,
+  creatorName: null,
   ids: [],
   laboratoryOptions: {
     value: 'all',
@@ -203,21 +211,19 @@ const data = reactive({
   }
 })
 
+const paginationQuery = usePaginationQuery(data)
+
 const indexMethod = (index) => {
   return (data.pageNum - 1) * data.pageSize + index + 1
 }
 
 const load = () => {
-  // 根据是否有搜索条件决定使用哪个接口
-  const endpoint = data.title ? '/notification/search' : '/notification/selectPageGrouped'
-  console.log("endpoint",endpoint)
-  console.log("title",data.title)
-
-  request.get(endpoint, {
+  paginationQuery.sync()
+  request.get('/notification/selectPageGrouped', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      title: data.title
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -382,8 +388,14 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.notificationId)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.title = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

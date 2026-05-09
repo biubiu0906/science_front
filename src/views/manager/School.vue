@@ -2,7 +2,7 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入学校名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
       <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
 
@@ -18,11 +18,11 @@
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="name" label="学校名称" />
-        <el-table-column label="操作" width="120" fixed="right" v-if="data.user.role === 'SUPER_ADMIN'">
+        <el-table-column label="操作" width="150" fixed="right" v-if="data.user.role === 'SUPER_ADMIN'">
           <template v-slot="scope">
-            <!--<el-tooltip content="查看画像" placement="bottom" effect="light">
+            <el-tooltip content="查看画像" placement="bottom" effect="light">
               <el-button type="primary" circle :icon="View" @click="openProfile(scope.row)" size="small"></el-button>
-            </el-tooltip>-->
+            </el-tooltip>
             <el-tooltip content="删除" placement="bottom" effect="light">
               <el-button type="danger" circle :icon="Delete" @click="del(scope.row.id)" size="small"></el-button>
             </el-tooltip>
@@ -56,6 +56,7 @@ import { reactive, ref } from "vue";
 import { Search, Delete, View } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import request from "@/utils/request";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 
 const router = useRouter()
@@ -72,6 +73,8 @@ const data = reactive({
   ids: []
 })
 
+const paginationQuery = usePaginationQuery(data)
+
 const formRef = ref(null)
 
 const rules = reactive({
@@ -85,6 +88,7 @@ const indexMethod = (index) => {
 }
 
 const load = () => {
+  paginationQuery.sync()
   request.get('/school/selectPage', {
     params: {
       pageNum: data.pageNum,
@@ -101,8 +105,14 @@ const load = () => {
   })
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
   data.name = ''
+  paginationQuery.reset()
   load()
 }
 

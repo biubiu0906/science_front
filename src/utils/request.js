@@ -1,6 +1,30 @@
 import axios from "axios";
 import {ElMessage} from "./element-plus";
 import router from "@/router/index.js";
+import { clearLoginState } from "@/utils/auth.js";
+
+let tokenExpiredHandled = false
+
+const handleTokenExpired = (message = '登录已过期，请重新登录') => {
+    clearLoginState()
+
+    if (!tokenExpiredHandled) {
+        tokenExpiredHandled = true
+        ElMessage.error(message)
+    }
+
+    if (router.currentRoute.value.path !== '/login') {
+        router.replace('/login').finally(() => {
+            setTimeout(() => {
+                tokenExpiredHandled = false
+            }, 300)
+        })
+    } else {
+        setTimeout(() => {
+            tokenExpiredHandled = false
+        }, 300)
+    }
+}
 
 const request = axios.create({
     baseURL: import.meta.env.VITE_BASE_URL,
@@ -28,15 +52,6 @@ request.interceptors.response.use(
             // 直接返回二进制数据，避免后续字符串解析
             return res
         }
-        // 当权限验证不通过的时候给出提示
-        if (res.code === '401') {
-            ElMessage.error(res.msg)
-            router.push('/login')
-        }
-        // 当系统异常时给出提示
-        if (res.code === '500') {
-            ElMessage.error(res.msg || '系统异常，请查看后端控制台报错')
-        }
         // 兼容服务端返回的字符串数据
         if (typeof res === 'string') {
             // 仅当 content-type 为 JSON 时再尝试解析，避免下载模板这类非 JSON 字符串触发异常
@@ -44,6 +59,15 @@ request.interceptors.response.use(
             if (contentType.includes('application/json')) {
                 res = res ? JSON.parse(res) : res
             }
+        }
+        // 当权限验证不通过的时候给出提示
+        if (String(res?.code) === '401') {
+            handleTokenExpired(res.msg)
+            return Promise.reject(new Error(res.msg || '登录已过期，请重新登录'))
+        }
+        // 当系统异常时给出提示
+        if (String(res?.code) === '500' && response.config.url !== '/login') {
+            ElMessage.error(res.msg || '系统异常，请查看后端控制台报错')
         }
         return res;
     },
@@ -54,7 +78,9 @@ request.interceptors.response.use(
             console.error(error?.message || 'Unknown network error')
             return Promise.reject(error)
         }
-        if (status === 404) {
+        if (status === 401) {
+            handleTokenExpired(error?.response?.data?.msg)
+        } else if (status === 404) {
             ElMessage.error('未找到请求接口')
         } else if (status === 500) {
             ElMessage.error('系统异常，请查看后端控制台报错')

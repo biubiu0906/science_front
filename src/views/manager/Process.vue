@@ -3,7 +3,11 @@
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.projectName" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
         placeholder="请输入项目名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.projectCode" :prefix-icon="Search" style="width: 180px; margin-right: 10px"
+        placeholder="请输入项目编号查询"></el-input>
+      <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 180px; margin-right: 10px"
+        placeholder="请输入教师姓名查询"></el-input>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -88,9 +92,13 @@
 
 import { reactive, ref, onMounted } from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 import { Delete, Edit, Search } from "@element-plus/icons-vue";
+import { fetchLaboratoryLevel, getCachedLaboratoryLevel, getUserLaboratoryId } from "@/utils/laboratoryLevel.js";
 
+const queryFields = ['projectName', 'projectCode', 'teacherName', 'content', 'question', 'solution', 'time']
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -101,10 +109,18 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   projectName: null,
+  projectCode: null,
+  teacherName: null,
+  content: null,
+  question: null,
+  solution: null,
+  time: null,
   ids: [],
   projectData: [],
-  laboratoryLevel: null
+  laboratoryLevel: getCachedLaboratoryLevel(getUserLaboratoryId(JSON.parse(localStorage.getItem('xm-user') || '{}')))
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 const indexMethod = (index) => {
   return (data.pageNum - 1) * data.pageSize + index + 1
@@ -135,11 +151,12 @@ const loadProject = () => {
   })
 }
 const load = () => {
+  paginationQuery.sync()
   request.get('/process/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      projectName: data.projectName
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -229,26 +246,31 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.projectName = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 
 const getLaboratoryLevel = () => {
-  // 检查用户是否有实验室ID
-  if (!data.user.laboratoryId) {
+  const laboratoryId = getUserLaboratoryId(data.user)
+  if (!laboratoryId) {
     return
   }
-  
-  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
-    if (res.code === '200') {
-      data.laboratoryLevel = res.data.type
-    } else {
-      ElMessage.error(res.msg)
-    }
-  }).catch(error => {
-    console.error('获取实验室级别失败:', error)
-    ElMessage.error('获取实验室信息失败')
+
+  const cached = getCachedLaboratoryLevel(laboratoryId)
+  if (cached !== null) {
+    data.laboratoryLevel = cached
+    return
+  }
+
+  fetchLaboratoryLevel(laboratoryId, data.user.token).then(level => {
+    if (level !== null) data.laboratoryLevel = level
   })
 }
 

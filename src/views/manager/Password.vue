@@ -32,6 +32,7 @@ import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import router from "@/router/index.js";
 import { encrypt, getSecurityParams } from '@/utils/rsa.js'
+import { clearLaboratoryLevelCache } from "@/utils/laboratoryLevel.js";
 
 // 定义props和emits
 const props = defineProps({
@@ -145,6 +146,7 @@ const updatePassword = () => {
 
 const logout = () => {
   localStorage.removeItem('xm-user')
+  clearLaboratoryLevelCache()
   router.push('/login')
 }
 </script>

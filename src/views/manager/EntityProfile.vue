@@ -43,7 +43,7 @@
           </div>
         </div>
       </div>
-      <el-descriptions border :column="6" style="margin-top: 10px">
+      <el-descriptions class="entity-detail-descriptions" border :column="6" style="margin-top: 10px">
         <el-descriptions-item v-for="(item, idx) in entityDetailItems" :key="`${item.label}-${idx}`" :label="item.label" :span="item.span">
           <template v-if="Array.isArray(item.value)">
             <div class="desc-list">
@@ -80,13 +80,6 @@
         <div class="kpi-sub">
           <el-tag size="small" type="warning" effect="light">待审 {{ kpis.phaseReport.pending }}</el-tag>
           <el-tag size="small" type="success" effect="light">通过 {{ kpis.phaseReport.approved }}</el-tag>
-        </div>
-      </div>
-      <div class="card kpi-card">
-        <div class="kpi-title">科研过程</div>
-        <div class="kpi-value">{{ kpis.process.total }}</div>
-        <div class="kpi-sub">
-          <el-tag size="small" type="info" effect="light">最近更新 {{ kpis.process.recent }}</el-tag>
         </div>
       </div>
     </div>
@@ -165,7 +158,7 @@
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px">
             <el-input v-model="filters.project.keyword" style="width: 260px" placeholder="项目名称/编号" clearable />
             <el-select v-model="filters.project.status" style="width: 180px" placeholder="审核状态" clearable>
-              <el-option label="待审核" value="待审核" />
+              <el-option label="待实验室审核" value="待审核" />
               <el-option label="审核通过" value="审核通过" />
               <el-option label="不通过" value="不通过" />
             </el-select>
@@ -193,7 +186,7 @@
             <el-table-column prop="teacherName" label="申请教师" min-width="110" sortable />
             <el-table-column prop="status" label="审核状态" min-width="110" sortable>
               <template #default="{ row }">
-                <el-tag v-if="row.status === '待审核'" type="warning">待审核</el-tag>
+                <el-tag v-if="row.status === '待审核'" type="warning">待实验室审核</el-tag>
                 <el-tag v-else-if="row.status === '不通过'" type="danger">不通过</el-tag>
                 <el-tag v-else type="success">审核通过</el-tag>
               </template>
@@ -205,7 +198,7 @@
                 <el-tooltip content="查看详情" placement="bottom" effect="light">
                   <el-button type="primary" circle :icon="View" size="small" @click="handleProjectView(row)"></el-button>
                 </el-tooltip>
-                <el-tooltip content="审核项目" placement="bottom" effect="light">
+                <el-tooltip v-if="canReviewProjectOrAchievement(row.status)" content="审核项目" placement="bottom" effect="light">
                   <el-button type="warning" circle :icon="Tickets" size="small" @click="handleProjectCheck(row)"></el-button>
                 </el-tooltip>
                 <el-tooltip content="删除项目" placement="bottom" effect="light">
@@ -220,6 +213,7 @@
               layout="prev, pager, next"
               :page-size="projectPager.pageSize"
               v-model:current-page="projectPager.pageNum"
+              @current-change="syncToRoute"
               :total="filteredProjects.length"
             />
           </div>
@@ -229,7 +223,7 @@
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px">
             <el-input v-model="filters.achievement.keyword" style="width: 260px" placeholder="成果名称/项目名称" clearable />
             <el-select v-model="filters.achievement.status" style="width: 180px" placeholder="审核状态" clearable>
-              <el-option label="待审核" value="待审核" />
+              <el-option label="待实验室审核" value="待审核" />
               <el-option label="审核通过" value="审核通过" />
               <el-option label="不通过" value="不通过" />
             </el-select>
@@ -257,16 +251,19 @@
             </el-table-column>
             <el-table-column prop="status" label="审核状态" min-width="120" sortable>
               <template #default="{ row }">
-                <el-tag v-if="row.status === '待审核'" type="warning">待审核</el-tag>
+                <el-tag v-if="row.status === '待审核'" type="warning">待实验室审核</el-tag>
                 <el-tag v-else-if="row.status === '不通过'" type="danger">不通过</el-tag>
                 <el-tag v-else type="success">审核通过</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="reason" label="审核信息" min-width="110" sortable show-overflow-tooltip />
             <el-table-column prop="time" label="审核时间" min-width="160" show-overflow-tooltip sortable />
-            <el-table-column label="操作" width="100" fixed="right">
+            <el-table-column label="操作" width="120" fixed="right">
               <template #default="{ row }">
-                <el-tooltip content="审核成果" placement="bottom" effect="light">
+                <el-tooltip content="查看详情" placement="bottom" effect="light">
+                  <el-button type="primary" circle :icon="View" size="small" @click="handleAchievementView(row)"></el-button>
+                </el-tooltip>
+                <el-tooltip v-if="canReviewProjectOrAchievement(row.status)" content="审核成果" placement="bottom" effect="light">
                   <el-button type="warning" circle :icon="Tickets" size="small" @click="handleAchievementCheck(row)"></el-button>
                 </el-tooltip>
                 <el-tooltip content="删除成果" placement="bottom" effect="light">
@@ -281,38 +278,8 @@
               layout="prev, pager, next"
               :page-size="achievementPager.pageSize"
               v-model:current-page="achievementPager.pageNum"
+              @current-change="syncToRoute"
               :total="filteredAchievements.length"
-            />
-          </div>
-        </el-tab-pane>
-
-        <el-tab-pane label="科研过程" name="process">
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px">
-            <el-input v-model="filters.process.keyword" style="width: 260px" placeholder="项目名称/过程内容" clearable />
-          </div>
-          <el-table :data="pagedProcesses" stripe :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
-            <el-table-column type="index" label="序号" width="60" :index="indexMethod(processPager.pageNum, processPager.pageSize)" />
-            <el-table-column prop="projectName" label="项目名称" sortable min-width="160" show-overflow-tooltip />
-            <el-table-column prop="projectCode" label="项目编号" sortable min-width="140" />
-            <el-table-column prop="teacherName" label="教师姓名" sortable min-width="110" />
-            <el-table-column prop="content" label="工作内容" sortable min-width="160" show-overflow-tooltip />
-            <el-table-column prop="question" label="遇到的问题" sortable min-width="150" show-overflow-tooltip />
-            <el-table-column prop="solution" label="解决方案" sortable min-width="150" show-overflow-tooltip />
-            <el-table-column label="操作" width="100" fixed="right">
-              <template #default="{ row }">
-                <el-tooltip content="删除科研过程" placement="bottom" effect="light">
-                  <el-button type="danger" circle size="small" :icon="Delete" @click="handleProcessDelete(row)"></el-button>
-                </el-tooltip>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div style="margin-top: 10px; text-align: center" v-if="filteredProcesses.length">
-            <el-pagination
-              background
-              layout="prev, pager, next"
-              :page-size="processPager.pageSize"
-              v-model:current-page="processPager.pageNum"
-              :total="filteredProcesses.length"
             />
           </div>
         </el-tab-pane>
@@ -346,7 +313,7 @@
                 <el-tooltip content="查看详情" placement="bottom" effect="light">
                   <el-button @click="openPhaseReport(row)" size="small" type="primary" circle :icon="View"></el-button>
                 </el-tooltip>
-                <el-tooltip content="审核报告" placement="bottom" effect="light">
+                <el-tooltip v-if="canReviewPhaseReport(row)" content="审核报告" placement="bottom" effect="light">
                   <el-button @click="handlePhaseCheck(row)" size="small" type="warning" circle :icon="Tickets"></el-button>
                 </el-tooltip>
                 <el-tooltip content="删除报告" placement="bottom" effect="light">
@@ -361,6 +328,7 @@
               layout="prev, pager, next"
               :page-size="phaseReportPager.pageSize"
               v-model:current-page="phaseReportPager.pageNum"
+              @current-change="syncToRoute"
               :total="filteredPhaseReports.length"
             />
           </div>
@@ -396,6 +364,105 @@
         <el-button size="small" @click="phaseDialog.visible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="projectDialog.visible" title="科研项目详情" width="62%" destroy-on-close>
+      <el-descriptions v-if="projectDialog.data" border :column="2">
+        <el-descriptions-item label="项目名称" :span="2">{{ displayValue(projectDialog.data.name) }}</el-descriptions-item>
+        <el-descriptions-item label="立项编号">{{ displayValue(projectDialog.data.code) }}</el-descriptions-item>
+        <el-descriptions-item label="申请教师">{{ displayValue(projectDialog.data.teacherName) }}</el-descriptions-item>
+        <el-descriptions-item label="研究类型">{{ displayValue(projectDialog.data.researchType) }}</el-descriptions-item>
+        <el-descriptions-item label="学科">{{ displayValue(projectDialog.data.subjectCategory) }}</el-descriptions-item>
+        <el-descriptions-item label="项目性质">{{ displayValue(projectDialog.data.projectNature) }}</el-descriptions-item>
+        <el-descriptions-item label="课题类别">{{ displayValue(projectDialog.data.projectLevel) }}</el-descriptions-item>
+        <el-descriptions-item label="项目状态">{{ projectStatusText(projectDialog.data.projectStatus) }}</el-descriptions-item>
+        <el-descriptions-item label="审核状态">{{ approvalStatusText(projectDialog.data.status) }}</el-descriptions-item>
+        <el-descriptions-item label="审核时间">{{ displayValue(projectDialog.data.time) }}</el-descriptions-item>
+        <el-descriptions-item label="审核信息" :span="2">
+          <div class="detail-text">{{ displayValue(projectDialog.data.reason) }}</div>
+        </el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button size="small" @click="projectDialog.visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="achievementDialog.visible" title="科研成果详情" width="58%" destroy-on-close>
+      <el-descriptions v-if="achievementDialog.data" border :column="2">
+        <el-descriptions-item label="成果名称" :span="2">{{ displayValue(achievementDialog.data.name) }}</el-descriptions-item>
+        <el-descriptions-item label="成果类型">{{ displayValue(achievementDialog.data.typeName) }}</el-descriptions-item>
+        <el-descriptions-item label="教师">{{ displayValue(achievementDialog.data.teacherName) }}</el-descriptions-item>
+        <el-descriptions-item label="项目名称" :span="2">{{ displayValue(achievementDialog.data.projectName) }}</el-descriptions-item>
+        <el-descriptions-item label="立项编号">{{ displayValue(achievementDialog.data.projectCode) }}</el-descriptions-item>
+        <el-descriptions-item label="审核状态">{{ approvalStatusText(achievementDialog.data.status) }}</el-descriptions-item>
+        <el-descriptions-item label="审核时间">{{ displayValue(achievementDialog.data.time) }}</el-descriptions-item>
+        <el-descriptions-item label="审核信息" :span="2">
+          <div class="detail-text">{{ displayValue(achievementDialog.data.reason) }}</div>
+        </el-descriptions-item>
+        <el-descriptions-item label="成果描述" :span="2">
+          <div class="detail-text">{{ displayValue(achievementDialog.data.description) }}</div>
+        </el-descriptions-item>
+        <el-descriptions-item label="证明材料" :span="2">
+          <el-button v-if="achievementDialog.data.evidence" link type="primary" @click="handleDownloadEvidence(achievementDialog.data)">下载文件</el-button>
+          <span v-else>暂无数据</span>
+        </el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button size="small" @click="achievementDialog.visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="projectReviewDialog.visible" title="审核项目" width="500px" destroy-on-close>
+      <el-form :model="projectReviewDialog.form" label-width="80px" style="padding: 12px 20px">
+        <el-form-item label="审核结果">
+          <el-select v-model="projectReviewDialog.form.status" placeholder="请选择审核结果" style="width: 100%">
+            <el-option label="通过" value="通过" />
+            <el-option label="驳回" value="驳回" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核理由">
+          <el-input v-model="projectReviewDialog.form.reason" type="textarea" :rows="4" placeholder="请输入审核理由" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button size="small" @click="projectReviewDialog.visible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="submitProjectReview">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="achievementReviewDialog.visible" title="审核成果" width="500px" destroy-on-close>
+      <el-form :model="achievementReviewDialog.form" label-width="80px" style="padding: 12px 20px">
+        <el-form-item label="审核结果">
+          <el-select v-model="achievementReviewDialog.form.status" placeholder="请选择审核结果" style="width: 100%">
+            <el-option label="通过" value="通过" />
+            <el-option label="驳回" value="驳回" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核理由">
+          <el-input v-model="achievementReviewDialog.form.reason" type="textarea" :rows="4" placeholder="请输入审核理由" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button size="small" @click="achievementReviewDialog.visible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="submitAchievementReview">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="phaseReviewDialog.visible" title="报告审核" width="500px" destroy-on-close>
+      <el-form :model="phaseReviewDialog.form" label-width="80px" style="padding: 12px 20px">
+        <el-form-item label="审核结果">
+          <el-select v-model="phaseReviewDialog.form.approvalStatus" placeholder="请选择审核结果" style="width: 100%">
+            <el-option v-for="item in phaseReviewOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核意见">
+          <el-input v-model="phaseReviewDialog.form.comment" type="textarea" :rows="4" placeholder="请输入审核意见（可选）" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button size="small" @click="phaseReviewDialog.visible = false">取消</el-button>
+        <el-button type="primary" size="small" @click="submitPhaseReview">提交</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -404,10 +471,14 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { useRoute, useRouter } from 'vue-router'
 import echarts from '@/utils/echarts.js'
 import { ArrowRight, Delete, Tickets, View } from '@element-plus/icons-vue'
-import { ElMessage } from '@/utils/element-plus'
+import { ElMessage, ElMessageBox } from '@/utils/element-plus'
+import { usePaginationQuery } from '@/utils/paginationQuery.js'
+import request from '@/utils/request.js'
 
 const router = useRouter()
 const route = useRoute()
+const currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+const userRole = currentUser.role
 
 const typeNameMap = {
   school: '学校',
@@ -422,21 +493,21 @@ const hierarchyMap = {
   team: '团队'
 }
 
-const mockSchools = [
+const mockSchools = reactive([
   { id: 1, name: '示例大学', principal: '小明', principalPhone: '13900001111', address: '北路 3663 号' },
   { id: 2, name: '科技学院', principal: '小军', principalPhone: '13800002222', address: '大道 1001 号' },
   { id: 3, name: '综合大学', principal: '小红', principalPhone: '13700003333', address: '学院路 88 号' }
-]
+])
 
-const mockLaboratories = [
+const mockLaboratories = reactive([
   { id: 101, schoolId: 1, username: 'lab_ai', laboratoryName: '智能实验室', laboratoryHierarchy: '实验室', directorName: '小明', directorPhone: '13611110001', supportUniversity: '示例大学', majorSupportingDiscipline: '计算机科学与技术', otherSupportingDiscipline: ['教育技术学', '统计学'], majorResearchDirection: '多模态智能评测', otherResearchDirection: ['大模型安全与对齐', '智能评测系统落地'], type: 2 },
   { id: 102, schoolId: 1, username: 'base_dh', laboratoryName: '数字基地', laboratoryHierarchy: '基地', directorName: '小青', directorPhone: '13611110002', supportUniversity: '示例大学', majorSupportingDiscipline: '中国语言文学', otherSupportingDiscipline: ['历史学', '信息资源管理'], majorResearchDirection: '知识图谱构建', otherResearchDirection: ['古籍文本挖掘', '文献数字化工具'], type: 1 },
   { id: 201, schoolId: 2, username: 'team_mat', laboratoryName: '先进团队', laboratoryHierarchy: '团队', directorName: '小芳', directorPhone: '13611110003', supportUniversity: '科技学院', majorSupportingDiscipline: '材料科学与工程', otherSupportingDiscipline: ['化学工程', '力学'], majorResearchDirection: '复合材料制备', otherResearchDirection: ['结构优化设计', '性能表征方法'], type: 2 },
   { id: 202, schoolId: 2, username: 'lab_env', laboratoryName: '生态实验室', laboratoryHierarchy: '实验室', directorName: '小强', directorPhone: '13611110004', supportUniversity: '科技学院', majorSupportingDiscipline: '环境科学与工程', otherSupportingDiscipline: ['地理学', '生态学'], majorResearchDirection: '碳循环监测', otherResearchDirection: ['生态修复评估', '监测系统集成'], type: 1 },
   { id: 301, schoolId: 3, username: 'base_pm', laboratoryName: '工程研究基地', laboratoryHierarchy: '基地', directorName: '小磊', directorPhone: '13611110005', supportUniversity: '综合大学', majorSupportingDiscipline: '管理科学与工程', otherSupportingDiscipline: ['土木工程', '计算机科学与技术'], majorResearchDirection: '项目风险预警', otherResearchDirection: ['工程治理数字化', '数据驱动决策'], type: 1 }
-]
+])
 
-const mockProjects = [
+const mockProjects = reactive([
   { id: 1, schoolId: 1, laboratoryId: 101, name: '面向教育场景的多模态智能评测', code: 'P-2026-001', researchType: '应用研究', subjectCategory: '教育学', projectNature: '纵向课题', projectLevel: '省社科', projectStatus: '0', status: '待审核', teacherName: '刘洋', reason: '材料待补充', time: '2026-04-02 10:21', updateTime: '2026-04-02' },
   { id: 2, schoolId: 1, laboratoryId: 101, name: '大模型可解释性评估与安全对齐', code: 'P-2025-019', researchType: '基础研究', subjectCategory: '工学', projectNature: '纵向课题', projectLevel: '国自科', projectStatus: '0', status: '审核通过', teacherName: '陈璐', reason: '符合立项要求', time: '2026-03-18 09:40', updateTime: '2026-03-18' },
   { id: 3, schoolId: 1, laboratoryId: 102, name: '地方文献知识图谱构建与应用', code: 'P-2025-011', researchType: '开发研究', subjectCategory: '历史学', projectNature: '横向课题', projectLevel: '省社科', projectStatus: '1', status: '审核通过', teacherName: '孙悦', reason: '结项材料完整', time: '2026-01-12 15:06', updateTime: '2026-01-12' },
@@ -444,9 +515,9 @@ const mockProjects = [
   { id: 5, schoolId: 2, laboratoryId: 202, name: '城市生态系统碳循环监测', code: 'P-2024-033', researchType: '应用研究', subjectCategory: '理学', projectNature: '横向课题', projectLevel: '其他', projectStatus: '1', status: '审核通过', teacherName: '许倩', reason: '结项材料完整', time: '2025-12-20 14:00', updateTime: '2025-12-20' },
   { id: 6, schoolId: 3, laboratoryId: 301, name: '工程项目风险识别与预警模型', code: 'P-2026-010', researchType: '其他', subjectCategory: '管理学', projectNature: '纵向课题', projectLevel: '省社科', projectStatus: '2', status: '不通过', teacherName: '郑博', reason: '研究方案不清晰', time: '2026-02-28 16:33', updateTime: '2026-02-28' },
   { id: 7, schoolId: 1, laboratoryId: 101, name: '教育数据治理与质量评估', code: 'P-2025-099', researchType: '应用研究', subjectCategory: '管理学', projectNature: '纵向课题', projectLevel: '省社科', projectStatus: '0', status: '审核通过', teacherName: '刘洋', reason: '符合立项要求', time: '2025-11-18 09:28', updateTime: '2025-11-18' }
-]
+])
 
-const mockAchievements = [
+const mockAchievements = reactive([
   { id: 1, schoolId: 1, laboratoryId: 101, name: '多模态测评数据集（V1）', typeName: '数据库', description: '面向课堂互动的多模态测评数据', teacherName: '刘洋', projectId: 1, projectName: mockProjects[0].name, projectCode: mockProjects[0].code, evidence: 'https://example.com/file/evidence-1.pdf', status: '待审核', reason: '材料待补充', time: '2026-04-06 09:20', updateTime: '2026-04-06' },
   { id: 2, schoolId: 1, laboratoryId: 101, name: '大模型安全对齐技术报告', typeName: '咨政报告', description: '对齐策略与风险评估建议', teacherName: '陈璐', projectId: 2, projectName: mockProjects[1].name, projectCode: mockProjects[1].code, evidence: '', status: '审核通过', reason: '内容完整', time: '2026-03-25 13:55', updateTime: '2026-03-25' },
   { id: 3, schoolId: 1, laboratoryId: 102, name: '地方文献知识图谱原型系统', typeName: '软件著作权', description: '知识图谱原型系统与演示', teacherName: '孙悦', projectId: 3, projectName: mockProjects[2].name, projectCode: mockProjects[2].code, evidence: 'https://example.com/file/evidence-3.zip', status: '审核通过', reason: '证明材料齐全', time: '2026-01-20 10:08', updateTime: '2026-01-20' },
@@ -454,17 +525,9 @@ const mockAchievements = [
   { id: 5, schoolId: 2, laboratoryId: 202, name: '生态碳循环监测平台', typeName: '平台', description: '碳循环监测数据平台原型', teacherName: '许倩', projectId: 5, projectName: mockProjects[4].name, projectCode: mockProjects[4].code, evidence: 'https://example.com/file/evidence-5.pdf', status: '待审核', reason: '待补充说明', time: '2026-03-03 08:45', updateTime: '2026-03-03' },
   { id: 6, schoolId: 1, laboratoryId: 102, name: '古籍语义检索工具包', typeName: '软件著作权', description: '面向古籍语料的语义检索工具', teacherName: '孙悦', projectId: 3, projectName: mockProjects[2].name, projectCode: mockProjects[2].code, evidence: '', status: '审核通过', reason: '符合要求', time: '2026-02-15 11:10', updateTime: '2026-02-15' },
   { id: 7, schoolId: 3, laboratoryId: 301, name: '工程风险评估指标集', typeName: '数据库', description: '工程风险多维评估指标数据', teacherName: '郑博', projectId: 6, projectName: mockProjects[5].name, projectCode: mockProjects[5].code, evidence: '', status: '审核通过', reason: '符合要求', time: '2025-12-11 10:20', updateTime: '2025-12-11' }
-]
+])
 
-const mockProcesses = [
-  { id: 1, schoolId: 1, laboratoryId: 101, projectId: 1, projectName: mockProjects[0].name, projectCode: mockProjects[0].code, teacherName: '刘洋', content: '完成样本采集与标注规范制定', question: '样本一致性存在偏差', solution: '统一标注规范并回溯修订', updateTime: '2026-04-05' },
-  { id: 2, schoolId: 1, laboratoryId: 101, projectId: 2, projectName: mockProjects[1].name, projectCode: mockProjects[1].code, teacherName: '陈璐', content: '完成对齐训练方案与评测基准', question: '对齐指标不稳定', solution: '增加多维评测与对照实验', updateTime: '2026-03-29' },
-  { id: 3, schoolId: 1, laboratoryId: 102, projectId: 3, projectName: mockProjects[2].name, projectCode: mockProjects[2].code, teacherName: '孙悦', content: '完成知识抽取规则与数据清洗流程', question: '历史文本歧义较多', solution: '引入规则+模型混合策略', updateTime: '2026-01-16' },
-  { id: 4, schoolId: 2, laboratoryId: 201, projectId: 4, projectName: mockProjects[3].name, projectCode: mockProjects[3].code, teacherName: '黄凯', content: '完成材料试验方案与参数优化', question: '参数空间过大', solution: '采用分层采样缩小搜索范围', updateTime: '2026-04-12' },
-  { id: 5, schoolId: 2, laboratoryId: 202, projectId: 5, projectName: mockProjects[4].name, projectCode: mockProjects[4].code, teacherName: '许倩', content: '完成监测点位规划与采集脚本', question: '点位覆盖不足', solution: '补充关键区域点位并校验', updateTime: '2026-02-10' }
-]
-
-const mockPhaseReports = [
+const mockPhaseReports = reactive([
   {
     id: 9001,
     schoolId: 1,
@@ -507,28 +570,52 @@ const mockPhaseReports = [
     reviewStatus: 'SCHOOL_REJECTED',
     updatedAt: '2026-04-03'
   }
-]
+])
+
+mockSchools.splice(0, mockSchools.length)
+mockLaboratories.splice(0, mockLaboratories.length)
+mockProjects.splice(0, mockProjects.length)
+mockAchievements.splice(0, mockAchievements.length)
+mockPhaseReports.splice(0, mockPhaseReports.length)
+
+const formatDate = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const defaultDateRange = () => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setFullYear(start.getFullYear() - 1)
+  return [formatDate(start), formatDate(end)]
+}
 
 const query = reactive({
   type: 'school',
-  schoolId: mockSchools[0].id,
-  laboratoryId: 101,
-  dateRange: ['2026-01-01', '2026-12-31']
+  schoolId: null,
+  laboratoryId: null,
+  dateRange: defaultDateRange()
 })
 
-const activeTab = ref('overview')
+const profileTabs = ['overview', 'project', 'achievement', 'phaseReport']
+const routeTab = String(route.query.tab || '')
+const activeTab = ref(profileTabs.includes(routeTab) ? routeTab : 'overview')
 
 const filters = reactive({
   project: { keyword: '', status: '', projectStatus: '' },
   achievement: { keyword: '', status: '', typeName: '' },
-  process: { keyword: '' },
   phaseReport: { keyword: '', reviewStatus: '' }
 })
 
 const projectPager = reactive({ pageNum: 1, pageSize: 10 })
 const achievementPager = reactive({ pageNum: 1, pageSize: 10 })
-const processPager = reactive({ pageNum: 1, pageSize: 10 })
 const phaseReportPager = reactive({ pageNum: 1, pageSize: 10 })
+
+usePaginationQuery(projectPager, { pageKey: 'projectPage', pageSizeKey: null })
+usePaginationQuery(achievementPager, { pageKey: 'achievementPage', pageSizeKey: null })
+usePaginationQuery(phaseReportPager, { pageKey: 'phaseReportPage', pageSizeKey: null })
 
 const trendChartEl = ref(null)
 const statusChartEl = ref(null)
@@ -538,9 +625,56 @@ let statusChart = null
 let subjectChart = null
 
 const phaseDialog = reactive({ visible: false, data: null })
+const projectDialog = reactive({ visible: false, data: null })
+const achievementDialog = reactive({ visible: false, data: null })
+const projectReviewDialog = reactive({ visible: false, form: { id: null, status: '通过', reason: '' } })
+const achievementReviewDialog = reactive({ visible: false, form: { id: null, status: '通过', reason: '' } })
+const phaseReviewDialog = reactive({ visible: false, form: { id: null, approvalStatus: null, comment: '' } })
 const phaseSelection = reactive({ ids: [] })
 
 const typeLabel = computed(() => typeNameMap[query.type] || '实体')
+
+const setList = (target, list) => {
+  target.splice(0, target.length, ...(Array.isArray(list) ? list : []))
+}
+
+let profileRequestSeq = 0
+let applyingProfilePayload = false
+let profileReady = false
+let profileLoadTimer = null
+
+const currentProfileParams = () => {
+  const params = { type: query.type }
+  const id = query.type === 'school' ? query.schoolId : query.laboratoryId
+  if (id) params.id = id
+  return params
+}
+
+const loadProfileData = async () => {
+  const seq = ++profileRequestSeq
+  const res = await request.get('/entityProfile/data', { params: currentProfileParams() })
+  if (seq !== profileRequestSeq) return
+  if (res.code !== '200') {
+    ElMessage.error(res.msg || '画像数据加载失败')
+    return
+  }
+  const payload = res.data || {}
+  applyingProfilePayload = true
+  setList(mockSchools, payload.schools)
+  setList(mockLaboratories, payload.laboratories)
+  if (['school', 'laboratory', 'base', 'team'].includes(payload.selectedType)) {
+    query.type = payload.selectedType
+  }
+  query.schoolId = payload.selectedSchoolId || null
+  query.laboratoryId = payload.selectedLaboratoryId || null
+  ensureTypeSelection()
+  setList(mockProjects, payload.projects)
+  setList(mockAchievements, payload.achievements)
+  setList(mockPhaseReports, payload.phaseReports)
+  await nextTick()
+  applyingProfilePayload = false
+  renderCharts()
+}
 
 const currentTypeLaboratories = computed(() => {
   const targetHierarchy = hierarchyMap[query.type]
@@ -550,16 +684,14 @@ const currentTypeLaboratories = computed(() => {
 
 const ensureTypeSelection = () => {
   if (query.type === 'school') {
-    if (!mockSchools.some(s => s.id === query.schoolId)) query.schoolId = mockSchools[0].id
+    if (!mockSchools.length || !mockSchools.some(s => s.id === query.schoolId)) {
+      query.schoolId = null
+    }
     return
   }
   const options = currentTypeLaboratories.value
-  if (!options.length) {
+  if (!options.length || !options.some(l => l.id === query.laboratoryId)) {
     query.laboratoryId = null
-    return
-  }
-  if (!options.some(l => l.id === query.laboratoryId)) {
-    query.laboratoryId = options[0].id
   }
 }
 
@@ -604,7 +736,7 @@ const entityDetailItems = computed(() => {
     { label: '主要依托学科', value: lab.majorSupportingDiscipline, span: 2 },
     { label: '主要研究方向', value: lab.majorResearchDirection, span: 2 },
     { label: '其他依托学科', value: lab.otherSupportingDiscipline, span: 2 },
-    { label: '其他研究方向', value: lab.otherResearchDirection, span: 3 }
+    { label: '其他研究方向', value: lab.otherResearchDirection, span: 2 }
   ]
 })
 
@@ -616,9 +748,7 @@ const withinRange = (dateStr) => {
 }
 
 const baseFilter = (item) => {
-  if (!withinRange(item.updateTime || item.updatedAt)) return false
-  if (query.type === 'school') return item.schoolId === query.schoolId
-  return item.laboratoryId === query.laboratoryId
+  return withinRange(item.updateTime || item.updatedAt)
 }
 
 const filteredProjects = computed(() => {
@@ -643,15 +773,6 @@ const filteredAchievements = computed(() => {
   })
 })
 
-const filteredProcesses = computed(() => {
-  const kw = (filters.process.keyword || '').trim()
-  return mockProcesses.filter(x => {
-    if (!baseFilter(x)) return false
-    if (!kw) return true
-    return (x.projectName && x.projectName.includes(kw)) || (x.content && x.content.includes(kw))
-  })
-})
-
 const filteredPhaseReports = computed(() => {
   const kw = (filters.phaseReport.keyword || '').trim()
   return mockPhaseReports.filter(r => {
@@ -672,13 +793,11 @@ const paginate = (list, pageNum, pageSize) => {
 
 const pagedProjects = computed(() => paginate(filteredProjects.value, projectPager.pageNum, projectPager.pageSize))
 const pagedAchievements = computed(() => paginate(filteredAchievements.value, achievementPager.pageNum, achievementPager.pageSize))
-const pagedProcesses = computed(() => paginate(filteredProcesses.value, processPager.pageNum, processPager.pageSize))
 const pagedPhaseReports = computed(() => paginate(filteredPhaseReports.value, phaseReportPager.pageNum, phaseReportPager.pageSize))
 
 const kpis = computed(() => {
   const project = filteredProjects.value
   const achievement = filteredAchievements.value
-  const process = filteredProcesses.value
   const phaseReport = filteredPhaseReports.value
   return {
     project: {
@@ -695,10 +814,6 @@ const kpis = computed(() => {
       total: phaseReport.length,
       pending: phaseReport.filter(r => ['SUBMITTED', 'SCHOOL_APPROVED'].includes(r.reviewStatus)).length,
       approved: phaseReport.filter(r => ['SUPER_APPROVED'].includes(r.reviewStatus)).length
-    },
-    process: {
-      total: process.length,
-      recent: process.filter(p => withinRange(p.updateTime)).length
     }
   }
 })
@@ -743,6 +858,31 @@ const recentList = computed(() => {
 
 const indexMethod = (pageNum, pageSize) => (index) => (pageNum - 1) * pageSize + index + 1
 
+const displayValue = (value) => {
+  if (value === undefined || value === null || value === '') return '暂无数据'
+  return value
+}
+
+const projectStatusText = (status) => {
+  const map = { 0: '在研', 1: '结项', 2: '未开始' }
+  return map[status] || displayValue(status)
+}
+
+const approvalStatusText = (status) => {
+  return status === '待审核' ? '待实验室审核' : displayValue(status)
+}
+
+const isLaboratoryReviewRole = (role) => {
+  return role === 'KEY_LABORATORY' || role === 'NORMAL_LABORATORY'
+}
+
+const canReviewProjectOrAchievement = (status) => {
+  if (isLaboratoryReviewRole(userRole) && status === '待审核') return true
+  if (userRole === 'SCHOOL_ADMIN' && status === '实验室审核通过') return true
+  if ((userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && status === '校审通过') return true
+  return false
+}
+
 const phaseStatusText = (status) => {
   const map = { SUBMITTED: '已提交', SCHOOL_APPROVED: '校审通过', SCHOOL_REJECTED: '校审驳回', SUPER_APPROVED: '审核通过', SUPER_REJECTED: '审核未通过' }
   return map[status] || '未知状态'
@@ -753,8 +893,37 @@ const phaseStatusTag = (status) => {
   return map[status] || 'info'
 }
 
-const openPhaseReport = (row) => {
-  phaseDialog.data = row
+const phaseReviewOptions = computed(() => {
+  if (userRole === 'SCHOOL_ADMIN') {
+    return [
+      { label: '校审通过', value: 'SCHOOL_APPROVED' },
+      { label: '校审驳回', value: 'SCHOOL_REJECTED' }
+    ]
+  }
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return [
+      { label: '审核通过', value: 'SUPER_APPROVED' },
+      { label: '审核未通过', value: 'SUPER_REJECTED' }
+    ]
+  }
+  return []
+})
+
+const canReviewPhaseReport = (row) => {
+  const status = row?.reviewStatus
+  if (userRole === 'SCHOOL_ADMIN') return status === 'SUBMITTED' || status === 1
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return status === 'SCHOOL_APPROVED' || status === 'SUBMITTED' || status === 1
+  return false
+}
+
+const openPhaseReport = async (row) => {
+  const res = await request.get(`/lab_phase_report/select/${row.id}`)
+  if (res.code === '200' && res.data) {
+    phaseDialog.data = { ...row, ...res.data, basicInfo: { ...(row.basicInfo || {}), ...(res.data.basicInfo || {}) } }
+  } else {
+    phaseDialog.data = row
+    ElMessage.error(res.msg || '获取详情失败')
+  }
   phaseDialog.visible = true
 }
 
@@ -767,27 +936,93 @@ const handlePhaseBatchDelete = () => {
     ElMessage.warning('请选择数据')
     return
   }
-  ElMessage.info('演示版：批量删除已拦截')
+  ElMessageBox.confirm('确认删除选中的阶段报告吗？', '提示', { type: 'warning' }).then(() => {
+    request.delete('/lab_phase_report/delete/batch', { data: phaseSelection.ids }).then(async res => {
+      if (res.code === '200') {
+        ElMessage.success('批量删除成功')
+        phaseSelection.ids = []
+        await loadProfileData()
+      } else {
+        ElMessage.error(res.msg || '批量删除失败')
+      }
+    })
+  }).catch(() => {})
 }
 
-const handlePhaseCheck = () => {
-  ElMessage.info('演示版：审核操作已拦截')
+const handlePhaseCheck = (row) => {
+  phaseReviewDialog.form = { id: row.id, approvalStatus: null, comment: '' }
+  phaseReviewDialog.visible = true
 }
 
-const handlePhaseDelete = () => {
-  ElMessage.info('演示版：删除操作已拦截')
+const submitPhaseReview = async () => {
+  if (!phaseReviewDialog.form.approvalStatus) {
+    ElMessage.warning('请选择审核结果')
+    return
+  }
+  const { id, approvalStatus, comment } = phaseReviewDialog.form
+  const res = await request.put(`/lab_phase_report/review/${id}`, null, {
+    params: { approvalStatus, comment: comment || '' }
+  })
+  if (res.code === '200') {
+    ElMessage.success('审核成功')
+    phaseReviewDialog.visible = false
+    await loadProfileData()
+  } else {
+    ElMessage.error(res.msg || '审核失败')
+  }
 }
 
-const handleProjectView = () => {
-  ElMessage.info('演示版：查看详情已拦截')
+const handlePhaseDelete = (row) => {
+  ElMessageBox.confirm('确认删除该报告吗？', '提示', { type: 'warning' }).then(() => {
+    request.delete(`/lab_phase_report/delete/${row.id}`).then(async res => {
+      if (res.code === '200') {
+        ElMessage.success('删除成功')
+        await loadProfileData()
+      } else {
+        ElMessage.error(res.msg || '删除失败')
+      }
+    })
+  }).catch(() => {})
 }
 
-const handleProjectCheck = () => {
-  ElMessage.info('演示版：审核操作已拦截')
+const handleProjectView = async (row) => {
+  const res = await request.get(`/project/selectById/${row.id}`)
+  projectDialog.data = res.code === '200' && res.data ? { ...row, ...res.data } : row
+  if (res.code !== '200') ElMessage.error(res.msg || '获取详情失败')
+  projectDialog.visible = true
 }
 
-const handleProjectDelete = () => {
-  ElMessage.info('演示版：删除操作已拦截')
+const handleProjectCheck = (row) => {
+  projectReviewDialog.form = { id: row.id, status: '通过', reason: '' }
+  projectReviewDialog.visible = true
+}
+
+const submitProjectReview = async () => {
+  if (projectReviewDialog.form.status === '驳回' && !String(projectReviewDialog.form.reason || '').trim()) {
+    ElMessage.warning('请输入驳回理由')
+    return
+  }
+  const res = await request.put('/project/check', projectReviewDialog.form)
+  if (res.code === '200') {
+    ElMessage.success('操作成功')
+    projectReviewDialog.visible = false
+    await loadProfileData()
+  } else {
+    ElMessage.error(res.msg || '操作失败')
+  }
+}
+
+const handleProjectDelete = (row) => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
+    request.delete(`/project/delete/${row.id}`).then(async res => {
+      if (res.code === '200') {
+        ElMessage.success('删除成功')
+        await loadProfileData()
+      } else {
+        ElMessage.error(res.msg || '删除失败')
+      }
+    })
+  }).catch(() => {})
 }
 
 const handleDownloadEvidence = (row) => {
@@ -795,16 +1030,44 @@ const handleDownloadEvidence = (row) => {
   window.open(row.evidence, '_blank')
 }
 
-const handleAchievementCheck = () => {
-  ElMessage.info('演示版：审核操作已拦截')
+const handleAchievementCheck = (row) => {
+  achievementReviewDialog.form = { id: row.id, status: '通过', reason: '' }
+  achievementReviewDialog.visible = true
 }
 
-const handleAchievementDelete = () => {
-  ElMessage.info('演示版：删除操作已拦截')
+const submitAchievementReview = async () => {
+  if (achievementReviewDialog.form.status === '驳回' && !String(achievementReviewDialog.form.reason || '').trim()) {
+    ElMessage.warning('请输入驳回理由')
+    return
+  }
+  const res = await request.put('/achievement/check', achievementReviewDialog.form)
+  if (res.code === '200') {
+    ElMessage.success('操作成功')
+    achievementReviewDialog.visible = false
+    await loadProfileData()
+  } else {
+    ElMessage.error(res.msg || '操作失败')
+  }
 }
 
-const handleProcessDelete = () => {
-  ElMessage.info('演示版：删除操作已拦截')
+const handleAchievementDelete = (row) => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(() => {
+    request.delete(`/achievement/delete/${row.id}`).then(async res => {
+      if (res.code === '200') {
+        ElMessage.success('删除成功')
+        await loadProfileData()
+      } else {
+        ElMessage.error(res.msg || '删除失败')
+      }
+    })
+  }).catch(() => {})
+}
+
+const handleAchievementView = async (row) => {
+  const res = await request.get(`/achievement/selectById/${row.id}`)
+  achievementDialog.data = res.code === '200' && res.data ? { ...row, ...res.data } : row
+  if (res.code !== '200') ElMessage.error(res.msg || '获取详情失败')
+  achievementDialog.visible = true
 }
 
 const jumpTo = (payload) => {
@@ -816,35 +1079,76 @@ const jumpTo = (payload) => {
   })
 }
 
-const applyRouteQuery = () => {
+const applyRouteQuery = (shouldEnsure = true) => {
   const type = String(route.query.type || '')
   const id = Number(route.query.id)
   if (['school', 'laboratory', 'base', 'team'].includes(type)) query.type = type
   if (query.type === 'school') {
-    if (Number.isFinite(id) && mockSchools.some(s => s.id === id)) query.schoolId = id
-  } else if (Number.isFinite(id)) {
+    if (Number.isFinite(id) && id > 0) query.schoolId = id
+  } else if (Number.isFinite(id) && id > 0) {
     query.laboratoryId = id
   }
-  ensureTypeSelection()
+  if (shouldEnsure) ensureTypeSelection()
 }
 
-const syncToRoute = () => {
-  const q = query.type === 'school' ? { type: 'school', id: query.schoolId } : { type: query.type, id: query.laboratoryId }
-  router.replace({ path: '/manager/entityProfile', query: q })
+const getScrollSnapshot = () => {
+  const contentArea = document.querySelector('.content-area')
+  const mainRight = document.querySelector('.manager-main-right')
+  return {
+    windowX: window.scrollX,
+    windowY: window.scrollY,
+    contentTop: contentArea?.scrollTop || 0,
+    mainTop: mainRight?.scrollTop || 0
+  }
+}
+
+const restoreScrollSnapshot = (snapshot) => {
+  if (!snapshot) return
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const contentArea = document.querySelector('.content-area')
+      const mainRight = document.querySelector('.manager-main-right')
+      if (contentArea) contentArea.scrollTop = snapshot.contentTop
+      if (mainRight) mainRight.scrollTop = snapshot.mainTop
+      window.scrollTo(snapshot.windowX, snapshot.windowY)
+    })
+  })
+}
+
+const syncToRoute = async () => {
+  const scrollSnapshot = getScrollSnapshot()
+  const q = query.type === 'school' ? { type: 'school', id: query.schoolId || '' } : { type: query.type, id: query.laboratoryId || '' }
+  q.tab = activeTab.value
+  q.projectPage = projectPager.pageNum
+  q.achievementPage = achievementPager.pageNum
+  q.phaseReportPage = phaseReportPager.pageNum
+  await router.replace({ path: '/manager/entityProfile', query: q })
+  restoreScrollSnapshot(scrollSnapshot)
 }
 
 const resetPagers = () => {
   projectPager.pageNum = 1
   achievementPager.pageNum = 1
-  processPager.pageNum = 1
   phaseReportPager.pageNum = 1
+}
+
+const scheduleProfileLoad = () => {
+  if (!profileReady) return
+  if (applyingProfilePayload) return
+  if (profileLoadTimer) clearTimeout(profileLoadTimer)
+  profileLoadTimer = setTimeout(async () => {
+    profileLoadTimer = null
+    resetPagers()
+    await loadProfileData()
+    syncToRoute()
+  }, 0)
 }
 
 const reset = () => {
   query.type = 'school'
-  query.schoolId = mockSchools[0].id
-  query.laboratoryId = 101
-  query.dateRange = ['2026-01-01', '2026-12-31']
+  query.schoolId = null
+  query.laboratoryId = null
+  query.dateRange = defaultDateRange()
   ensureTypeSelection()
 
   filters.project.keyword = ''
@@ -853,21 +1157,20 @@ const reset = () => {
   filters.achievement.keyword = ''
   filters.achievement.status = ''
   filters.achievement.typeName = ''
-  filters.process.keyword = ''
   filters.phaseReport.keyword = ''
   filters.phaseReport.reviewStatus = ''
   activeTab.value = 'overview'
   resetPagers()
-  syncToRoute()
-  nextTick(() => renderCharts())
+  scheduleProfileLoad()
 }
 
-const refresh = () => {
-  resetPagers()
-  nextTick(() => renderCharts())
+const refresh = async () => {
+  await loadProfileData()
+  syncToRoute()
 }
 
 const onTabChange = () => {
+  syncToRoute()
   nextTick(() => renderCharts())
 }
 
@@ -894,6 +1197,8 @@ const countByMonth = (list, dateKey) => {
   return months.map(m => map.get(m))
 }
 
+const buildGrowth = (values) => values.map((value, index) => index === 0 ? 0 : value - values[index - 1])
+
 const buildSubjectData = () => {
   const subjects = {}
   filteredProjects.value.forEach(p => {
@@ -915,11 +1220,12 @@ const buildProjectStatusData = () => {
 const renderCharts = () => {
   if (trendChartEl.value) {
     if (!trendChart) trendChart = echarts.init(trendChartEl.value)
-    const months = ['11月', '12月', '1月', '2月', '3月', '4月']
-    const projectMonthly = [26, 33, 42, 45, 54, 61]
-    const projectGrowth = [0, 7, 9, 3, 9, 7]
-    const achievementMonthly = [32, 41, 53, 52, 68, 74]
-    const achievementGrowth = [0, 9, 12, -1, 16, 6]
+    const monthKeys = getLast6Months()
+    const months = monthKeys.map(m => `${Number(m.slice(5, 7))}月`)
+    const projectMonthly = countByMonth(filteredProjects.value, 'updateTime')
+    const achievementMonthly = countByMonth(filteredAchievements.value, 'updateTime')
+    const projectGrowth = buildGrowth(projectMonthly)
+    const achievementGrowth = buildGrowth(achievementMonthly)
     trendChart.setOption({
       color: ['#5470c6', '#91cc75', '#ee6666', '#73c0de'],
       tooltip: {
@@ -1039,12 +1345,20 @@ const renderCharts = () => {
 watch(
   () => query.type,
   () => {
+    if (applyingProfilePayload) return
     ensureTypeSelection()
   }
 )
 
 watch(
-  () => [query.type, query.schoolId, query.laboratoryId, query.dateRange],
+  () => [query.type, query.schoolId, query.laboratoryId],
+  () => {
+    scheduleProfileLoad()
+  }
+)
+
+watch(
+  () => query.dateRange,
   () => {
     resetPagers()
     syncToRoute()
@@ -1054,17 +1368,23 @@ watch(
 )
 
 watch(
-  () => [filters.project, filters.achievement, filters.process, filters.phaseReport],
+  () => [filters.project, filters.achievement, filters.phaseReport],
   () => resetPagers(),
   { deep: true }
 )
 
-onMounted(() => {
-  applyRouteQuery()
-  nextTick(() => renderCharts())
+onMounted(async () => {
+  applyRouteQuery(false)
+  await loadProfileData()
+  profileReady = true
+  syncToRoute()
 })
 
 onUnmounted(() => {
+  if (profileLoadTimer) {
+    clearTimeout(profileLoadTimer)
+    profileLoadTimer = null
+  }
   if (trendChart) {
     trendChart.dispose()
     trendChart = null
@@ -1089,7 +1409,7 @@ onUnmounted(() => {
 
 .kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -1119,11 +1439,40 @@ onUnmounted(() => {
   gap: 2px;
 }
 
+.entity-detail-descriptions {
+  width: 100%;
+}
+
+.entity-detail-descriptions :deep(.el-descriptions__table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.entity-detail-descriptions :deep(.el-descriptions__cell) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entity-detail-descriptions :deep(.el-descriptions__label) {
+  width: 18%;
+  min-width: 0;
+}
+
+.entity-detail-descriptions :deep(.el-descriptions__content) {
+  width: 15.3333%;
+  min-width: 0;
+}
+
+.entity-detail-descriptions :deep(.desc-list) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 :deep(.el-descriptions--border .el-descriptions__label) {
   background: #f5f7fa;
   color: #606266;
   font-weight: 500;
-  width: 140px;
 }
 
 :deep(.el-descriptions__content) {

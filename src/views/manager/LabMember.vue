@@ -3,7 +3,11 @@
         <div class="card" style="margin-bottom: 5px">
             <el-input v-model="data.projectName" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
                 placeholder="请输入项目名称查询"></el-input>
-            <el-button type="info" plain size="small" @click="load">查询</el-button>
+            <el-input v-model="data.projectCode" :prefix-icon="Search" style="width: 180px; margin-right: 10px"
+                placeholder="请输入项目编号查询"></el-input>
+            <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 180px; margin-right: 10px"
+                placeholder="请输入教师姓名查询"></el-input>
+            <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
       <div style="margin-bottom: 10px">
@@ -76,9 +80,12 @@
 
 import { reactive, ref } from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
 import { Delete, Edit, Search } from "@element-plus/icons-vue";
 
+const queryFields = ['projectName', 'projectCode', 'teacherName', 'content', 'question', 'solution', 'time']
 
 const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -89,9 +96,17 @@ const data = reactive({
     pageSize: 10,
     total: 0,
     projectName: null,
+    projectCode: null,
+    teacherName: null,
+    content: null,
+    question: null,
+    solution: null,
+    time: null,
     ids: [],
     projectData: []
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 const formRef = ref()
 const rules = reactive({
@@ -121,11 +136,12 @@ const loadProject = () => {
     })
 }
 const load = () => {
+  paginationQuery.sync()
     request.get('/process/selectPage', {
         params: {
             pageNum: data.pageNum,
             pageSize: data.pageSize,
-            projectName: data.projectName
+            ...tableQueryParams(data, queryFields)
         }
     }).then(res => {
         if (res.code === '200') {
@@ -204,8 +220,14 @@ const handleSelectionChange = (rows) => {
     data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-    data.projectName = null
+    clearTableQuery(data, queryFields)
+  paginationQuery.reset()
     load()
 }
 

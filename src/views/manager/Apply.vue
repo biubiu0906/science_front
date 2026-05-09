@@ -3,7 +3,12 @@
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入教师名称查询"></el-input>
       <el-input v-model="data.activityName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入活动名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-select v-model="data.status" placeholder="申请状态" clearable style="width: 130px; margin-right: 10px">
+        <el-option label="待审核" value="待审核" />
+        <el-option label="审核通过" value="审核通过" />
+        <el-option label="不通过" value="不通过" />
+      </el-select>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
       <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px" v-if="data.user.role === 'SUPER_ADMIN'">
@@ -85,9 +90,13 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Search} from "@element-plus/icons-vue";
 
+
+const queryFields = ['teacherName', 'activityName', 'description', 'time', 'status', 'reason', 'checkTime']
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -100,16 +109,23 @@ const data = reactive({
   total: 0,
   teacherName: null,
   activityName: null,
+  description: null,
+  time: null,
+  status: null,
+  reason: null,
+  checkTime: null,
   ids: []
 })
 
+const paginationQuery = usePaginationQuery(data)
+
 const load = () => {
+  paginationQuery.sync()
   request.get('/apply/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      teacherName: data.teacherName,
-      activityName: data.activityName,
+      ...tableQueryParams(data, queryFields),
     }
   }).then(res => {
     if (res.code === '200') {
@@ -176,9 +192,14 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.teacherName = null
-  data.activityName = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

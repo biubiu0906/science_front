@@ -2,7 +2,10 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入操作名称查询"></el-input>
-      <el-button type="info" plain @click="load" size="small">查询</el-button>
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入操作人查询"></el-input>
+      <el-input v-model="data.ip" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入IP查询"></el-input>
+      <el-input v-model="data.location" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入地址查询"></el-input>
+      <el-button type="info" plain @click="search" size="small">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>
     <div class="card" style="margin-bottom: 5px">
@@ -29,8 +32,12 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
+import { Search } from "@element-plus/icons-vue";
 
+const queryFields = ['name', 'ip', 'location', 'username', 'time']
 
 const data = reactive({
   tableData: [],
@@ -38,15 +45,22 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   name: null,
+  ip: null,
+  location: null,
+  username: null,
+  time: null,
   ids: []
 })
 
+const paginationQuery = usePaginationQuery(data)
+
 const load = () => {
+  paginationQuery.sync()
   request.get('/log/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      name: data.name
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -92,8 +106,14 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.name = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

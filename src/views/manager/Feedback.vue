@@ -2,7 +2,9 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入教师名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.content" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入反馈内容查询"></el-input>
+      <el-input v-model="data.replyName" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入回复人查询"></el-input>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -68,9 +70,13 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, Search} from "@element-plus/icons-vue";
 
+
+const queryFields = ['teacherName', 'content', 'time', 'replyContent', 'replyName', 'replyTime']
 
 const data = reactive({
   formVisible: false,
@@ -80,15 +86,23 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   teacherName: null,
+  content: null,
+  time: null,
+  replyContent: null,
+  replyName: null,
+  replyTime: null,
   ids: []
 })
 
+const paginationQuery = usePaginationQuery(data)
+
 const load = () => {
+  paginationQuery.sync()
   request.get('/feedback/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      teacherName: data.teacherName
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -152,8 +166,14 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.teacherName = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

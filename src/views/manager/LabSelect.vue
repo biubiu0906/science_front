@@ -123,18 +123,25 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Document, User, Grid, Money, Paperclip, Check, OfficeBuilding, Plus, Delete, Search } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import LabApplicationForm from './componets/LabCom.vue';
 import ResearchBaseCom from './componets/ResearchBaseCom.vue';
 import InnovationTeamCom from './componets/InnovationTeamCom.vue';
+
+const route = useRoute();
 
 // 读取环境变量
 const baseUrl = import.meta.env?.VITE_BASE_URL || '';
 
 // 页面状态
-const applyType = ref('LAB'); // 默认实验室
+const applyTypeOptions = ['LAB', 'BASE', 'TEAM'];
+const applyTypeFromQuery = String(route.query.applyType || '');
+const hasApplyTypeQuery = applyTypeOptions.includes(applyTypeFromQuery);
+const applyType = ref(hasApplyTypeQuery ? applyTypeFromQuery : 'LAB'); // 默认实验室
 const selectedApplicationId = ref(null); 
 
 // 申请列表数据
@@ -157,8 +164,19 @@ const data = reactive({
     total: 0
 });
 
+const paginationQuery = usePaginationQuery(data);
+
+const syncListQuery = () => {
+    paginationQuery.replaceQuery({
+        pageNum: data.pageNum,
+        pageSize: data.pageSize,
+        applyType: applyType.value
+    });
+};
+
 const handleSizeChange = (val) => {
     data.pageSize = val;
+    data.pageNum = 1;
     fetchApplyList();
 };
 
@@ -192,6 +210,7 @@ const handleTypeChange = (val) => {
 // 定义一个方法来获取数据
 const fetchApplyList = async () => {
     try {
+        syncListQuery();
         let response;
         if (applyType.value === 'LAB') {
             response = await request.get('/application_record/list', {
@@ -253,7 +272,7 @@ const fetchApplyList = async () => {
 // 在组件挂载完成后调用
 onMounted(() => {
     // 如果 token 中 laboratoryHierarchy 标识了当前用户的类型，可以根据它设置默认值
-    if (data.user && data.user.laboratoryHierarchy) {
+    if (!hasApplyTypeQuery && data.user && data.user.laboratoryHierarchy) {
         if (data.user.laboratoryHierarchy === '基地') {
             applyType.value = 'BASE';
         } else if (data.user.laboratoryHierarchy === '团队') {

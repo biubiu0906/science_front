@@ -42,6 +42,7 @@
   import router from "@/router/index.js";
   import { reactive, onUnmounted } from "vue";
   import request from "@/utils/request.js";
+  import { clearLaboratoryLevelCache } from "@/utils/laboratoryLevel.js";
   // 按需引入 Element Plus 图标
   import { Bell, ArrowDown } from "@element-plus/icons-vue";
   // 关闭标签页/浏览器自动退出注册函数
@@ -58,6 +59,7 @@
 
   const logout = () => {
     localStorage.removeItem('xm-user')
+    clearLaboratoryLevelCache()
     router.push('/login')
   }
 

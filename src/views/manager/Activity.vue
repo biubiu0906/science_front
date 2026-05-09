@@ -9,7 +9,13 @@
         <el-option label="学术研讨会" value="学术研讨会"></el-option>
       </el-select>
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入活动名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.location" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入位置查询"></el-input>
+      <el-select v-model="data.status" placeholder="活动状态" clearable style="width: 130px; margin-right: 10px">
+        <el-option label="进行中" value="进行中" />
+        <el-option label="未开始" value="未开始" />
+        <el-option label="已结束" value="已结束" />
+      </el-select>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
       <div style="margin-bottom: 10px">
@@ -108,10 +114,13 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, Search} from "@element-plus/icons-vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 const baseUrl = import.meta.env.VITE_BASE_URL
+const queryFields = ['type', 'name', 'content', 'location', 'start', 'end', 'status']
 
 const data = reactive({
   formVisible: false,
@@ -122,9 +131,16 @@ const data = reactive({
   total: 0,
   type: null,
   name: null,
+  content: null,
+  location: null,
+  start: null,
+  end: null,
+  status: null,
   ids: [],
   showSecurityAlert: false // 控制安全提醒弹窗的显示
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 const formRef = ref()
 const rules = reactive({
@@ -140,12 +156,12 @@ const rules = reactive({
 })
 
 const load = () => {
+  paginationQuery.sync()
   request.get('/activity/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      type: data.type,
-      name: data.name
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -230,9 +246,14 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.type = null
-  data.name = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

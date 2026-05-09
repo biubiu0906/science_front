@@ -2,7 +2,9 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.title" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入公告标题查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.content" :prefix-icon="Search" style="width: 260px; margin-right: 10px" placeholder="请输入公告内容查询"></el-input>
+      <el-input v-model="data.file" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入附件查询"></el-input>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -16,16 +18,12 @@
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="title" label="标题" min-width="150" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.title)">
-              {{ scope.row.title }}
-            </div>
+            <div class="notice-cell-ellipsis">{{ scope.row.title || '-' }}</div>
           </template>
         </el-table-column>
         <el-table-column prop="content" label="公告内容" min-width="300" sortable>
           <template v-slot="scope">
-            <div :class="getContentAlignClass(scope.row.content)">
-              {{ scope.row.content }}
-            </div>
+            <div class="notice-cell-ellipsis">{{ scope.row.content || '-' }}</div>
           </template>
         </el-table-column>
         <el-table-column prop="file" label="附件" width="150" sortable>
@@ -48,8 +46,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="发布时间" width="160" sortable />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="140" fixed="right">
           <template v-slot="scope">
+            <el-tooltip content="查看详情" placement="bottom" effect="light">
+              <el-button @click="handleView(scope.row)" size="small" type="primary" circle :icon="View"></el-button>
+            </el-tooltip>
             <el-tooltip content="编辑公告" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
@@ -67,10 +68,22 @@
     <el-dialog title="公告信息" v-model="data.formVisible" width="40%" destroy-on-close>
       <el-form ref="form" :model="data.form" label-width="70px" style="padding: 5px 20px 0 20px">
         <el-form-item prop="title" label="公告标题">
-          <el-input v-model="data.form.title" placeholder="请输入公告标题"></el-input>
+          <el-input
+            v-model="data.form.title"
+            :maxlength="NOTICE_TITLE_MAX_LENGTH"
+            show-word-limit
+            :placeholder="`请输入公告标题，最多${NOTICE_TITLE_MAX_LENGTH}个字符`"
+          ></el-input>
         </el-form-item>
         <el-form-item prop="content" label="公告内容">
-          <el-input type="textarea" :rows="4" v-model="data.form.content" placeholder="请输入公告内容"></el-input>
+          <el-input
+            type="textarea"
+            :rows="4"
+            v-model="data.form.content"
+            :maxlength="NOTICE_CONTENT_MAX_LENGTH"
+            show-word-limit
+            :placeholder="`请输入公告内容，最多${NOTICE_CONTENT_MAX_LENGTH}个字符`"
+          ></el-input>
         </el-form-item>
         <el-form-item prop="file" label="附件">
           <el-input 
@@ -92,6 +105,31 @@
       </template>
     </el-dialog>
 
+    <el-dialog title="公告详情" v-model="data.detailVisible" width="45%">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="公告标题">{{ data.detail.title || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="公告内容">
+          <div class="notice-detail-content">{{ data.detail.content || '-' }}</div>
+        </el-descriptions-item>
+        <el-descriptions-item label="附件">
+          <el-button
+            v-if="data.detail.file"
+            type="primary"
+            link
+            size="small"
+            @click="openLink(data.detail.file)"
+          >
+            <el-icon><Link /></el-icon>
+            访问链接
+          </el-button>
+          <span v-else>无附件</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="发布时间">{{ data.detail.createTime || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button size="small" @click="data.detailVisible = false">关 闭</el-button>
+      </template>
+    </el-dialog>
 
   </div>
 </template>
@@ -100,33 +138,45 @@
 
 import {reactive} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
-import {Delete, Edit, Link, Search} from "@element-plus/icons-vue";
+import {Delete, Edit, Link, Search, View} from "@element-plus/icons-vue";
 
+const NOTICE_TITLE_MAX_LENGTH = 100
+const NOTICE_CONTENT_MAX_LENGTH = 10000
+const queryFields = ['title', 'content', 'file']
 
 const data = reactive({
   formVisible: false,
+  detailVisible: false,
   form: {
     file: null
   },
+  detail: {},
   tableData: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
   title: null,
+  content: null,
+  file: null,
   ids: []
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 const indexMethod = (index) => {
   return (data.pageNum - 1) * data.pageSize + index + 1
 }
 
 const load = () => {
+  paginationQuery.sync()
   request.get('/notice/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      title: data.title
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -142,6 +192,10 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
   data.formVisible = true
+}
+const handleView = (row) => {
+  data.detail = JSON.parse(JSON.stringify(row))
+  data.detailVisible = true
 }
 const add = () => {
   request.post('/notice/add', data.form).then(res => {
@@ -165,7 +219,20 @@ const update = () => {
   })
 }
 
+const validateNoticeForm = () => {
+  if (data.form.title && data.form.title.length > NOTICE_TITLE_MAX_LENGTH) {
+    ElMessage.warning(`公告标题不能超过${NOTICE_TITLE_MAX_LENGTH}个字符`)
+    return false
+  }
+  if (data.form.content && data.form.content.length > NOTICE_CONTENT_MAX_LENGTH) {
+    ElMessage.warning(`公告内容不能超过${NOTICE_CONTENT_MAX_LENGTH}个字符`)
+    return false
+  }
+  return true
+}
+
 const save = () => {
+  if (!validateNoticeForm()) return
   data.form.id ? update() : add()
 }
 
@@ -205,17 +272,15 @@ const handleSelectionChange = (rows) => {
   data.ids = rows.map(v => v.id)
 }
 
-const reset = () => {
-  data.title = null
+const search = () => {
+  paginationQuery.reset()
   load()
 }
 
-// 根据内容长度判断对齐方式的方法
-const getContentAlignClass = (content) => {
-  if (!content) return 'content-center'
-  // 判断内容是否超过一行（这里以50个字符为基准，可根据实际情况调整）
-  const isMultiLine = content.length > 50 || content.includes('\n')
-  return isMultiLine ? 'content-justify' : 'content-center'
+const reset = () => {
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
+  load()
 }
 
 // 链接相关方法
@@ -251,6 +316,21 @@ load()
   text-align: justify;
   text-justify: inter-ideograph;
   line-height: 1.5;
+}
+
+.notice-cell-ellipsis {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-detail-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  max-height: 420px;
+  overflow-y: auto;
 }
 
 /* 附件相关样式 */

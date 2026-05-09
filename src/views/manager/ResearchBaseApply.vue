@@ -2,6 +2,15 @@
     <div>
         <div class="card" style="margin-bottom: 5px">
             <el-input v-model="searchId" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入申请编号查询" clearable @clear="resetSearch"></el-input>
+            <el-input v-model="searchBaseName" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入基地名称查询" clearable @clear="resetSearch"></el-input>
+            <el-select v-model="searchState" placeholder="审核状态" clearable style="width: 140px; margin-right: 10px">
+                <el-option label="草稿" :value="1" />
+                <el-option label="待审核" :value="0" />
+                <el-option label="校审通过" :value="2" />
+                <el-option label="校审驳回" :value="3" />
+                <el-option label="终审通过" :value="4" />
+                <el-option label="终审驳回" :value="5" />
+            </el-select>
             <el-button type="info" plain size="small" @click="handleSearch">查询</el-button>
             <el-button type="warning" plain size="small" style="margin: 0 10px" @click="resetSearch">重置</el-button>
         </div>
@@ -625,6 +634,7 @@ import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Check, Plus, Minus, Warning, View, EditPen, Delete, Search, UploadFilled } from '@element-plus/icons-vue';
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import Editor from '@/components/Editor.vue';
 import ResearchBaseCom from './componets/ResearchBaseCom.vue';
 import SecurityAlert from '@/components/SecurityAlert.vue';
@@ -651,6 +661,8 @@ const applyList = ref([]);
 const fileList = ref([]);
 const currentViewId = ref(null);
 const searchId = ref('');
+const searchBaseName = ref('');
+const searchState = ref(null);
 
 const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -659,13 +671,18 @@ const data = reactive({
     total: 0
 });
 
+const paginationQuery = usePaginationQuery(data);
+
 const handleSizeChange = (val) => {
     data.pageSize = val;
+    data.pageNum = 1;
+    paginationQuery.sync();
     fetchApplyList();
 };
 
 const handleCurrentChange = (val) => {
     data.pageNum = val;
+    paginationQuery.sync();
     fetchApplyList();
 };
 
@@ -726,10 +743,14 @@ const formData = ref(JSON.parse(JSON.stringify(defaultFormData)));
 
 const fetchApplyList = async () => {
     try {
+        paginationQuery.sync();
         const response = await request.get('/research_base_application_record/list', {
             params: {
                 pageNum: data.pageNum,
-                pageSize: data.pageSize
+                pageSize: data.pageSize,
+                id: searchId.value || undefined,
+                baseName: searchBaseName.value || undefined,
+                state: searchState.value ?? undefined
             }
         });
         let resData = response?.data || response;
@@ -759,33 +780,15 @@ const fetchApplyList = async () => {
 };
 
 const handleSearch = async () => {
-    if (!searchId.value.trim()) {
-        fetchApplyList();
-        return;
-    }
-    try {
-        const response = await request.get(`/research_base_apply_for/select/${searchId.value.trim()}`);
-        if (response.code === '200' && response.data) {
-            // 将单条查询结果包装成列表，为了展示效果我们构造一下记录结构
-            const record = {
-                ...response.data,
-                applicationRecordList: [
-                    { applyStatus: response.data.state, reviewComments: '' }
-                ]
-            };
-            applyList.value = [record];
-        } else {
-            applyList.value = [];
-            ElMessage.warning('未查询到相关申请');
-        }
-    } catch (error) {
-        console.error('搜索申请失败', error);
-        applyList.value = [];
-    }
+    paginationQuery.reset();
+    fetchApplyList();
 };
 
 const resetSearch = () => {
     searchId.value = '';
+    searchBaseName.value = '';
+    searchState.value = null;
+    paginationQuery.reset();
     fetchApplyList();
 };
 

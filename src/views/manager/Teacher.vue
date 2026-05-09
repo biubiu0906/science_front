@@ -2,7 +2,17 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入姓名查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入用户名查询"></el-input>
+      <el-input v-model="data.ofLab" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入实验室查询"></el-input>
+      <el-select v-model="data.gender" placeholder="性别" clearable style="width: 100px; margin-right: 10px">
+        <el-option label="男" value="boy" />
+        <el-option label="女" value="girl" />
+      </el-select>
+      <el-select v-model="data.employmentType" placeholder="全职/兼职" clearable style="width: 130px; margin-right: 10px">
+        <el-option label="全职" value="FULL_TIME" />
+        <el-option label="兼职" value="PART_TIME" />
+      </el-select>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -238,6 +248,8 @@
 
 import {reactive, ref, computed} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Collection, UploadFilled, Search} from "@element-plus/icons-vue";
 import Password from "./Password.vue";
@@ -250,6 +262,7 @@ const reportFormRef = ref(null)
 // 批量上传组件引用
 const batchUploadRef = ref(null)
 const baseUrl = import.meta.env.VITE_BASE_URL
+const queryFields = ['name', 'username', 'gender', 'phone', 'email', 'unit', 'ofLab', 'employmentType']
 
 const uploadHeaders = computed(() => {
   const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
@@ -273,12 +286,21 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   name: null,
+  username: null,
+  gender: null,
+  phone: null,
+  email: null,
+  unit: null,
+  ofLab: null,
+  employmentType: null,
   ids: [],
   Password: null,
   showSecurityAlert: false,
   // 批量上传文件列表（受控模式，便于在上传成功后清空）
   batchFileList: []
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 // 表单验证规则
 const rules = reactive({
@@ -322,12 +344,13 @@ const reportRules = reactive({
 })
 
 const load = () => {
+  paginationQuery.sync()
   if(data.user.role === 'SUPER_ADMIN'){
     request.get('/teacher/selectTeachers', {
       params: {
         pageNum: data.pageNum,
         pageSize: data.pageSize,
-        name: data.name
+        ...tableQueryParams(data, queryFields)
       }
     }).then(res => {
       if (res.code === '200') {
@@ -340,7 +363,7 @@ const load = () => {
       params: {
         pageNum: data.pageNum,
         pageSize: data.pageSize,
-        name: data.name
+        ...tableQueryParams(data, queryFields)
       }
     }).then(res => {
       if (res.code === '200') {
@@ -536,8 +559,14 @@ const handleFileUpload = (res) => {
   data.form.avatar = res.data
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.name = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

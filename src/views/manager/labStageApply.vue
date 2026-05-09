@@ -2,6 +2,13 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
         <el-input v-model="searchId" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入申请编号查询"></el-input>
+        <el-select v-model="searchStatus" placeholder="状态" clearable style="width: 140px; margin-right: 10px">
+          <el-option label="待审核" value="SUBMITTED" />
+          <el-option label="校审通过" value="SCHOOL_APPROVED" />
+          <el-option label="校审驳回" value="SCHOOL_REJECTED" />
+          <el-option label="终审通过" value="SUPER_APPROVED" />
+          <el-option label="终审驳回" value="SUPER_REJECTED" />
+        </el-select>
         <el-button type="info" plain size="small" @click="searchReport">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="resetSearch">重置</el-button>
       </div>
@@ -560,10 +567,16 @@ const getStatusTagType = (status) => {
 // 报告列表数据
 const reportList = ref([])
 const searchId = ref('')
+const searchStatus = ref(null)
 
 // 获取报告列表
 const loadReportList = () => {
-  request.get('/lab_phase_report/list').then(res => {
+  request.get('/lab_phase_report/selectByCondition', {
+    params: {
+      id: searchId.value || undefined,
+      reviewStatus: searchStatus.value || undefined
+    }
+  }).then(res => {
     if (res.code === '200') {
       reportList.value = res.data
     } else {
@@ -573,22 +586,12 @@ const loadReportList = () => {
 }
 
 const searchReport = () => {
-  if (!searchId.value) {
-    ElMessage.warning('请输入申请编号')
-    return
-  }
-  request.get(`/lab_phase_report/select/${searchId.value}`).then(res => {
-    if (res.code === '200' && res.data) {
-      reportList.value = [res.data]
-    } else {
-      ElMessage.warning('未找到相关报告')
-      reportList.value = []
-    }
-  })
+  loadReportList()
 }
 
 const resetSearch = () => {
   searchId.value = ''
+  searchStatus.value = null
   loadReportList()
 }
 

@@ -78,11 +78,12 @@ import {reactive, onMounted} from "vue";
 import request from "@/utils/request.js";
 import {ElMessage} from "@/utils/element-plus";
 import {List, BellFilled, StarFilled} from "@element-plus/icons-vue";
+import { fetchLaboratoryLevel, getCachedLaboratoryLevel, getUserLaboratoryId } from "@/utils/laboratoryLevel.js";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
   noticeData: [],
-  laboratoryLevel: null,
+  laboratoryLevel: getCachedLaboratoryLevel(getUserLaboratoryId(JSON.parse(localStorage.getItem('xm-user') || '{}'))),
   totalNotice: null
 })
 
@@ -98,28 +99,32 @@ const loadNotice = () => {
 }
 
 const getLaboratoryLevel = () => {
-  // 检查用户是否有实验室ID
-  if (!data.user.laboratoryId) {
+  const laboratoryId = getUserLaboratoryId(data.user)
+  if (!laboratoryId) {
     return
   }
-  
-  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
-    if (res.code === '200') {
-      data.laboratoryLevel = res.data.type
-      
-      if (data.laboratoryLevel === 1) {
-        ElMessage({
-          message: '您所在的实验室还不是重点实验室，请联系实验室管理员申请为重点实验室',
-          type: 'warning',
-          duration: 10000,
-        })
-      }
-    } else {
-      ElMessage.error(res.msg)
+
+  const showNormalLaboratoryTip = () => {
+    if (data.laboratoryLevel === 1) {
+      ElMessage({
+        message: '您所在的实验室还不是重点实验室，请联系实验室管理员申请为重点实验室',
+        type: 'warning',
+        duration: 10000,
+      })
     }
-  }).catch(error => {
-    console.error('获取实验室级别失败:', error)
-    ElMessage.error('获取实验室信息失败')
+  }
+
+  const cached = getCachedLaboratoryLevel(laboratoryId)
+  if (cached !== null) {
+    data.laboratoryLevel = cached
+    showNormalLaboratoryTip()
+    return
+  }
+
+  fetchLaboratoryLevel(laboratoryId, data.user.token).then(level => {
+    if (level === null) return
+    data.laboratoryLevel = level
+    showNormalLaboratoryTip()
   })
 }
 

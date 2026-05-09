@@ -1,4 +1,6 @@
 
+import { clearLaboratoryLevelCache } from "@/utils/laboratoryLevel.js";
+
 export function ensureLogoutIfClosed() {
   const flagKey = 'xm-will-logout'
   const tabAliveKey = 'xm-tab-alive'
@@ -24,6 +26,7 @@ export function ensureLogoutIfClosed() {
   }
 
   localStorage.removeItem('xm-user')
+  clearLaboratoryLevelCache()
   localStorage.removeItem(flagKey)
   try {
     sessionStorage.setItem(tabAliveKey, '1')

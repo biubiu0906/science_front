@@ -2,7 +2,10 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
-      <el-button type="info" plain @click="load" size="small">查询</el-button>
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入用户名查询"></el-input>
+      <el-input v-model="data.phone" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入电话查询"></el-input>
+      <el-input v-model="data.email" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入邮箱查询"></el-input>
+      <el-button type="info" plain @click="search" size="small">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
     </div>
     
@@ -107,6 +110,8 @@
 
 import {reactive, ref} from "vue";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Search} from "@element-plus/icons-vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
@@ -116,6 +121,7 @@ import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 const formRef = ref(null)
 
 const baseUrl = import.meta.env.VITE_BASE_URL
+const queryFields = ['name', 'username', 'phone', 'email']
 
 const data = reactive({
   formVisible: false,
@@ -125,9 +131,14 @@ const data = reactive({
   pageSize: 10,
   total: 0,
   name: null,
+  username: null,
+  phone: null,
+  email: null,
   ids: [],
   showSecurityAlert: false
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 const indexMethod = (index) => {
   return (data.pageNum - 1) * data.pageSize + index + 1
@@ -149,11 +160,12 @@ const rules = reactive({
 })
 
 const load = () => {
+  paginationQuery.sync()
   request.get('/admin/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      name: data.name
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -262,8 +274,14 @@ const handleFileUpload = (res) => {
   data.form.avatar = res.data
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.name = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

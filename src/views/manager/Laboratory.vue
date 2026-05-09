@@ -1,8 +1,14 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.labName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
-      <el-button type="info" plain size="small" @click="load">查询</el-button>
+      <el-input v-model="data.laboratoryName" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
+      <el-select v-model="data.laboratoryHierarchy" placeholder="组织类别" clearable style="width: 140px; margin-right: 10px">
+        <el-option label="实验室" value="实验室" />
+        <el-option label="基地" value="基地" />
+        <el-option label="团队" value="团队" />
+      </el-select>
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入账号查询"></el-input>
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
         <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
       </div>
 
@@ -54,14 +60,14 @@
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template v-slot="scope">
             <el-tooltip content="编辑信息" placement="bottom" effect="light">
               <el-button type="primary" circle size="small" :icon="Edit" @click="handleEdit(scope.row)"></el-button>
             </el-tooltip>
-            <!--<el-tooltip content="查看画像" placement="bottom" effect="light">
+            <el-tooltip content="查看画像" placement="bottom" effect="light">
               <el-button type="info" circle size="small" :icon="View" @click="openProfile(scope.row)"></el-button>
-            </el-tooltip>-->
+            </el-tooltip>
             <el-tooltip content="生成报告" placement="bottom" effect="light">
               <el-button type="success" circle size="small" :icon="Collection" @click="handleReportForm(scope.row.id)"></el-button>
             </el-tooltip>
@@ -154,11 +160,14 @@
 import {reactive, ref} from "vue";
 import { useRouter } from "vue-router";
 import request from "@/utils/request.js";
+import { usePaginationQuery } from '@/utils/paginationQuery.js';
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
 import {Delete, Edit, View, Hide, Collection, Search} from "@element-plus/icons-vue";
 import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 
 const router = useRouter()
+const queryFields = ['laboratoryName', 'laboratoryHierarchy', 'laboratoryDescription', 'laboratoryAddress', 'username']
 
 // 表单引用
 const formRef = ref(null)
@@ -179,11 +188,14 @@ const data = reactive({
   total: 0,
   ids: [],
   laboratoryName: null,
+  laboratoryHierarchy: null,
   username: null,
   password: null,
   laboratoryDescription: null,
   laboratoryAddress: null
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 // 表单验证规则
 const rules = reactive({
@@ -205,11 +217,12 @@ const rules = reactive({
 })
 
 const load = () => {
+  paginationQuery.sync()
   request.get('/laboratory/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      labName: data.labName
+      ...tableQueryParams(data, queryFields)
     }
   }).then(res => {
     if (res.code === '200') {
@@ -369,8 +382,14 @@ const handleFileUpload = (res) => {
   data.form.avatar = res.data
 }
 
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
 const reset = () => {
-  data.labName = null
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
   load()
 }
 

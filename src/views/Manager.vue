@@ -7,7 +7,8 @@
         <el-menu 
           :default-active="$route.path" 
           :collapse="isCollapse"
-          :default-openeds="['1','2','3']"
+          :default-openeds="[]"
+          unique-opened
           router>
           <!-- 菜单头部区域 -->
           <div class="menu-header">
@@ -32,13 +33,50 @@
             </el-icon>
             <span>消息</span>
           </el-menu-item>
-          <el-sub-menu index="1" v-if="data.user.role === 'SUPER_ADMIN'">
+          <el-sub-menu index="4">
             <template #title>
-              <el-icon><Setting /></el-icon>
-              <span>系统管理</span>
+              <el-icon>
+                <OfficeBuilding />
+              </el-icon>
+              <span>机构信息</span>
             </template>
-            <el-menu-item index="/manager/notice" v-if="data.user.role === 'SUPER_ADMIN'">公告管理</el-menu-item>
-            <el-menu-item index="/manager/notification" v-if="data.user.role === 'SUPER_ADMIN'">通知管理</el-menu-item>
+            <el-menu-item index="/manager/institutionBasic">基本信息</el-menu-item>
+            <el-menu-item index="/manager/institutionSettings">基础设置</el-menu-item>
+            <el-menu-item index="/manager/institutionOrganization">组织建设</el-menu-item>
+            <el-menu-item index="/manager/institutionDigital">信息化建设</el-menu-item>
+            <el-menu-item index="/manager/institutionResearchDepartment">科研管理部门</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="3" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">
+            <template #title>
+              <el-icon>
+                <User />
+              </el-icon>
+              <span>成员管理</span>
+            </template>
+            <el-menu-item index="/manager/teacher">聘任人员</el-menu-item>
+            <el-menu-item index="/manager/laboratory">组织信息</el-menu-item>
+            <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
+            <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
+            <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">超级管理员信息</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="3" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
+            <template #title>
+              <el-icon>
+                <User />
+              </el-icon>
+              <span>成员管理</span>
+            </template>
+            <el-menu-item index="/manager/teacher">聘任人员</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="5">
+            <template #title>
+              <el-icon>
+                <Memo />
+              </el-icon>
+              <span>科研课题</span>
+            </template>
+            <el-menu-item index="/manager/verticalTopic">纵向课题</el-menu-item>
+            <el-menu-item index="/manager/horizontalTopic">横向课题</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="2" v-if="data.user.role !== 'TEACHER'">
             <template #title>
@@ -47,20 +85,18 @@
               </el-icon>
               <span>信息管理</span>
             </template>
-            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '实验室'">任务书</el-menu-item>
-            <el-menu-item index="/manager/researchBaseApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '基地'">重点研究基地申请</el-menu-item>
-            <el-menu-item index="/manager/innovationTeamApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.user.laboratoryHierarchy === '团队'">优秀创新团队申请</el-menu-item>
+            <el-menu-item index="/manager/labApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.laboratoryHierarchy === '实验室'">任务书</el-menu-item>
+            <el-menu-item index="/manager/researchBaseApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.laboratoryHierarchy === '基地'">重点研究基地申请</el-menu-item>
+            <el-menu-item index="/manager/innovationTeamApply" v-if="data.user.role === 'NORMAL_LABORATORY' && data.laboratoryHierarchy === '团队'">优秀创新团队申请</el-menu-item>
             <el-menu-item index="/manager/labStageApply" v-if="data.user.role === 'KEY_LABORATORY'">阶段报告</el-menu-item>
 
-            <!--<el-menu-item index="/manager/entityProfile" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">学校/组织画像</el-menu-item>-->
+            <el-menu-item index="/manager/entityProfile" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">学校/组织画像</el-menu-item>
             <el-menu-item index="/manager/labSelect" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">重点组织审核</el-menu-item>
             <el-menu-item index="/manager/labStage" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">阶段报告</el-menu-item>  <!--管理员端-->
             
 
-            <el-menu-item index="/manager/project" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研项目</el-menu-item>
-            <el-menu-item index="/manager/process" v-if="data.user.role !== 'NORMAL_LABORATORY'">科研过程</el-menu-item>
-            <el-menu-item index="/manager/achievement"
-              v-if="data.user.role !== 'NORMAL_LABORATORY'">科研成果</el-menu-item>
+            <el-menu-item index="/manager/project">科研项目</el-menu-item>
+            <el-menu-item index="/manager/achievement">科研成果</el-menu-item>
             <!--<el-menu-item index="/manager/teacherFeedback"
               v-if="data.laboratoryLevel === 2">教师反馈提交</el-menu-item>-->
             <!--<el-menu-item index="/manager/feedback" v-if="data.user.role === 'SUPER_ADMIN'">教师反馈回复</el-menu-item>-->
@@ -86,32 +122,75 @@
             </template>
             <!-- 泪飙 -->
             <el-menu-item index="/manager/project" v-if="data.laboratoryLevel === 2">科研项目</el-menu-item>
-            <el-menu-item index="/manager/process" v-if="data.laboratoryLevel === 2">科研过程</el-menu-item>
             <el-menu-item index="/manager/achievement" v-if="data.laboratoryLevel === 2">科研成果</el-menu-item>
             <el-menu-item index="/manager/report">科研报告</el-menu-item>
           </el-sub-menu>
-
-          <el-sub-menu index="3" v-if="data.user.role === 'SUPER_ADMIN' || data.user.role === 'SCHOOL_ADMIN'">
+          <el-sub-menu index="6">
             <template #title>
               <el-icon>
-                <User />
+                <DataAnalysis />
               </el-icon>
-              <span>用户管理</span>
+              <span>成果管理</span>
             </template>
-            <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
-            <el-menu-item index="/manager/laboratory">组织信息</el-menu-item>
-            <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
-            <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
-            <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">超级管理员信息</el-menu-item>
+            <el-menu-item index="/manager/academicAchievement">学术成果</el-menu-item>
+            <el-menu-item index="/manager/intellectualProperty">知识产权</el-menu-item>
+            <el-menu-item index="/manager/advisoryService">咨政服务</el-menu-item>
+            <el-menu-item index="/manager/academicExchange">学术交流</el-menu-item>
           </el-sub-menu>
-          <el-sub-menu index="3" v-if="data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY' ">
+          <el-sub-menu index="7">
             <template #title>
               <el-icon>
-                <User />
+                <DataAnalysis />
               </el-icon>
-              <span>用户管理</span>
+              <span>获奖/荣誉</span>
             </template>
-            <el-menu-item index="/manager/teacher">教师信息</el-menu-item>
+            <el-menu-item index="/manager/talentHonor">人才称号与荣誉</el-menu-item>
+            <el-menu-item index="/manager/achievementAward">成果获奖</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="8">
+            <template #title>
+              <el-icon>
+                <DataAnalysis />
+              </el-icon>
+              <span>机构经费</span>
+            </template>
+            <el-menu-item index="/manager/labConstructionFund">实验室建设经费</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="9">
+            <template #title>
+              <el-icon>
+                <Memo />
+              </el-icon>
+              <span>管理工作</span>
+            </template>
+            <el-menu-item index="/manager/labSummary">实验室总结</el-menu-item>
+            <el-menu-item index="/manager/labPlan">实验室规划</el-menu-item>
+            <el-menu-item index="/manager/workAchievementBrief">工作/成果简报</el-menu-item>
+            <el-menu-item index="/manager/rulesRegulations">规章制度</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="10">
+            <template #title>
+              <el-icon>
+                <Memo />
+              </el-icon>
+              <span>科研规划</span>
+            </template>
+            <el-menu-item index="/manager/planningTopicList">课题列表</el-menu-item>
+            <el-menu-item index="/manager/planningChangeApply">变更申请</el-menu-item>
+          </el-sub-menu>
+          <el-menu-item index="/manager/recycleBin">
+            <el-icon>
+              <Delete />
+            </el-icon>
+            <span>回收站</span>
+          </el-menu-item>
+          <el-sub-menu index="1" v-if="data.user.role === 'SUPER_ADMIN'">
+            <template #title>
+              <el-icon><Setting /></el-icon>
+              <span>系统管理</span>
+            </template>
+            <el-menu-item index="/manager/notice" v-if="data.user.role === 'SUPER_ADMIN'">公告管理</el-menu-item>
+            <el-menu-item index="/manager/notification" v-if="data.user.role === 'SUPER_ADMIN'">通知管理</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </div>
@@ -165,19 +244,28 @@
 import { reactive, onMounted, onUnmounted, ref } from "vue";
 import router from "@/router/index.js";
 import { ElMessage } from "@/utils/element-plus";
-import request from "@/utils/request.js";
+import {
+  clearLaboratoryLevelCache,
+  fetchLaboratoryInfo,
+  getCachedLaboratoryHierarchy,
+  getCachedLaboratoryLevel,
+  getUserLaboratoryId
+} from "@/utils/laboratoryLevel.js";
 // 关闭标签页/浏览器自动退出注册函数
 import { registerAutoLogoutOnClose, ensureLogoutIfClosed } from "@/utils/autoLogout.js";
 // 按需引入 Element Plus 图标
-import { DataAnalysis, Bell, Menu, Fold, Expand, ArrowDown, Setting, User, Memo } from "@element-plus/icons-vue";
+import { DataAnalysis, Bell, Menu, Fold, Expand, ArrowDown, Setting, User, Memo, OfficeBuilding, Delete } from "@element-plus/icons-vue";
 // 引入个人资料对话框组件
 import PersonDialog from "@/views/manager/Person.vue";
 // 引入修改密码对话框组件
 import PasswordDialog from "@/views/manager/Password.vue";
 
+const currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+const currentLaboratoryId = getUserLaboratoryId(currentUser)
 const data = reactive({
-  user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
-  laboratoryLevel: null
+  user: currentUser,
+  laboratoryLevel: getCachedLaboratoryLevel(currentLaboratoryId) ?? currentUser.type ?? null,
+  laboratoryHierarchy: getCachedLaboratoryHierarchy(currentLaboratoryId) || currentUser.laboratoryHierarchy || null
 })
 
 // 页面加载即检查：若上次关闭时已标记退出且此次为“重新打开”（非刷新），则清理登录态
@@ -192,6 +280,7 @@ const showPasswordDialog = ref(false)
 
 const logout = () => {
   localStorage.removeItem('xm-user')
+  clearLaboratoryLevelCache()
   router.push('/login')
 }
 
@@ -202,25 +291,35 @@ onUnmounted(() => cleanupAutoLogout())
 
 
 const getLaboratoryLevel = () => {
-  // 检查用户是否有实验室ID
-  if (!data.user.laboratoryId) {
+  const laboratoryId = getUserLaboratoryId(data.user)
+  if (!laboratoryId) {
     return
   }
-  
-  request.get('/teacher/selectLaboratoryById/' + data.user.laboratoryId).then(res => {
-    if (res.code === '200') {
-      data.laboratoryLevel = res.data.type
-    } else {
-      ElMessage.error(res.msg)
-    }
-  }).catch(error => {
-    console.error('获取实验室级别失败:', error)
-    ElMessage.error('获取实验室信息失败')
+
+  const cached = getCachedLaboratoryLevel(laboratoryId)
+  if (cached !== null) {
+    data.laboratoryLevel = cached
+  }
+  const cachedHierarchy = getCachedLaboratoryHierarchy(laboratoryId)
+  if (cachedHierarchy) {
+    data.laboratoryHierarchy = cachedHierarchy
+  }
+  if (cached !== null && cachedHierarchy) {
+    return
+  }
+
+  fetchLaboratoryInfo(laboratoryId, data.user.token).then(info => {
+    if (!info) return
+    if (info.type !== null && info.type !== undefined) data.laboratoryLevel = Number(info.type)
+    if (info.laboratoryHierarchy) data.laboratoryHierarchy = info.laboratoryHierarchy
   })
 }
 
 const updateUser = () => {
   data.user = JSON.parse(localStorage.getItem('xm-user') || '{}')
+  const laboratoryId = getUserLaboratoryId(data.user)
+  data.laboratoryLevel = getCachedLaboratoryLevel(laboratoryId) ?? data.user.type ?? null
+  data.laboratoryHierarchy = getCachedLaboratoryHierarchy(laboratoryId) || data.user.laboratoryHierarchy || null
 }
 
 if (!data.user.id) {

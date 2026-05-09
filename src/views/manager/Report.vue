@@ -1,5 +1,21 @@
 <template>
     <div class="card" style="margin-bottom: 5px">
+      <el-input v-model="data.taskId" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入编号查询" />
+      <el-select v-model="data.type" placeholder="报告对象类型" clearable style="width: 140px; margin-right: 10px">
+        <el-option label="教师" value="teacher" />
+        <el-option label="组织" value="laboratory" />
+      </el-select>
+      <el-select v-model="data.status" placeholder="报告状态" clearable style="width: 130px; margin-right: 10px">
+        <el-option label="排队中" value="CREATING" />
+        <el-option label="生成中" value="RUNNING" />
+        <el-option label="完成" value="COMPLETED" />
+        <el-option label="生成失败" value="FAILED" />
+      </el-select>
+      <el-input v-model="data.comment" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入报告类型查询" />
+      <el-button type="info" plain size="small" @click="search">查询</el-button>
+      <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
+    </div>
+    <div class="card" style="margin-bottom: 5px">
       <div style="margin-bottom: 10px; margin-left: 10px;">
         <el-button type="warning" plain size="small" @click="load">刷新</el-button>
         <el-button type="primary" plain size="small" v-if="data.user.role !== 'SUPER_ADMIN'" @click="creatMyReport">生成报告</el-button>
@@ -99,10 +115,13 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
 import request from '@/utils/request.js'
+import { usePaginationQuery } from '@/utils/paginationQuery.js'
+import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js'
 import { Delete, Search } from '@element-plus/icons-vue'
 
 // 表单引用
 const reportFormRef = ref(null)
+const queryFields = ['taskId', 'type', 'status', 'comment', 'createdAt']
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
@@ -112,8 +131,15 @@ const data = reactive({
   pageNum: 1,
   pageSize: 10,
   total: 0,
+  taskId: null,
+  type: null,
+  status: null,
+  comment: null,
+  createdAt: null,
   ids: [],
 })
+
+const paginationQuery = usePaginationQuery(data)
 
 // 报告表单验证规则
 const reportRules = reactive({
@@ -141,10 +167,12 @@ const viewReport = (url) => {
 
 // 加载报告数据
 const load = () => {
+  paginationQuery.sync()
   request.get('/report/task/page', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
+      ...tableQueryParams(data, queryFields),
     }
   }).then(res => {
     if (res.code === '200') {
@@ -162,6 +190,17 @@ const load = () => {
     console.error(error)
     ElMessage.error('数据加载失败')
   })
+}
+
+const search = () => {
+  paginationQuery.reset()
+  load()
+}
+
+const reset = () => {
+  clearTableQuery(data, queryFields)
+  paginationQuery.reset()
+  load()
 }
 
 // 获取报告对象

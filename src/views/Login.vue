@@ -67,6 +67,7 @@ import request from "@/utils/request.js";
 import { ElMessage } from "@/utils/element-plus";
 import router from "@/router/index.js";
 import { encrypt, getSecurityParams, getPublicKey, removePublicKey } from '@/utils/rsa.js'
+import { clearLaboratoryLevelCache } from "@/utils/laboratoryLevel.js";
 
 const data = reactive({
   form: {
@@ -129,8 +130,7 @@ const startCaptchaCountdown = (seconds) => {
       captcha.expireSeconds = 0
       clearInterval(captchaTimer)
       captchaTimer = null
-      loadCaptcha()
-      data.form.captchaCode = ''
+      captcha.captchaId = ''
       return
     }
     captcha.expireSeconds -= 1
@@ -197,6 +197,7 @@ const login = () => {
         request.post('/login', loginData).then(async res => {
           if (String(res.code) === '200') {
             ElMessage.success('登录成功')
+            clearLaboratoryLevelCache()
             localStorage.setItem('xm-user', JSON.stringify(res.data))
             try { localStorage.removeItem('xm-will-logout') } catch (_) { /* 忽略 */ }
             const userInfo = JSON.parse(localStorage.getItem('xm-user') || '{}')
