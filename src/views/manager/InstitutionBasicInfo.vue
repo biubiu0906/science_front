@@ -47,6 +47,26 @@
               <el-radio-button label="是" />
               <el-radio-button label="否" />
             </el-radio-group>
+            <el-cascader
+              v-else-if="item.type === 'cascader'"
+              v-model="data.editForm[item.prop]"
+              :options="getItemOptions(item)"
+              :props="{ emitPath: false, label: 'label', value: 'value' }"
+              clearable
+              filterable
+              style="width: 100%"
+            />
+            <el-tree-select
+              v-else-if="item.type === 'tree-select'"
+              v-model="data.editForm[item.prop]"
+              :data="getItemOptions(item)"
+              multiple
+              :props="{ label: 'label', value: 'value' }"
+              clearable
+              filterable
+              style="width: 100%"
+              @change="(val) => handleTreeChange(item.prop, val)"
+            />
             <el-input
               v-else
               v-model="data.editForm[item.prop]"
@@ -55,7 +75,14 @@
               clearable
             />
           </div>
-          <div v-else class="info-value">{{ data.info[item.prop] || '' }}</div>
+          <div v-else class="info-value">
+            <template v-if="item.type === 'tree-select'">
+              <el-tag v-for="tag in (data.info[item.prop] || [])" :key="tag" style="margin-right: 5px;">{{ tag }}</el-tag>
+            </template>
+            <template v-else>
+              {{ data.info[item.prop] || '' }}
+            </template>
+          </div>
         </div>
       </div>
     </div>
@@ -131,8 +158,8 @@ const sections = [
     title: '3. 学科与方向',
     editable: true,
     items: [
-      { label: '所属学科', prop: 'mainDiscipline', full: true },
-      { label: '涉及学科', prop: 'relatedDisciplines', full: true }
+      { label: '所属学科', prop: 'mainDiscipline', type: 'cascader', full: true },
+      { label: '涉及学科', prop: 'relatedDisciplines', type: 'tree-select', full: true }
     ]
   },
   {
@@ -170,7 +197,9 @@ const data = reactive({
   editingSectionKey: '',
   editForm: {},
   options: {
-    competentDepartment: []
+    competentDepartment: [],
+    mainDiscipline: [],
+    relatedDisciplines: []
   }
 })
 
@@ -181,6 +210,17 @@ const normalizeInfo = (raw = {}) => {
   })
   if (raw.id) normalized.id = raw.id
   if (raw.laboratoryId || raw.laboratory_id) normalized.laboratoryId = raw.laboratoryId ?? raw.laboratory_id
+  
+  if (normalized.relatedDisciplines && typeof normalized.relatedDisciplines === 'string') {
+    try {
+      normalized.relatedDisciplines = JSON.parse(normalized.relatedDisciplines)
+    } catch (e) {
+      normalized.relatedDisciplines = normalized.relatedDisciplines.split(',').filter(Boolean)
+    }
+  } else if (!normalized.relatedDisciplines) {
+    normalized.relatedDisciplines = []
+  }
+
   return normalized
 }
 
@@ -200,6 +240,34 @@ const loadOptions = () => {
       data.options.competentDepartment = res.data || []
     }
   })
+  request.get('/subject/tree').then(res => {
+    if (res.code === '200') {
+      data.options.mainDiscipline = res.data || []
+      data.options.relatedDisciplines = res.data || []
+    }
+  })
+}
+
+const handleTreeChange = (prop, val) => {
+  if (!val || !Array.isArray(val)) return;
+  const isLeaf = (value, nodes) => {
+    for (const node of nodes) {
+      if (node.value === value) {
+        return !node.children || node.children.length === 0;
+      }
+      if (node.children && node.children.length > 0) {
+        const res = isLeaf(value, node.children);
+        if (res !== null) return res;
+      }
+    }
+    return null;
+  };
+  
+  const options = data.options[prop] || [];
+  const filtered = val.filter(v => isLeaf(v, options) === true);
+  if (filtered.length !== val.length) {
+    data.editForm[prop] = filtered;
+  }
 }
 
 const getItemOptions = (item) => {
@@ -208,7 +276,7 @@ const getItemOptions = (item) => {
 
 const openEdit = (section) => {
   data.editingSectionKey = section.key
-  data.editForm = { ...data.info }
+  data.editForm = JSON.parse(JSON.stringify(data.info))
 }
 
 const cancelEdit = () => {
@@ -217,9 +285,14 @@ const cancelEdit = () => {
 }
 
 const saveSection = () => {
-  request.put('/institutionBasic/current', data.editForm).then(res => {
+  const submitData = { ...data.editForm }
+  if (Array.isArray(submitData.relatedDisciplines)) {
+    submitData.relatedDisciplines = JSON.stringify(submitData.relatedDisciplines)
+  }
+  
+  request.put('/institutionBasic/current', submitData).then(res => {
     if (res.code === '200') {
-      data.info = normalizeInfo(res.data || data.editForm)
+      data.info = normalizeInfo(res.data || submitData)
       data.editingSectionKey = ''
       data.editForm = {}
       ElMessage.success('保存成功')

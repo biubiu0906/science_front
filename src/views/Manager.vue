@@ -41,7 +41,7 @@
               <span>机构信息</span>
             </template>
             <el-menu-item index="/manager/institutionBasic">基本信息</el-menu-item>
-            <el-menu-item index="/manager/institutionSettings">基础设置</el-menu-item>
+            <el-menu-item index="/manager/institutionSettings">基础设施</el-menu-item>
             <el-menu-item index="/manager/institutionOrganization">组织建设</el-menu-item>
             <el-menu-item index="/manager/institutionDigital">信息化建设</el-menu-item>
             <el-menu-item index="/manager/institutionResearchDepartment">科研管理部门</el-menu-item>
