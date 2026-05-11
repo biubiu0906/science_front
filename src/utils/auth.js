@@ -3,6 +3,7 @@ import { clearLaboratoryLevelCache } from "@/utils/laboratoryLevel.js";
 export const clearLoginState = () => {
   localStorage.removeItem('xm-user')
   localStorage.removeItem('xm-will-logout')
+  localStorage.removeItem('rsa_public_key')
   clearLaboratoryLevelCache()
 }
 

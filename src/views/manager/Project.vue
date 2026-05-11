@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="project-page">
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.code" :prefix-icon="Search" style="width: 200px; margin-right: 10px"
         placeholder="请输入立项编号查询"></el-input>
@@ -7,6 +7,10 @@
         placeholder="请输入项目名称查询"></el-input>
       <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 180px; margin-right: 10px"
         placeholder="请输入申请教师查询"></el-input>
+      <el-select v-if="canFilterBySchool" v-model="data.schoolId" placeholder="请选择学校" clearable filterable
+        style="width: 180px; margin-right: 10px">
+        <el-option v-for="school in data.schools" :key="school.id" :label="school.name" :value="school.id" />
+      </el-select>
       <el-select v-model="data.researchType" placeholder="研究类型" clearable style="width: 140px; margin-right: 10px">
         <el-option label="基础研究" value="基础研究" />
         <el-option label="应用研究" value="应用研究" />
@@ -22,11 +26,11 @@
       <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
 
-    <div class="card" style="margin-bottom: 5px">
+    <div class="card project-table-card" style="margin-bottom: 5px" v-loading="data.loading" element-loading-text="数据加载中...">
       <div style="margin-bottom: 10px; margin-left: 10px;" v-if="data.laboratoryLevel === 2">
         <el-button type="primary" plain size="small" @click="handleAdd">新增</el-button>
       </div>
-      <el-table stripe :data="data.tableData" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
+      <el-table stripe :data="data.tableData" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center project-table" empty-text="暂无数据">
         <el-table-column label="序号" type="index" :index="indexMethod" width="60"/>
         <el-table-column prop="name" label="项目名称" min-width="150" sortable />
         <el-table-column prop="code" label="立项编号" min-width="140" sortable />
@@ -73,9 +77,17 @@
         </el-table-column>
       </el-table>
     </div>
-    <div class="card" v-if="data.total">
-      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize"
-        v-model:current-page="data.pageNum" :total="data.total" />
+    <div class="card project-pagination-card">
+      <el-pagination
+        @current-change="load"
+        @size-change="(size) => (paginationQuery.setPageSize(size), load())"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :page-sizes="[5, 10, 20, 50, 100]"
+        v-model:page-size="data.pageSize"
+        v-model:current-page="data.pageNum"
+        :total="data.total"
+      />
     </div>
 
     <!-- 科研项目新增/查看抽屉 -->
@@ -626,7 +638,7 @@
 
 <script setup>
 
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, computed } from "vue";
 import request from "@/utils/request.js";
 import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
@@ -646,7 +658,7 @@ const ATTACHMENT_DESCRIPTION_MAX_LENGTH = 256
 const PROJECT_REVIEW_REASON_MAX_LENGTH = 5000
 const PROJECT_TAB_ORDER = ['projectInfo', 'teamMembers', 'cooperativeUnits', 'projectStatus', 'budgetInfo', 'attachments']
 const PROJECT_DRAFT_PREFIX = 'project-form-draft'
-const queryFields = ['code', 'name', 'teacherName', 'researchType', 'subjectCategory', 'projectNature', 'projectLevel', 'projectStatus', 'status', 'reason', 'time']
+const queryFields = ['code', 'name', 'teacherName', 'schoolId', 'researchType', 'subjectCategory', 'projectNature', 'projectLevel', 'projectStatus', 'status', 'reason', 'time']
 const formRef = ref()
 const attachmentUploadRef = ref()
 const createEmptyAttachment = () => ({ fileCategory: '', fileDescription: '', fileName: '', fileUrl: '', fileList: [] })
@@ -702,12 +714,15 @@ const data = reactive({
     attachments: [], // 附件材料
   },
   tableData: [],
+  loading: false,
   pageNum: 1,
   pageSize: 10,
   total: 0,
   code: null,
   name: null,
   teacherName: null,
+  schoolId: null,
+  schools: [],
   researchType: null,
   subjectCategory: null,
   projectNature: null,
@@ -724,6 +739,19 @@ const data = reactive({
 })
 
 const paginationQuery = usePaginationQuery(data)
+
+const canFilterBySchool = computed(() => ['SUPER_ADMIN', 'ADMIN'].includes(data.user.role))
+
+const loadSchools = () => {
+  if (!canFilterBySchool.value) return
+  request.get('/school/selectAll').then(res => {
+    if (res.code === '200') {
+      data.schools = res.data || []
+    } else {
+      ElMessage.error(res.msg || '学校列表加载失败')
+    }
+  })
+}
 
 const createEmptyProjectForm = () => ({
   // 项目信息
@@ -993,6 +1021,7 @@ const load = () => {
       queryParams.status = todoStatus
     }
   }
+  data.loading = true
   request.get('/project/selectPage', {
     params: {
       pageNum: data.pageNum,
@@ -1007,6 +1036,8 @@ const load = () => {
       console.log('表格数据已加载:', data.tableData)
       console.log('数据总数:', data.total)
     }
+  }).finally(() => {
+    data.loading = false
   })
 }
 const handleAdd = () => {
@@ -1906,6 +1937,7 @@ onMounted(() => {
   if (data.user.id) {
     getLaboratoryLevel()
   }
+  loadSchools()
   load()
 })
 </script>
@@ -1936,9 +1968,26 @@ onMounted(() => {
   transition: all 0.2s ease-in-out;
 }
 
-/* 表格容器优化 */
-.el-table {
-  transition: all 0.2s ease-in-out;
+/* 主列表保留稳定高度，避免初次加载和最后一页行数不足时页面高度跳动 */
+.project-table-card {
+  min-height: 590px;
+}
+
+.project-table {
+  min-height: 540px;
+  transition: none;
+}
+
+.project-pagination-card {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-pagination-card :deep(.el-pagination) {
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
 /* 防止内容闪烁 */

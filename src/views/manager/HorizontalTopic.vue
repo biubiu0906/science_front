@@ -125,16 +125,15 @@
     <div class="table-footer">
       <div class="selected-info">已选择 {{ data.selectedIds.length }} 项</div>
       <div class="pagination-wrap">
-        <span class="total-info">总计 {{ data.total }} 条数据</span>
         <el-pagination
           v-model:current-page="data.pageNum"
           v-model:page-size="data.pageSize"
-          :page-sizes="[10, 20, 50]"
+          :page-sizes="[5, 10, 20, 50, 100]"
           :total="data.total"
-          layout="prev, pager, next, sizes, jumper"
+          layout="total, sizes, prev, pager, next, jumper"
           background
           @current-change="load"
-          @size-change="load"
+          @size-change="(size) => (data.pageSize = size, data.pageNum = 1, load())"
         />
       </div>
     </div>

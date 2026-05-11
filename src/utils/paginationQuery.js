@@ -1,3 +1,4 @@
+import { onScopeDispose } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const toPositiveInteger = (value, fallback) => {
@@ -9,10 +10,16 @@ const toPositiveInteger = (value, fallback) => {
 export const usePaginationQuery = (pagination, options = {}) => {
   const route = useRoute()
   const router = useRouter()
+  const ownerPath = route.path
+  let active = true
   const pageKey = options.pageKey || 'pageNum'
   const pageSizeKey = options.pageSizeKey || 'pageSize'
   const defaultPageNum = toPositiveInteger(options.defaultPageNum || pagination.pageNum, 1)
   const defaultPageSize = toPositiveInteger(options.defaultPageSize || pagination.pageSize, 10)
+
+  onScopeDispose(() => {
+    active = false
+  })
 
   pagination.pageNum = toPositiveInteger(route.query[pageKey], defaultPageNum)
   if (pageSizeKey) {
@@ -20,7 +27,8 @@ export const usePaginationQuery = (pagination, options = {}) => {
   }
 
   const replaceQuery = (patch) => {
-    const query = { ...route.query }
+    if (!active || router.currentRoute.value.path !== ownerPath) return
+    const query = { ...router.currentRoute.value.query }
     Object.entries(patch).forEach(([key, value]) => {
       if (value === null || value === undefined || value === '') {
         delete query[key]
@@ -28,7 +36,7 @@ export const usePaginationQuery = (pagination, options = {}) => {
         query[key] = String(value)
       }
     })
-    router.replace({ path: route.path, query })
+    router.replace({ path: ownerPath, query })
   }
 
   const sync = () => {

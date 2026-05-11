@@ -32,7 +32,16 @@
     </div>
 
     <div class="card" v-if="data.total">
-      <el-pagination @current-change="load" background layout="prev, pager, next" :page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total" />
+      <el-pagination
+        @current-change="load"
+        @size-change="(size) => (paginationQuery.setPageSize(size), load())"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :page-sizes="[5, 10, 20, 50, 100]"
+        v-model:page-size="data.pageSize"
+        v-model:current-page="data.pageNum"
+        :total="data.total"
+      />
     </div>
 
     <el-dialog title="新增学校" v-model="data.formVisible" width="30%" destroy-on-close>

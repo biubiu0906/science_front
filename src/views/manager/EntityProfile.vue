@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="profileLoading" element-loading-text="数据加载中...">
     <div class="card" style="margin-bottom: 8px; top: 0; z-index: 3">
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
@@ -159,6 +159,8 @@
             <el-input v-model="filters.project.keyword" style="width: 260px" placeholder="项目名称/编号" clearable />
             <el-select v-model="filters.project.status" style="width: 180px" placeholder="审核状态" clearable>
               <el-option label="待实验室审核" value="待审核" />
+              <el-option label="待学校审核" value="实验室审核通过" />
+              <el-option label="校审通过" value="校审通过" />
               <el-option label="审核通过" value="审核通过" />
               <el-option label="不通过" value="不通过" />
             </el-select>
@@ -186,9 +188,7 @@
             <el-table-column prop="teacherName" label="申请教师" min-width="110" sortable />
             <el-table-column prop="status" label="审核状态" min-width="110" sortable>
               <template #default="{ row }">
-                <el-tag v-if="row.status === '待审核'" type="warning">待实验室审核</el-tag>
-                <el-tag v-else-if="row.status === '不通过'" type="danger">不通过</el-tag>
-                <el-tag v-else type="success">审核通过</el-tag>
+                <el-tag :type="businessStatusTag(row.status)">{{ businessStatusText(row.status) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="reason" label="审核信息" min-width="110" show-overflow-tooltip sortable />
@@ -210,10 +210,12 @@
           <div style="margin-top: 10px; text-align: center" v-if="filteredProjects.length">
             <el-pagination
               background
-              layout="prev, pager, next"
-              :page-size="projectPager.pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :page-sizes="[5, 10, 20, 50, 100]"
+              v-model:page-size="projectPager.pageSize"
               v-model:current-page="projectPager.pageNum"
               @current-change="syncToRoute"
+              @size-change="(size) => handlePagerSizeChange(projectPager, size)"
               :total="filteredProjects.length"
             />
           </div>
@@ -224,6 +226,8 @@
             <el-input v-model="filters.achievement.keyword" style="width: 260px" placeholder="成果名称/项目名称" clearable />
             <el-select v-model="filters.achievement.status" style="width: 180px" placeholder="审核状态" clearable>
               <el-option label="待实验室审核" value="待审核" />
+              <el-option label="待学校审核" value="实验室审核通过" />
+              <el-option label="校审通过" value="校审通过" />
               <el-option label="审核通过" value="审核通过" />
               <el-option label="不通过" value="不通过" />
             </el-select>
@@ -251,9 +255,7 @@
             </el-table-column>
             <el-table-column prop="status" label="审核状态" min-width="120" sortable>
               <template #default="{ row }">
-                <el-tag v-if="row.status === '待审核'" type="warning">待实验室审核</el-tag>
-                <el-tag v-else-if="row.status === '不通过'" type="danger">不通过</el-tag>
-                <el-tag v-else type="success">审核通过</el-tag>
+                <el-tag :type="businessStatusTag(row.status)">{{ businessStatusText(row.status) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="reason" label="审核信息" min-width="110" sortable show-overflow-tooltip />
@@ -275,10 +277,12 @@
           <div style="margin-top: 10px; text-align: center" v-if="filteredAchievements.length">
             <el-pagination
               background
-              layout="prev, pager, next"
-              :page-size="achievementPager.pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :page-sizes="[5, 10, 20, 50, 100]"
+              v-model:page-size="achievementPager.pageSize"
               v-model:current-page="achievementPager.pageNum"
               @current-change="syncToRoute"
+              @size-change="(size) => handlePagerSizeChange(achievementPager, size)"
               :total="filteredAchievements.length"
             />
           </div>
@@ -325,10 +329,12 @@
           <div style="margin-top: 10px; text-align: center" v-if="filteredPhaseReports.length">
             <el-pagination
               background
-              layout="prev, pager, next"
-              :page-size="phaseReportPager.pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :page-sizes="[5, 10, 20, 50, 100]"
+              v-model:page-size="phaseReportPager.pageSize"
               v-model:current-page="phaseReportPager.pageNum"
               @current-change="syncToRoute"
+              @size-change="(size) => handlePagerSizeChange(phaseReportPager, size)"
               :total="filteredPhaseReports.length"
             />
           </div>
@@ -477,6 +483,7 @@ import request from '@/utils/request.js'
 
 const router = useRouter()
 const route = useRoute()
+const ENTITY_PROFILE_PATH = '/manager/entityProfile'
 const currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
 const userRole = currentUser.role
 
@@ -578,19 +585,7 @@ mockProjects.splice(0, mockProjects.length)
 mockAchievements.splice(0, mockAchievements.length)
 mockPhaseReports.splice(0, mockPhaseReports.length)
 
-const formatDate = (date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const defaultDateRange = () => {
-  const end = new Date()
-  const start = new Date(end)
-  start.setFullYear(start.getFullYear() - 1)
-  return [formatDate(start), formatDate(end)]
-}
+const defaultDateRange = () => []
 
 const query = reactive({
   type: 'school',
@@ -609,13 +604,17 @@ const filters = reactive({
   phaseReport: { keyword: '', reviewStatus: '' }
 })
 
+const approvedBusinessStatuses = ['审核通过', '校审通过', '校级审核通过']
+const rejectedBusinessStatuses = ['不通过', '审核未通过', '校审驳回', '实验室审核驳回']
+const approvedPhaseStatuses = ['SUPER_APPROVED']
+
 const projectPager = reactive({ pageNum: 1, pageSize: 10 })
 const achievementPager = reactive({ pageNum: 1, pageSize: 10 })
 const phaseReportPager = reactive({ pageNum: 1, pageSize: 10 })
 
-usePaginationQuery(projectPager, { pageKey: 'projectPage', pageSizeKey: null })
-usePaginationQuery(achievementPager, { pageKey: 'achievementPage', pageSizeKey: null })
-usePaginationQuery(phaseReportPager, { pageKey: 'phaseReportPage', pageSizeKey: null })
+usePaginationQuery(projectPager, { pageKey: 'projectPage', pageSizeKey: 'projectPageSize' })
+usePaginationQuery(achievementPager, { pageKey: 'achievementPage', pageSizeKey: 'achievementPageSize' })
+usePaginationQuery(phaseReportPager, { pageKey: 'phaseReportPage', pageSizeKey: 'phaseReportPageSize' })
 
 const trendChartEl = ref(null)
 const statusChartEl = ref(null)
@@ -642,6 +641,12 @@ let profileRequestSeq = 0
 let applyingProfilePayload = false
 let profileReady = false
 let profileLoadTimer = null
+let profileDisposed = false
+const profileLoading = ref(false)
+
+const isCurrentProfileRoute = () => {
+  return !profileDisposed && router.currentRoute.value.path === ENTITY_PROFILE_PATH
+}
 
 const currentProfileParams = () => {
   const params = { type: query.type }
@@ -651,29 +656,38 @@ const currentProfileParams = () => {
 }
 
 const loadProfileData = async () => {
+  if (!isCurrentProfileRoute()) return
   const seq = ++profileRequestSeq
-  const res = await request.get('/entityProfile/data', { params: currentProfileParams() })
-  if (seq !== profileRequestSeq) return
-  if (res.code !== '200') {
-    ElMessage.error(res.msg || '画像数据加载失败')
-    return
+  profileLoading.value = true
+  try {
+    const res = await request.get('/entityProfile/data', { params: currentProfileParams() })
+    if (seq !== profileRequestSeq || !isCurrentProfileRoute()) return
+    if (res.code !== '200') {
+      ElMessage.error(res.msg || '画像数据加载失败')
+      return
+    }
+    const payload = res.data || {}
+    applyingProfilePayload = true
+    setList(mockSchools, payload.schools)
+    setList(mockLaboratories, payload.laboratories)
+    if (['school', 'laboratory', 'base', 'team'].includes(payload.selectedType)) {
+      query.type = payload.selectedType
+    }
+    query.schoolId = payload.selectedSchoolId || null
+    query.laboratoryId = payload.selectedLaboratoryId || null
+    ensureTypeSelection()
+    setList(mockProjects, payload.projects)
+    setList(mockAchievements, payload.achievements)
+    setList(mockPhaseReports, payload.phaseReports)
+    await nextTick()
+    if (!isCurrentProfileRoute()) return
+    renderCharts()
+  } finally {
+    if (seq === profileRequestSeq) {
+      applyingProfilePayload = false
+      profileLoading.value = false
+    }
   }
-  const payload = res.data || {}
-  applyingProfilePayload = true
-  setList(mockSchools, payload.schools)
-  setList(mockLaboratories, payload.laboratories)
-  if (['school', 'laboratory', 'base', 'team'].includes(payload.selectedType)) {
-    query.type = payload.selectedType
-  }
-  query.schoolId = payload.selectedSchoolId || null
-  query.laboratoryId = payload.selectedLaboratoryId || null
-  ensureTypeSelection()
-  setList(mockProjects, payload.projects)
-  setList(mockAchievements, payload.achievements)
-  setList(mockPhaseReports, payload.phaseReports)
-  await nextTick()
-  applyingProfilePayload = false
-  renderCharts()
 }
 
 const currentTypeLaboratories = computed(() => {
@@ -747,15 +761,38 @@ const withinRange = (dateStr) => {
   return dateStr >= start && dateStr <= end
 }
 
+const sameId = (a, b) => String(a) === String(b)
+
+const matchesEntityScope = (item) => {
+  if (query.type === 'school') {
+    if (!query.schoolId) return true
+    return sameId(item.schoolId, query.schoolId)
+  }
+  if (!query.laboratoryId) return true
+  return sameId(item.laboratoryId, query.laboratoryId)
+}
+
 const baseFilter = (item) => {
-  return withinRange(item.updateTime || item.updatedAt)
+  return matchesEntityScope(item) && withinRange(item.updateTime || item.updatedAt)
+}
+
+const matchesBusinessStatus = (status, selectedStatus) => {
+  if (!selectedStatus) return true
+  if (selectedStatus === '审核通过') return approvedBusinessStatuses.includes(status)
+  if (selectedStatus === '不通过') return rejectedBusinessStatuses.includes(status)
+  return status === selectedStatus
+}
+
+const matchesPhaseStatus = (status, selectedStatus) => {
+  if (!selectedStatus) return true
+  return status === selectedStatus
 }
 
 const filteredProjects = computed(() => {
   const kw = (filters.project.keyword || '').trim()
   return mockProjects.filter(p => {
     if (!baseFilter(p)) return false
-    if (filters.project.status && p.status !== filters.project.status) return false
+    if (!matchesBusinessStatus(p.status, filters.project.status)) return false
     if (filters.project.projectStatus && p.projectStatus !== filters.project.projectStatus) return false
     if (!kw) return true
     return (p.name && p.name.includes(kw)) || (p.code && p.code.includes(kw))
@@ -766,7 +803,7 @@ const filteredAchievements = computed(() => {
   const kw = (filters.achievement.keyword || '').trim()
   return mockAchievements.filter(a => {
     if (!baseFilter(a)) return false
-    if (filters.achievement.status && a.status !== filters.achievement.status) return false
+    if (!matchesBusinessStatus(a.status, filters.achievement.status)) return false
     if (filters.achievement.typeName && a.typeName !== filters.achievement.typeName) return false
     if (!kw) return true
     return (a.name && a.name.includes(kw)) || (a.projectName && a.projectName.includes(kw))
@@ -777,7 +814,7 @@ const filteredPhaseReports = computed(() => {
   const kw = (filters.phaseReport.keyword || '').trim()
   return mockPhaseReports.filter(r => {
     if (!baseFilter(r)) return false
-    if (filters.phaseReport.reviewStatus && r.reviewStatus !== filters.phaseReport.reviewStatus) return false
+    if (!matchesPhaseStatus(r.reviewStatus, filters.phaseReport.reviewStatus)) return false
     if (!kw) return true
     const labName = r.basicInfo?.labName || ''
     return String(r.id).includes(kw) || labName.includes(kw)
@@ -802,30 +839,30 @@ const kpis = computed(() => {
   return {
     project: {
       total: project.length,
-      pending: project.filter(p => p.status === '待审核').length,
-      approved: project.filter(p => p.status === '审核通过').length
+      pending: project.filter(p => canReviewProjectOrAchievement(p.status)).length,
+      approved: project.filter(p => approvedBusinessStatuses.includes(p.status)).length
     },
     achievement: {
       total: achievement.length,
-      pending: achievement.filter(a => a.status === '待审核').length,
-      approved: achievement.filter(a => a.status === '审核通过').length
+      pending: achievement.filter(a => canReviewProjectOrAchievement(a.status)).length,
+      approved: achievement.filter(a => approvedBusinessStatuses.includes(a.status)).length
     },
     phaseReport: {
       total: phaseReport.length,
-      pending: phaseReport.filter(r => ['SUBMITTED', 'SCHOOL_APPROVED'].includes(r.reviewStatus)).length,
-      approved: phaseReport.filter(r => ['SUPER_APPROVED'].includes(r.reviewStatus)).length
+      pending: phaseReport.filter(r => canReviewPhaseReport(r)).length,
+      approved: phaseReport.filter(r => approvedPhaseStatuses.includes(r.reviewStatus)).length
     }
   }
 })
 
 const todos = computed(() => {
   const items = []
-  const pPending = filteredProjects.value.filter(p => p.status === '待审核').length
-  if (pPending) items.push({ key: 'pPending', title: '待审核科研项目', count: pPending, tagText: '项目', tagType: 'primary', jump: { tab: 'project', patch: () => { filters.project.status = '待审核' } } })
-  const aPending = filteredAchievements.value.filter(a => a.status === '待审核').length
-  if (aPending) items.push({ key: 'aPending', title: '待审核科研成果', count: aPending, tagText: '成果', tagType: 'success', jump: { tab: 'achievement', patch: () => { filters.achievement.status = '待审核' } } })
-  const phasePending = filteredPhaseReports.value.filter(r => ['SUBMITTED', 'SCHOOL_APPROVED'].includes(r.reviewStatus)).length
-  if (phasePending) items.push({ key: 'phasePending', title: '待审核阶段报告', count: phasePending, tagText: '阶段', tagType: 'warning', jump: { tab: 'phaseReport', patch: () => { filters.phaseReport.reviewStatus = 'SUBMITTED' } } })
+  const pPending = filteredProjects.value.filter(p => canReviewProjectOrAchievement(p.status)).length
+  if (pPending) items.push({ key: 'pPending', title: '待审核科研项目', count: pPending, tagText: '项目', tagType: 'primary', jump: { tab: 'project', patch: () => { filters.project.status = userRole === 'SCHOOL_ADMIN' ? '实验室审核通过' : userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? '校审通过' : '待审核' } } })
+  const aPending = filteredAchievements.value.filter(a => canReviewProjectOrAchievement(a.status)).length
+  if (aPending) items.push({ key: 'aPending', title: '待审核科研成果', count: aPending, tagText: '成果', tagType: 'success', jump: { tab: 'achievement', patch: () => { filters.achievement.status = userRole === 'SCHOOL_ADMIN' ? '实验室审核通过' : userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? '校审通过' : '待审核' } } })
+  const phasePending = filteredPhaseReports.value.filter(r => canReviewPhaseReport(r)).length
+  if (phasePending) items.push({ key: 'phasePending', title: '待审核阶段报告', count: phasePending, tagText: '阶段', tagType: 'warning', jump: { tab: 'phaseReport', patch: () => { filters.phaseReport.reviewStatus = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' ? 'SCHOOL_APPROVED' : 'SUBMITTED' } } })
   return items
 })
 
@@ -872,6 +909,28 @@ const approvalStatusText = (status) => {
   return status === '待审核' ? '待实验室审核' : displayValue(status)
 }
 
+const businessStatusText = (status) => {
+  const map = {
+    待审核: '待实验室审核',
+    实验室审核通过: '待学校审核',
+    校审通过: '校审通过',
+    校级审核通过: '校审通过',
+    审核通过: '审核通过',
+    不通过: '不通过',
+    实验室审核驳回: '实验室审核驳回',
+    校审驳回: '校审驳回',
+    审核未通过: '审核未通过'
+  }
+  return map[status] || displayValue(status)
+}
+
+const businessStatusTag = (status) => {
+  if (status === '待审核' || status === '实验室审核通过') return 'warning'
+  if (approvedBusinessStatuses.includes(status)) return 'success'
+  if (rejectedBusinessStatuses.includes(status)) return 'danger'
+  return 'info'
+}
+
 const isLaboratoryReviewRole = (role) => {
   return role === 'KEY_LABORATORY' || role === 'NORMAL_LABORATORY'
 }
@@ -884,6 +943,7 @@ const canReviewProjectOrAchievement = (status) => {
 }
 
 const phaseStatusText = (status) => {
+  if (status === undefined || status === null || status === '') return '暂无数据'
   const map = { SUBMITTED: '已提交', SCHOOL_APPROVED: '校审通过', SCHOOL_REJECTED: '校审驳回', SUPER_APPROVED: '审核通过', SUPER_REJECTED: '审核未通过' }
   return map[status] || '未知状态'
 }
@@ -911,8 +971,8 @@ const phaseReviewOptions = computed(() => {
 
 const canReviewPhaseReport = (row) => {
   const status = row?.reviewStatus
-  if (userRole === 'SCHOOL_ADMIN') return status === 'SUBMITTED' || status === 1
-  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return status === 'SCHOOL_APPROVED' || status === 'SUBMITTED' || status === 1
+  if (userRole === 'SCHOOL_ADMIN') return status === 'SUBMITTED'
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return status === 'SCHOOL_APPROVED' || status === 'SUBMITTED'
   return false
 }
 
@@ -1116,14 +1176,25 @@ const restoreScrollSnapshot = (snapshot) => {
 }
 
 const syncToRoute = async () => {
+  if (!isCurrentProfileRoute()) return
   const scrollSnapshot = getScrollSnapshot()
   const q = query.type === 'school' ? { type: 'school', id: query.schoolId || '' } : { type: query.type, id: query.laboratoryId || '' }
   q.tab = activeTab.value
   q.projectPage = projectPager.pageNum
+  q.projectPageSize = projectPager.pageSize
   q.achievementPage = achievementPager.pageNum
+  q.achievementPageSize = achievementPager.pageSize
   q.phaseReportPage = phaseReportPager.pageNum
-  await router.replace({ path: '/manager/entityProfile', query: q })
+  q.phaseReportPageSize = phaseReportPager.pageSize
+  await router.replace({ path: ENTITY_PROFILE_PATH, query: q })
+  if (!isCurrentProfileRoute()) return
   restoreScrollSnapshot(scrollSnapshot)
+}
+
+const handlePagerSizeChange = (pager, pageSize) => {
+  pager.pageSize = pageSize
+  pager.pageNum = 1
+  syncToRoute()
 }
 
 const resetPagers = () => {
@@ -1133,14 +1204,16 @@ const resetPagers = () => {
 }
 
 const scheduleProfileLoad = () => {
+  if (!isCurrentProfileRoute()) return
   if (!profileReady) return
   if (applyingProfilePayload) return
   if (profileLoadTimer) clearTimeout(profileLoadTimer)
   profileLoadTimer = setTimeout(async () => {
     profileLoadTimer = null
+    if (!isCurrentProfileRoute()) return
     resetPagers()
     await loadProfileData()
-    syncToRoute()
+    if (isCurrentProfileRoute()) syncToRoute()
   }, 0)
 }
 
@@ -1165,11 +1238,13 @@ const reset = () => {
 }
 
 const refresh = async () => {
+  if (!isCurrentProfileRoute()) return
   await loadProfileData()
-  syncToRoute()
+  if (isCurrentProfileRoute()) syncToRoute()
 }
 
 const onTabChange = () => {
+  if (!isCurrentProfileRoute()) return
   syncToRoute()
   nextTick(() => renderCharts())
 }
@@ -1376,11 +1451,15 @@ watch(
 onMounted(async () => {
   applyRouteQuery(false)
   await loadProfileData()
+  if (!isCurrentProfileRoute()) return
   profileReady = true
   syncToRoute()
 })
 
 onUnmounted(() => {
+  profileDisposed = true
+  profileReady = false
+  profileRequestSeq += 1
   if (profileLoadTimer) {
     clearTimeout(profileLoadTimer)
     profileLoadTimer = null

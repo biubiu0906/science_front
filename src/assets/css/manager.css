@@ -23,8 +23,10 @@
     flex-direction: column;
     overflow-x: hidden;
     /* 隐藏滚动条 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE 和 Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 和 Edge */
     transition: width 0.3s ease-in-out;
 
     margin: 5px;
@@ -51,8 +53,10 @@
     overflow-y: auto;
     overflow-x: hidden;
     /* 隐藏滚动条 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE 和 Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 和 Edge */
 }
 
 /* 隐藏 Webkit 浏览器的滚动条 */
@@ -67,7 +71,7 @@
     display: flex;
     align-items: center;
     box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
-    margin:5px 5px 0 0;
+    margin: 5px 5px 0 0;
     border-radius: 5px;
 }
 
@@ -92,7 +96,7 @@
     padding-left: 20px;
 }
 
-.manager-header-left .el-icon{
+.manager-header-left .el-icon {
     font-size: 18px;
     color: #fff;
     margin-top: 6px;
@@ -110,13 +114,15 @@
     overflow-y: auto;
     overflow-x: hidden;
     /* 隐藏滚动条 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE 和 Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 和 Edge */
     /*background-color: #e9edf2;*/
 
     /* 使用背景图片，遮罩层通过伪元素实现 */
     position: relative;
-    background-image: 
+    background-image:
         linear-gradient(rgba(255, 255, 255, 0.815), rgba(255, 255, 255, 0.815)),
         url('../imgs/content-bg.png');
     background-size: cover;
@@ -131,7 +137,7 @@
 }
 
 /* 确保内容在遮罩层之上 */
-.content-area > * {
+.content-area>* {
     position: relative;
     z-index: 2;
 }
@@ -145,7 +151,8 @@
     justify-content: center;
     border-bottom: 1px solid #e6e6e6;
     transition: justify-content 0.3s ease;
-    flex-shrink: 0; /* 防止被压缩 */
+    flex-shrink: 0;
+    /* 防止被压缩 */
     position: sticky;
     top: 0;
     z-index: 1;
@@ -167,7 +174,8 @@
     font-size: 18px;
     margin-left: 10px;
     color: #fff;
-    transition: none; /* 移除过渡动画 */
+    transition: none;
+    /* 移除过渡动画 */
 }
 
 /* 折叠时标题立即隐藏 */
@@ -184,8 +192,10 @@
     overflow-y: auto;
     overflow-x: hidden;
     /* 隐藏滚动条 */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE 和 Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 和 Edge */
 }
 
 /* 隐藏菜单滚动条 */
@@ -205,7 +215,8 @@
 }
 
 .el-sub-menu__title:hover {
-    background-color: #2d5a9e !important; /* 悬浮时稍微深一点的蓝色 */
+    background-color: #2d5a9e !important;
+    /* 悬浮时稍微深一点的蓝色 */
     color: #fff !important;
 }
 
@@ -213,7 +224,8 @@
     color: #fff;
     height: 50px;
     line-height: 50px;
-    background-color: #3969b2 !important; /* 必须加上这个背景色，否则鼠标离开会出现白色 */
+    background-color: #3969b2 !important;
+    /* 必须加上这个背景色，否则鼠标离开会出现白色 */
     margin-left: 0;
 }
 

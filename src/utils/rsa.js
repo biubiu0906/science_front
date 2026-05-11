@@ -5,6 +5,10 @@ const STORAGE_KEY = 'rsa_public_key'
 // 提前缓冲时间（10分钟），单位毫秒
 const BUFFER_TIME = 10 * 60 * 1000
 
+const clearStoredPublicKey = () => {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 // 生成随机 nonce
 const generateNonce = (length = 16) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -17,7 +21,12 @@ const generateNonce = (length = 16) => {
 
 // 获取并缓存公钥
 export const getPublicKey = async (forceRefresh = false) => {
-  let stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+  let stored = null
+  try {
+    stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+  } catch (_) {
+    clearStoredPublicKey()
+  }
   const now = Date.now()
 
   // 检查缓存是否存在且未过期（保留缓冲时间）
@@ -34,14 +43,16 @@ export const getPublicKey = async (forceRefresh = false) => {
       return stored
     }
   } catch (e) {
+    if (forceRefresh) clearStoredPublicKey()
     console.error('Failed to fetch public key', e)
   }
+  if (forceRefresh) clearStoredPublicKey()
   return null
 }
 
 // 清除公钥缓存
 export const removePublicKey = () => {
-  localStorage.removeItem(STORAGE_KEY)
+  clearStoredPublicKey()
 }
 
 // 加密函数 (使用 node-forge 以兼容 HTTP 环境)
