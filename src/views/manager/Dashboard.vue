@@ -1,5 +1,10 @@
 <template>
-  <div style="height: calc(100vh - 89px); overflow: hidden; padding-right: 10px; padding-bottom: 0;">
+  <div 
+    style="height: calc(100vh - 89px); overflow: hidden; padding-right: 10px; padding-bottom: 0;"
+    v-loading="data.loading"
+    element-loading-text="数据加载中..."
+    element-loading-background="rgba(255, 255, 255, 0.78)"
+  >
     <div style="display: flex; margin-bottom: 10px;">
       <!-- 左侧：通知和公告 -->
       <div class="card" style="width: 50%; margin-right: 5px; height: 180px; padding: 0 15px 10px 15px; box-sizing: border-box;">
@@ -641,10 +646,11 @@ const data = reactive({
   ],
   achievementRanking: [
   ],
+  loading: false
 })
 
 const loadBaseData = () => {
-  request.get('/dashboard/base').then(res => {
+  return request.get('/dashboard/base').then(res => {
     if (res.code === '200') {
       data.baseData = res.data
     } else {
@@ -655,7 +661,7 @@ const loadBaseData = () => {
 
 // 加载公告数据
 const loadNotice = () => {
-  request.get('/notice/selectAll').then(res => {
+  return request.get('/notice/selectAll').then(res => {
     if (res.code === '200') {
       data.noticeData = res.data.list || []
     } else {
@@ -669,7 +675,7 @@ const loadNotice = () => {
 
 // 加载通知数据
 const loadNotification = () => {
-  request.get('/notification/selectCurrent').then(res => {
+  return request.get('/notification/selectCurrent').then(res => {
     if (res.code === '200') {
       data.notificationData = res.data.list || []
     } else {
@@ -970,10 +976,21 @@ const handleTabChange = (tabName) => {
   })
 }
 
-loadBaseData()
-loadNotice()
-loadNotification()
+const initData = async () => {
+  data.loading = true;
+  try {
+    await Promise.all([
+      loadBaseData(),
+      loadNotice(),
+      loadNotification()
+    ]);
+  } finally {
+    data.loading = false;
+  }
+}
+
 onMounted(() => {
+  initData();
   // 初始加载默认tab的图表
   handleTabChange(data.activeTab)
 })

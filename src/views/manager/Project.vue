@@ -640,6 +640,7 @@
 
 import { reactive, ref, onMounted, computed } from "vue";
 import request from "@/utils/request.js";
+import { getSchools } from '@/utils/dict.js';
 import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import { ElMessage, ElMessageBox } from "@/utils/element-plus";
@@ -744,12 +745,10 @@ const canFilterBySchool = computed(() => ['SUPER_ADMIN', 'ADMIN'].includes(data.
 
 const loadSchools = () => {
   if (!canFilterBySchool.value) return
-  request.get('/school/selectAll').then(res => {
-    if (res.code === '200') {
-      data.schools = res.data || []
-    } else {
-      ElMessage.error(res.msg || '学校列表加载失败')
-    }
+  getSchools().then(res => {
+    data.schools = res || []
+  }).catch(err => {
+    ElMessage.error(err.message || '学校列表加载失败')
   })
 }
 

@@ -1,5 +1,23 @@
 <template>
   <div class="research-dept-page">
+    <InstitutionScopeList v-if="canSelectScope" ref="scopeListRef" module="researchDepartment" :columns="scopeColumns" @select="openScope" />
+
+    <InstitutionMaintenanceDialog
+      v-if="shouldShowMaintenance"
+      v-model:visible="data.scopeDialogVisible"
+      :dialog="canSelectScope"
+      :title="scopeDialogTitle"
+      @closed="closeScopeDialog"
+    >
+    <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
+      <div>
+        <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+        <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+        <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+      </div>
+      <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+    </div>
+
     <div
       v-for="section in sections"
       :key="section.key"
@@ -43,14 +61,17 @@
         </div>
       </div>
     </div>
+    </InstitutionMaintenanceDialog>
   </div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { computed, reactive, onMounted, ref } from 'vue'
 import request from '@/utils/request.js'
 import { ElMessage } from '@/utils/element-plus'
 import { DocumentChecked } from '@element-plus/icons-vue'
+import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
+import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
 
 const fieldMap = {
   schoolLeader: 'school_leader',
@@ -66,6 +87,16 @@ const fieldMap = {
   contactPhone: 'contact_phone',
   contactEmail: 'contact_email'
 }
+
+const scopeColumns = [
+  { label: '科研管理部门', prop: 'summary.departmentFullName', minWidth: 200 },
+  { label: '分管校领导', prop: 'summary.schoolLeader', minWidth: 130 },
+  { label: '部门负责人', prop: 'summary.headName', minWidth: 120 },
+  { label: '负责人电话', prop: 'summary.headPhone', minWidth: 140 },
+  { label: '联系人', prop: 'summary.contactName', minWidth: 110 },
+  { label: '联系人电话', prop: 'summary.contactPhone', minWidth: 140 }
+]
+const scopeListRef = ref()
 
 const sections = [
   {
@@ -104,10 +135,23 @@ const sections = [
 ]
 
 const data = reactive({
+  currentUser: {},
+  selectedScope: null,
+  scopeDialogVisible: false,
   info: {},
   editingSectionKey: '',
   editForm: {}
 })
+
+try {
+  data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+} catch (_) {
+  data.currentUser = {}
+}
+
+const canSelectScope = computed(() => ['SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(data.currentUser.role))
+const shouldShowMaintenance = computed(() => !canSelectScope.value || !!data.selectedScope)
+const scopeDialogTitle = computed(() => data.selectedScope ? `维护 ${data.selectedScope.institutionName}` : '科研管理部门维护')
 
 const normalizeInfo = (raw = {}) => {
   const normalized = {}
@@ -119,14 +163,47 @@ const normalizeInfo = (raw = {}) => {
   return normalized
 }
 
+const getScopeParams = () => {
+  if (!canSelectScope.value || !data.selectedScope) return {}
+  return {
+    institutionType: data.selectedScope.institutionType,
+    schoolId: data.selectedScope.schoolId,
+    organizationId: data.selectedScope.organizationId
+  }
+}
+
 const load = () => {
-  request.get('/researchDepartment/current').then(res => {
+  request.get('/researchDepartment/current', { params: getScopeParams() }).then(res => {
     if (res.code === '200') {
       data.info = normalizeInfo(res.data || {})
     } else {
       ElMessage.error(res.msg || '获取科研管理部门信息失败')
     }
   })
+}
+
+const openScope = (scope) => {
+  data.selectedScope = scope
+  data.scopeDialogVisible = true
+  data.info = {}
+  data.editingSectionKey = ''
+  data.editForm = {}
+  load()
+}
+
+const returnToScopeList = () => {
+  if (canSelectScope.value) {
+    data.scopeDialogVisible = false
+    return
+  }
+  closeScopeDialog()
+}
+
+const closeScopeDialog = () => {
+  data.selectedScope = null
+  data.info = {}
+  data.editingSectionKey = ''
+  data.editForm = {}
 }
 
 const openEdit = (section) => {
@@ -142,11 +219,12 @@ const cancelEdit = () => {
 const saveSection = () => {
   const submitData = { ...data.editForm }
 
-  request.put('/researchDepartment/current', submitData).then(res => {
+  request.put('/researchDepartment/current', submitData, { params: getScopeParams() }).then(res => {
     if (res.code === '200') {
       data.info = normalizeInfo(res.data || submitData)
       data.editingSectionKey = ''
       data.editForm = {}
+      scopeListRef.value?.load?.()
       ElMessage.success('保存成功')
     } else {
       ElMessage.error(res.msg || '保存失败')
@@ -155,7 +233,7 @@ const saveSection = () => {
 }
 
 onMounted(() => {
-  load()
+  if (!canSelectScope.value) load()
 })
 </script>
 
@@ -169,6 +247,28 @@ onMounted(() => {
 .info-section {
   border: 1px solid #e4e7ed;
   background: #fff;
+}
+
+.selected-scope-bar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border: 1px solid #e4e7ed;
+  background: #fff;
+}
+
+.selected-scope-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.selected-scope-school {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #606266;
 }
 
 .section-header {

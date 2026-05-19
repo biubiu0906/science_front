@@ -1,22 +1,27 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-        <el-input v-model="searchId" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入申请编号查询"></el-input>
-        <el-select v-model="searchStatus" placeholder="状态" clearable style="width: 140px; margin-right: 10px">
+        <el-input v-model="searchId" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入申请编号查询" :disabled="data.loading"></el-input>
+        <el-select v-model="searchStatus" placeholder="状态" clearable style="width: 140px; margin-right: 10px" :disabled="data.loading">
           <el-option label="待审核" value="SUBMITTED" />
           <el-option label="校审通过" value="SCHOOL_APPROVED" />
           <el-option label="校审驳回" value="SCHOOL_REJECTED" />
           <el-option label="终审通过" value="SUPER_APPROVED" />
           <el-option label="终审驳回" value="SUPER_REJECTED" />
         </el-select>
-        <el-button type="info" plain size="small" @click="searchReport">查询</el-button>
-        <el-button type="warning" plain size="small" style="margin: 0 10px" @click="resetSearch">重置</el-button>
+        <el-button type="info" plain size="small" @click="searchReport" :loading="data.loading">查询</el-button>
+        <el-button type="warning" plain size="small" style="margin: 0 10px" @click="resetSearch" :disabled="data.loading">重置</el-button>
       </div>
-    <div class="card">
+    <div
+      class="card lab-stage-table-card"
+      v-loading="data.loading"
+      element-loading-text="数据加载中..."
+      element-loading-background="rgba(255, 255, 255, 0.78)"
+    >
       <div class="header-actions">
-        <el-button type="primary" @click="openDialog" size="small" plain>新增阶段报告</el-button>
+        <el-button type="primary" @click="openDialog" size="small" plain :disabled="data.loading">新增阶段报告</el-button>
         <el-button type="success" @click="downloadInstruction" size="small" plain>下载填写说明</el-button>
-        <el-button type="danger" @click="delBatch" size="small" plain>批量删除</el-button>
+        <el-button type="danger" @click="delBatch" size="small" plain :disabled="data.loading">批量删除</el-button>
       </div>
       
       <!-- 报告列表 -->
@@ -570,19 +575,26 @@ const searchId = ref('')
 const searchStatus = ref(null)
 
 // 获取报告列表
-const loadReportList = () => {
-  request.get('/lab_phase_report/selectByCondition', {
-    params: {
-      id: searchId.value || undefined,
-      reviewStatus: searchStatus.value || undefined
-    }
-  }).then(res => {
+const loadReportList = async () => {
+  data.loading = true
+  try {
+    const res = await request.get('/lab_phase_report/selectByCondition', {
+      params: {
+        id: searchId.value || undefined,
+        reviewStatus: searchStatus.value || undefined
+      }
+    })
     if (res.code === '200') {
-      reportList.value = res.data
+      reportList.value = Array.isArray(res.data) ? res.data : []
     } else {
       ElMessage.error(res.msg || '获取列表失败')
     }
-  })
+  } catch (error) {
+    console.error('获取阶段报告列表失败', error)
+    ElMessage.error('获取列表失败，请稍后再试')
+  } finally {
+    data.loading = false
+  }
 }
 
 const searchReport = () => {
@@ -612,7 +624,8 @@ const autoFillLoading = ref(false)
 const formRef = ref(null)
 
 const data = reactive({
-  ids: []
+  ids: [],
+  loading: false
 })
 
 // 上传相关配置
@@ -1186,6 +1199,22 @@ const delBatch = () => {
 
 .header-actions {
   margin-bottom: 10px;
+}
+
+.lab-stage-table-card {
+  position: relative;
+  min-height: 260px;
+}
+
+:deep(.lab-stage-table-card .el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+}
+
+:deep(.lab-stage-table-card .el-loading-text) {
+  margin-top: 10px;
+  color: #409eff;
+  font-size: 14px;
 }
 
 .section-title {

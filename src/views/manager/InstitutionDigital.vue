@@ -1,314 +1,260 @@
 <template>
-  <div class="digital-page">
-    <!-- 左侧子菜单 -->
-    <div class="digital-sidebar">
-      <el-menu
-        :default-active="activeMenu"
-        @select="handleMenuSelect"
-        class="digital-menu"
-      >
-        <el-menu-item index="PLATFORM">网络平台</el-menu-item>
-        <el-menu-item index="HARDWARE">硬件设备</el-menu-item>
-        <el-menu-item index="SOFTWARE">软件工具</el-menu-item>
-        <el-menu-item index="DATA">数据资源</el-menu-item>
-      </el-menu>
+  <div v-if="canSelectScope" class="digital-admin-page">
+    <div class="digital-shell">
+      <aside class="digital-side">
+        <button
+          v-for="item in moduleOptions"
+          :key="item.key"
+          type="button"
+          class="digital-side-item"
+          :class="{ active: activeMenu === item.key }"
+          @click="handleMenuSelect(item.key)"
+        >
+          {{ item.title }}
+        </button>
+      </aside>
+
+      <section class="digital-main">
+        <header class="page-heading">
+          <h2>{{ currentModule.title }}</h2>
+          <p>{{ currentModule.desc }}</p>
+        </header>
+        <InstitutionScopeList
+          ref="scopeListRef"
+          module="digital"
+          :columns="scopeColumns"
+          @select="openScope"
+        />
+      </section>
     </div>
 
-    <!-- 右侧内容区 -->
-    <div class="digital-content">
-      <!-- 标题 & 描述 -->
-      <div class="content-header">
-        <h2 class="page-title">{{ currentModule.title }}</h2>
-        <p class="page-desc">{{ currentModule.desc }}</p>
-      </div>
-
-      <!-- 工具栏 -->
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <el-button type="primary" @click="handleAdd">+ 新增</el-button>
-          <el-button :icon="Delete" @click="handleDeleteBatch" title="删除" />
-          <el-button :icon="RefreshLeft" title="还原" />
-          <el-button :icon="Sort" title="排序" />
-        </div>
-        <div class="toolbar-right">
-          <el-input
-            v-model="data.searchKeyword"
-            placeholder="搜索关键词..."
-            :prefix-icon="Search"
-            clearable
-            style="width: 200px"
-            @keyup.enter="handleSearch"
-            @clear="handleSearch"
-          />
-          <el-button>高级查询</el-button>
-          <el-button :icon="Refresh" @click="load" circle title="刷新" />
-          <el-button :icon="Grid" circle title="列设置" />
-          <el-button :icon="Download" circle title="导出" />
-          <el-button :icon="Upload" circle title="导入" />
-        </div>
-      </div>
-
-      <!-- ==================== 网络平台 表格 ==================== -->
-      <el-table
-        v-if="activeMenu === 'PLATFORM'"
-        :data="data.tableData"
-        stripe
-        @selection-change="handleSelectionChange"
-        :header-cell-style="headerStyle"
-        class="data-table"
-        empty-text="暂无数据"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column prop="id" label="序号" width="120" sortable />
-        <el-table-column prop="name" label="平台名称" min-width="200" sortable show-overflow-tooltip />
-        <el-table-column prop="url" label="入口地址" min-width="280" show-overflow-tooltip />
-        <el-table-column prop="category" label="平台类别" width="130" sortable />
-        <el-table-column prop="installDate" label="开通时间" width="130" sortable />
-        <el-table-column prop="attachmentCount" label="附件数" width="80" align="center">
-          <template #default="{ row }">{{ row.attachmentCount ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- ==================== 硬件设备 表格 ==================== -->
-      <el-table
-        v-if="activeMenu === 'HARDWARE'"
-        :data="data.tableData"
-        stripe
-        @selection-change="handleSelectionChange"
-        :header-cell-style="headerStyle"
-        class="data-table"
-        empty-text="暂无数据"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column prop="id" label="序号" width="120" sortable />
-        <el-table-column prop="name" label="设备名称" min-width="200" sortable show-overflow-tooltip />
-        <el-table-column prop="category" label="设备类型" min-width="150" sortable show-overflow-tooltip />
-        <el-table-column prop="quantity" label="数量" width="80" sortable />
-        <el-table-column prop="unitPrice" label="单台价格" width="110" sortable />
-        <el-table-column prop="installDate" label="安装时间" width="130" sortable />
-        <el-table-column prop="attachmentCount" label="附件数" width="80" align="center">
-          <template #default="{ row }">{{ row.attachmentCount ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- ==================== 软件工具 表格 ==================== -->
-      <el-table
-        v-if="activeMenu === 'SOFTWARE'"
-        :data="data.tableData"
-        stripe
-        @selection-change="handleSelectionChange"
-        :header-cell-style="headerStyle"
-        class="data-table"
-        empty-text="暂无数据"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column prop="id" label="序号" width="120" sortable />
-        <el-table-column prop="name" label="软件名称" min-width="250" sortable show-overflow-tooltip />
-        <el-table-column prop="category" label="软件类型" width="130" sortable />
-        <el-table-column prop="quantity" label="安装数量" width="100" sortable />
-        <el-table-column prop="unitPrice" label="单价" width="80" sortable>
-          <template #default="{ row }">{{ row.unitPrice ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="installDate" label="安装时间" width="130" sortable />
-        <el-table-column prop="attachmentCount" label="附件数" width="80" align="center">
-          <template #default="{ row }">{{ row.attachmentCount ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- ==================== 数据资源 表格 ==================== -->
-      <el-table
-        v-if="activeMenu === 'DATA'"
-        :data="data.tableData"
-        stripe
-        @selection-change="handleSelectionChange"
-        :header-cell-style="headerStyle"
-        class="data-table"
-        empty-text="暂无数据"
-      >
-        <el-table-column type="selection" width="50" />
-        <el-table-column prop="id" label="序号" width="120" sortable />
-        <el-table-column prop="name" label="数据资源名称" min-width="280" sortable show-overflow-tooltip />
-        <el-table-column prop="category" label="资源类别" width="140" sortable />
-        <el-table-column prop="unitPrice" label="采购价格(万元)" width="140" sortable>
-          <template #default="{ row }">{{ row.unitPrice ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="attachmentCount" label="附件数" width="80" align="center">
-          <template #default="{ row }">{{ row.attachmentCount ?? '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <!-- 底部：已选 + 分页 -->
-      <div class="table-footer">
-        <div class="selected-info">已选择 {{ data.selectedIds.length }} 项</div>
-        <div class="pagination-wrap">
-          <el-pagination
-            v-model:current-page="data.pageNum"
-            v-model:page-size="data.pageSize"
-            :page-sizes="[5, 10, 20, 50, 100]"
-            :total="data.total"
-            layout="total, sizes, prev, pager, next, jumper"
-            background
-            @current-change="load"
-            @size-change="(size) => (data.pageSize = size, data.pageNum = 1, load())"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== 新增/编辑 对话框 ==================== -->
-    <el-dialog
-      v-model="data.formVisible"
-      :title="dialogTitle"
-      width="520px"
-      destroy-on-close
+    <InstitutionMaintenanceDialog
+      v-if="shouldShowMaintenance"
+      v-model:visible="data.scopeDialogVisible"
+      :title="scopeDialogTitle"
+      dialog
+      @closed="closeScopeDialog"
     >
-      <el-form ref="formRef" :model="data.form" :rules="currentRules" label-width="110px" style="padding: 10px 20px">
-        <!-- 名称（共用） -->
-        <el-form-item :label="currentModule.nameLabel" prop="name">
-          <el-input v-model="data.form.name" :placeholder="'请输入' + currentModule.nameLabel" clearable />
-        </el-form-item>
-
-        <!-- 入口地址（仅网络平台） -->
-        <el-form-item v-if="activeMenu === 'PLATFORM'" label="入口地址" prop="url">
-          <el-input v-model="data.form.url" placeholder="请输入入口地址" clearable />
-        </el-form-item>
-
-        <!-- 类别（共用） -->
-        <el-form-item :label="currentModule.categoryLabel" prop="category">
-          <el-input v-model="data.form.category" :placeholder="'请输入' + currentModule.categoryLabel" clearable />
-        </el-form-item>
-
-        <!-- 数量（硬件设备、软件工具） -->
-        <el-form-item v-if="activeMenu === 'HARDWARE' || activeMenu === 'SOFTWARE'" :label="currentModule.quantityLabel" prop="quantity">
-          <el-input-number v-model="data.form.quantity" :min="0" style="width: 100%" />
-        </el-form-item>
-
-        <!-- 价格（硬件设备、软件工具、数据资源） -->
-        <el-form-item v-if="activeMenu !== 'PLATFORM'" :label="currentModule.priceLabel" prop="unitPrice">
-          <el-input-number v-model="data.form.unitPrice" :min="0" :precision="2" style="width: 100%" />
-        </el-form-item>
-
-        <!-- 日期（共用） -->
-        <el-form-item :label="currentModule.dateLabel" prop="installDate">
-          <el-date-picker
-            v-model="data.form.installDate"
-            type="date"
-            :placeholder="'请选择' + currentModule.dateLabel"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-
-        <!-- 附件数 -->
-        <el-form-item label="附件数" prop="attachmentCount">
-          <el-input-number v-model="data.form.attachmentCount" :min="0" style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="data.formVisible = false">取 消</el-button>
-        <el-button type="primary" @click="save">确 定</el-button>
-      </template>
-    </el-dialog>
+      <div class="digital-maintenance-content">
+        <div class="selected-scope-bar">
+          <div>
+            <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+            <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+            <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+          </div>
+          <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+        </div>
+        <InstitutionDigitalContent
+          :active-menu="activeMenu"
+          :current-module="currentModule"
+          :table-data="data.tableData"
+          v-model:page-num="data.pageNum"
+          v-model:page-size="data.pageSize"
+          v-model:search-keyword="data.searchKeyword"
+          :total="data.total"
+          :selected-ids="data.selectedIds"
+          :loading="data.loading"
+          @load="load"
+          @search="handleSearch"
+          @add="handleAdd"
+          @delete-batch="handleDeleteBatch"
+          @selection-change="handleSelectionChange"
+          @edit="handleEdit"
+          @delete="handleDelete"
+        />
+      </div>
+    </InstitutionMaintenanceDialog>
   </div>
+
+  <div v-else class="digital-direct-page">
+    <div class="digital-shell">
+      <aside class="digital-side">
+        <button
+          v-for="item in moduleOptions"
+          :key="item.key"
+          type="button"
+          class="digital-side-item"
+          :class="{ active: activeMenu === item.key }"
+          @click="handleMenuSelect(item.key)"
+        >
+          {{ item.title }}
+        </button>
+      </aside>
+
+      <section class="digital-main">
+        <InstitutionDigitalContent
+          :active-menu="activeMenu"
+          :current-module="currentModule"
+          :table-data="data.tableData"
+          v-model:page-num="data.pageNum"
+          v-model:page-size="data.pageSize"
+          v-model:search-keyword="data.searchKeyword"
+          :total="data.total"
+          :selected-ids="data.selectedIds"
+          :loading="data.loading"
+          @load="load"
+          @search="handleSearch"
+          @add="handleAdd"
+          @delete-batch="handleDeleteBatch"
+          @selection-change="handleSelectionChange"
+          @edit="handleEdit"
+          @delete="handleDelete"
+        />
+      </section>
+    </div>
+  </div>
+
+  <el-dialog
+    v-model="data.formVisible"
+    :title="dialogTitle"
+    width="520px"
+    append-to-body
+    destroy-on-close
+  >
+    <el-form ref="formRef" :model="data.form" :rules="currentRules" label-width="110px" style="padding: 10px 20px">
+      <el-form-item :label="currentModule.nameLabel" prop="name">
+        <el-input v-model="data.form.name" :placeholder="'请输入' + currentModule.nameLabel" clearable />
+      </el-form-item>
+
+      <el-form-item v-if="activeMenu === 'PLATFORM'" label="入口地址" prop="url">
+        <el-input v-model="data.form.url" placeholder="请输入入口地址" clearable />
+      </el-form-item>
+
+      <el-form-item :label="currentModule.categoryLabel" prop="category">
+        <el-input v-model="data.form.category" :placeholder="'请输入' + currentModule.categoryLabel" clearable />
+      </el-form-item>
+
+      <el-form-item v-if="activeMenu === 'HARDWARE' || activeMenu === 'SOFTWARE'" :label="currentModule.quantityLabel" prop="quantity">
+        <el-input-number v-model="data.form.quantity" :min="0" style="width: 100%" />
+      </el-form-item>
+
+      <el-form-item v-if="activeMenu !== 'PLATFORM'" :label="currentModule.priceLabel" prop="unitPrice">
+        <el-input-number v-model="data.form.unitPrice" :min="0" :precision="2" style="width: 100%" />
+      </el-form-item>
+
+      <el-form-item v-if="currentModule.dateLabel" :label="currentModule.dateLabel" prop="installDate">
+        <el-date-picker
+          v-model="data.form.installDate"
+          type="date"
+          :placeholder="'请选择' + currentModule.dateLabel"
+          value-format="YYYY-MM-DD"
+          style="width: 100%"
+        />
+      </el-form-item>
+
+      <el-form-item label="附件数" prop="attachmentCount">
+        <el-input-number v-model="data.form.attachmentCount" :min="0" style="width: 100%" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="data.formVisible = false">取 消</el-button>
+      <el-button type="primary" @click="save">确 定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import request from '@/utils/request.js'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
-import {
-  Delete,
-  RefreshLeft,
-  Sort,
-  Search,
-  Refresh,
-  Grid,
-  Download,
-  Upload
-} from '@element-plus/icons-vue'
+import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
+import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
+import InstitutionDigitalContent from '@/components/InstitutionDigitalContent.vue'
 
-const headerStyle = { backgroundColor: '#f5f7fa', color: '#606266', fontWeight: '600' }
-
-// ==================== 模块配置 ====================
 const moduleConfig = {
   PLATFORM: {
+    key: 'PLATFORM',
     title: '网络平台',
     desc: '本机构建设运营的网站、社交网络、新媒体账号等学术交流和宣传发布平台',
     nameLabel: '平台名称',
     categoryLabel: '平台类别',
     dateLabel: '开通时间',
     quantityLabel: '',
-    priceLabel: ''
+    priceLabel: '',
+    countProp: 'platformCount'
   },
   HARDWARE: {
+    key: 'HARDWARE',
     title: '硬件设备',
     desc: '本机构采购的、用于科研工作的重要仪器设备',
     nameLabel: '设备名称',
     categoryLabel: '设备类型',
     dateLabel: '安装时间',
     quantityLabel: '数量',
-    priceLabel: '单台价格'
+    priceLabel: '单台价格',
+    countProp: 'hardwareCount'
   },
   SOFTWARE: {
+    key: 'SOFTWARE',
     title: '软件工具',
     desc: '本机构购买的、用于科研工作的重要软件工具',
     nameLabel: '软件名称',
     categoryLabel: '软件类型',
     dateLabel: '安装时间',
     quantityLabel: '安装数量',
-    priceLabel: '单价'
+    priceLabel: '单价',
+    countProp: 'softwareCount'
   },
   DATA: {
+    key: 'DATA',
     title: '数据资源',
     desc: '本机构或所在学校/单位购买的，服务于机构科研人员的数据研究资源，例如各类文献数据库、行业数据资源等。',
     nameLabel: '数据资源名称',
     categoryLabel: '资源类别',
     dateLabel: '',
     quantityLabel: '',
-    priceLabel: '采购价格(万元)'
+    priceLabel: '采购价格(万元)',
+    countProp: 'dataCount'
   }
 }
 
-// ==================== 状态 ====================
+const moduleOptions = Object.values(moduleConfig)
 const activeMenu = ref('PLATFORM')
 const formRef = ref()
+const scopeListRef = ref()
+const scopeColumns = computed(() => {
+  const base = [
+    { label: '信息化条目', prop: 'summary.totalCount', minWidth: 110 }
+  ]
+  switch (activeMenu.value) {
+    case 'PLATFORM':
+      return [...base, { label: '网络平台数', prop: 'summary.platformCount', minWidth: 100 }]
+    case 'HARDWARE':
+      return [...base, { label: '硬件设备数', prop: 'summary.hardwareCount', minWidth: 100 }]
+    case 'SOFTWARE':
+      return [...base, { label: '软件工具数', prop: 'summary.softwareCount', minWidth: 100 }]
+    case 'DATA':
+      return [...base, { label: '数据资源数', prop: 'summary.dataCount', minWidth: 100 }]
+    default:
+      return base
+  }
+})
 
 const data = reactive({
+  currentUser: {},
+  selectedScope: null,
   tableData: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
   searchKeyword: '',
   selectedIds: [],
+  scopeDialogVisible: false,
   formVisible: false,
-  form: {}
+  form: {},
+  loading: false
 })
 
+try {
+  data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+} catch (_) {
+  data.currentUser = {}
+}
+
+const canSelectScope = computed(() => ['SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(data.currentUser.role))
+const shouldShowMaintenance = computed(() => canSelectScope.value && data.scopeDialogVisible && !!data.selectedScope)
 const currentModule = computed(() => moduleConfig[activeMenu.value])
+const scopeDialogTitle = computed(() => data.selectedScope ? `维护 ${data.selectedScope.institutionName} - ${currentModule.value.title}` : '信息化建设维护')
 
 const dialogTitle = computed(() => {
   const prefix = data.form.id ? '编辑' : '新增'
@@ -319,7 +265,6 @@ const currentRules = computed(() => ({
   name: [{ required: true, message: `请输入${currentModule.value.nameLabel}`, trigger: 'blur' }]
 }))
 
-// ==================== 菜单切换 ====================
 const handleMenuSelect = (key) => {
   activeMenu.value = key
 }
@@ -328,13 +273,27 @@ watch(activeMenu, () => {
   data.pageNum = 1
   data.searchKeyword = ''
   data.selectedIds = []
-  load()
+  if (data.selectedScope || !canSelectScope.value) {
+    data.tableData = []
+    data.total = 0
+    load()
+  }
 })
 
-// ==================== 数据加载 ====================
+const getScopeParams = () => {
+  if (!canSelectScope.value || !data.selectedScope) return {}
+  return {
+    institutionType: data.selectedScope.institutionType,
+    schoolId: data.selectedScope.schoolId,
+    organizationId: data.selectedScope.organizationId
+  }
+}
+
 const load = () => {
+  data.loading = true
   request.get('/digitalInfo/selectPage', {
     params: {
+      ...getScopeParams(),
       moduleType: activeMenu.value,
       pageNum: data.pageNum,
       pageSize: data.pageSize,
@@ -347,6 +306,8 @@ const load = () => {
     } else {
       ElMessage.error(res.msg || '加载失败')
     }
+  }).finally(() => {
+    data.loading = false
   })
 }
 
@@ -355,7 +316,29 @@ const handleSearch = () => {
   load()
 }
 
-// ==================== CRUD ====================
+const openScope = (scope) => {
+  data.selectedScope = scope
+  data.scopeDialogVisible = true
+  data.pageNum = 1
+  data.tableData = []
+  data.total = 0
+  data.selectedIds = []
+  load()
+}
+
+const returnToScopeList = () => {
+  data.scopeDialogVisible = false
+}
+
+const closeScopeDialog = () => {
+  data.selectedScope = null
+  data.tableData = []
+  data.total = 0
+  data.selectedIds = []
+  data.formVisible = false
+  data.form = {}
+}
+
 const handleAdd = () => {
   data.form = { moduleType: activeMenu.value }
   data.formVisible = true
@@ -371,13 +354,14 @@ const save = () => {
     if (!valid) return
     const formData = { ...data.form, moduleType: activeMenu.value }
     const api = formData.id
-      ? request.put('/digitalInfo/update', formData)
-      : request.post('/digitalInfo/add', formData)
+      ? request.put('/digitalInfo/update', formData, { params: getScopeParams() })
+      : request.post('/digitalInfo/add', formData, { params: getScopeParams() })
     api.then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         data.formVisible = false
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '操作失败')
       }
@@ -393,6 +377,7 @@ const handleDelete = (id) => {
       if (res.code === '200') {
         ElMessage.success('删除成功')
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -413,6 +398,7 @@ const handleDeleteBatch = () => {
         ElMessage.success('批量删除成功')
         data.selectedIds = []
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -424,135 +410,111 @@ const handleSelectionChange = (rows) => {
   data.selectedIds = rows.map(r => r.id)
 }
 
-// ==================== 初始化 ====================
 onMounted(() => {
-  load()
+  if (!canSelectScope.value) load()
 })
 </script>
 
 <style scoped>
-.digital-page {
+.digital-admin-page,
+.digital-direct-page {
+  height: 100%;
+  min-height: 0;
+}
+
+.digital-shell {
   display: flex;
   height: 100%;
   min-height: 0;
-  gap: 0;
-  background: #f0f2f5;
+  background: #fff;
+  border: 1px solid #ebeef5;
 }
 
-/* 左侧子菜单 */
-.digital-sidebar {
-  width: 120px;
-  min-width: 120px;
+.digital-side {
+  width: 158px;
+  min-width: 158px;
+  padding: 12px 0;
   background: #fff;
   border-right: 1px solid #e4e7ed;
-  flex-shrink: 0;
 }
 
-.digital-menu {
-  border-right: none;
-}
-
-.digital-menu :deep(.el-menu-item) {
+.digital-side-item {
+  width: 100%;
+  height: 52px;
+  border: 0;
+  border-right: 3px solid transparent;
+  background: transparent;
+  color: #303133;
+  cursor: pointer;
   font-size: 14px;
-  padding: 0 16px;
-  height: 48px;
-  line-height: 48px;
+  text-align: left;
+  padding: 0 22px;
 }
 
-.digital-menu :deep(.el-menu-item.is-active) {
+.digital-side-item:hover {
   color: #1677ff;
-  border-right: 2px solid #1677ff;
-  background-color: #e8f4ff;
-  font-weight: 500;
+  background: #f5f9ff;
 }
 
-/* 右侧内容区 */
-.digital-content {
+.digital-side-item.active {
+  color: #1677ff;
+  background: #e8f4ff;
+  border-right-color: #1677ff;
+  font-weight: 600;
+}
+
+.digital-main {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
   padding: 20px 24px;
   overflow: auto;
 }
 
-/* 标题区 */
-.content-header {
+.page-heading {
+  min-height: 54px;
   margin-bottom: 16px;
 }
 
-.page-title {
+.page-heading h2 {
   font-size: 20px;
   font-weight: 700;
   color: #1a1a2e;
   margin: 0 0 8px;
 }
 
-.page-desc {
+.page-heading p {
   font-size: 13px;
   color: #606266;
   margin: 0;
   line-height: 1.6;
 }
 
-/* 工具栏 */
-.toolbar {
+.digital-maintenance-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  background: #fff;
+}
+
+.selected-scope-bar {
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebeef5;
 }
 
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.selected-scope-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
 }
 
-.toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 表格 */
-.data-table {
-  flex: 1;
-  width: 100%;
-}
-
-.data-table :deep(.el-table__header th) {
-  background-color: #f5f7fa !important;
-}
-
-/* 底部 */
-.table-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 16px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.selected-info {
-  font-size: 13px;
-  color: #1677ff;
-  cursor: default;
-}
-
-.pagination-wrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.total-info {
+.selected-scope-school {
+  margin-left: 12px;
   font-size: 13px;
   color: #606266;
-  white-space: nowrap;
 }
 </style>

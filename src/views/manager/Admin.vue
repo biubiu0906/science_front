@@ -15,7 +15,7 @@
         <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
         <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
+      <el-table stripe v-loading="data.loading" :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="avatar" label="头像" align="center">
@@ -144,7 +144,8 @@ const data = reactive({
   phone: null,
   email: null,
   ids: [],
-  showSecurityAlert: false
+  showSecurityAlert: false,
+  loading: false
 })
 
 const paginationQuery = usePaginationQuery(data)
@@ -169,6 +170,7 @@ const rules = reactive({
 })
 
 const load = () => {
+  data.loading = true
   paginationQuery.sync()
   request.get('/admin/selectPage', {
     params: {
@@ -181,6 +183,8 @@ const load = () => {
       data.tableData = res.data?.list || []
       data.total = res.data?.total
     }
+  }).finally(() => {
+    data.loading = false
   })
 }
 const handleAdd = () => {

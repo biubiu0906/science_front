@@ -1,5 +1,10 @@
 <template>
-  <div v-loading="profileLoading" element-loading-text="数据加载中...">
+  <div
+    class="entity-profile-page"
+    v-loading="profileLoading"
+    element-loading-text="数据加载中..."
+    element-loading-custom-class="entity-profile-loading-mask"
+  >
     <div class="card" style="margin-bottom: 8px; top: 0; z-index: 3">
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
@@ -11,10 +16,12 @@
           </el-radio-group>
 
           <el-select v-if="query.type === 'school'" v-model="query.schoolId" filterable style="width: 260px" placeholder="请选择学校">
+            <el-option label="全部" :value="ALL_OPTION_VALUE" />
             <el-option v-for="s in mockSchools" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
 
           <el-select v-else v-model="query.laboratoryId" filterable style="width: 260px" :placeholder="`请选择${typeLabel}`">
+            <el-option label="全部" :value="ALL_OPTION_VALUE" />
             <el-option v-for="l in currentTypeLaboratories" :key="l.id" :label="l.laboratoryName" :value="l.id" />
           </el-select>
 
@@ -58,28 +65,61 @@
     </div>
 
     <div class="kpi-row">
-      <div class="card kpi-card">
+      <div
+        class="card kpi-card"
+        :class="{ 'kpi-card-clickable': canOpenResearchShare }"
+        @click="openResearchShareDialog('project')"
+      >
         <div class="kpi-title">科研项目</div>
         <div class="kpi-value">{{ kpis.project.total }}</div>
         <div class="kpi-sub">
-          <el-tag size="small" type="warning" effect="light">待审 {{ kpis.project.pending }}</el-tag>
-          <el-tag size="small" type="success" effect="light">通过 {{ kpis.project.approved }}</el-tag>
+          <el-tag
+            v-for="item in kpis.project.items"
+            :key="item.label"
+            size="small"
+            :type="item.type"
+            effect="light"
+          >
+            {{ item.label }} {{ item.value }}
+          </el-tag>
         </div>
       </div>
-      <div class="card kpi-card">
+      <div
+        class="card kpi-card"
+        :class="{ 'kpi-card-clickable': canOpenResearchShare }"
+        @click="openResearchShareDialog('achievement')"
+      >
         <div class="kpi-title">科研成果</div>
         <div class="kpi-value">{{ kpis.achievement.total }}</div>
         <div class="kpi-sub">
-          <el-tag size="small" type="warning" effect="light">待审 {{ kpis.achievement.pending }}</el-tag>
-          <el-tag size="small" type="success" effect="light">通过 {{ kpis.achievement.approved }}</el-tag>
+          <el-tag
+            v-for="item in kpis.achievement.items"
+            :key="item.label"
+            size="small"
+            :type="item.type"
+            effect="light"
+          >
+            {{ item.label }} {{ item.value }}
+          </el-tag>
         </div>
       </div>
-      <div class="card kpi-card">
+      <div
+        class="card kpi-card"
+        :class="{ 'kpi-card-clickable': canOpenResearchShare }"
+        @click="openResearchShareDialog('phaseReport')"
+      >
         <div class="kpi-title">阶段报告</div>
         <div class="kpi-value">{{ kpis.phaseReport.total }}</div>
         <div class="kpi-sub">
-          <el-tag size="small" type="warning" effect="light">待审 {{ kpis.phaseReport.pending }}</el-tag>
-          <el-tag size="small" type="success" effect="light">通过 {{ kpis.phaseReport.approved }}</el-tag>
+          <el-tag
+            v-for="item in kpis.phaseReport.items"
+            :key="item.label"
+            size="small"
+            :type="item.type"
+            effect="light"
+          >
+            {{ item.label }} {{ item.value }}
+          </el-tag>
         </div>
       </div>
     </div>
@@ -343,6 +383,20 @@
       </el-tabs>
     </div>
 
+    <el-dialog
+      v-model="researchShareDialog.visible"
+      :title="researchShareTitle"
+      width="64%"
+      destroy-on-close
+      @opened="renderResearchShareChart"
+      @closed="disposeResearchShareChart"
+    >
+      <div ref="researchShareChartEl" class="project-share-chart"></div>
+      <template #footer>
+        <el-button size="small" @click="researchShareDialog.visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="phaseDialog.visible" title="阶段报告详情" width="70%" destroy-on-close>
       <el-descriptions v-if="phaseDialog.data" border :column="4">
         <el-descriptions-item label="编号" :span="1">
@@ -484,6 +538,7 @@ import request from '@/utils/request.js'
 const router = useRouter()
 const route = useRoute()
 const ENTITY_PROFILE_PATH = '/manager/entityProfile'
+const ALL_OPTION_VALUE = 0
 const currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
 const userRole = currentUser.role
 
@@ -589,8 +644,8 @@ const defaultDateRange = () => []
 
 const query = reactive({
   type: 'school',
-  schoolId: null,
-  laboratoryId: null,
+  schoolId: ALL_OPTION_VALUE,
+  laboratoryId: ALL_OPTION_VALUE,
   dateRange: defaultDateRange()
 })
 
@@ -605,8 +660,12 @@ const filters = reactive({
 })
 
 const approvedBusinessStatuses = ['审核通过', '校审通过', '校级审核通过']
+const pendingBusinessStatuses = ['待审核', '实验室审核通过', '校审通过', '校级审核通过']
+const finalApprovedBusinessStatuses = ['审核通过', '通过']
 const rejectedBusinessStatuses = ['不通过', '审核未通过', '校审驳回', '实验室审核驳回']
+const pendingPhaseStatuses = ['SUBMITTED', 'SCHOOL_APPROVED']
 const approvedPhaseStatuses = ['SUPER_APPROVED']
+const rejectedPhaseStatuses = ['SCHOOL_REJECTED', 'SUPER_REJECTED']
 
 const projectPager = reactive({ pageNum: 1, pageSize: 10 })
 const achievementPager = reactive({ pageNum: 1, pageSize: 10 })
@@ -619,13 +678,16 @@ usePaginationQuery(phaseReportPager, { pageKey: 'phaseReportPage', pageSizeKey: 
 const trendChartEl = ref(null)
 const statusChartEl = ref(null)
 const subjectChartEl = ref(null)
+const researchShareChartEl = ref(null)
 let trendChart = null
 let statusChart = null
 let subjectChart = null
+let researchShareChart = null
 
 const phaseDialog = reactive({ visible: false, data: null })
 const projectDialog = reactive({ visible: false, data: null })
 const achievementDialog = reactive({ visible: false, data: null })
+const researchShareDialog = reactive({ visible: false, metric: 'project' })
 const projectReviewDialog = reactive({ visible: false, form: { id: null, status: '通过', reason: '' } })
 const achievementReviewDialog = reactive({ visible: false, form: { id: null, status: '通过', reason: '' } })
 const phaseReviewDialog = reactive({ visible: false, form: { id: null, approvalStatus: null, comment: '' } })
@@ -673,8 +735,8 @@ const loadProfileData = async () => {
     if (['school', 'laboratory', 'base', 'team'].includes(payload.selectedType)) {
       query.type = payload.selectedType
     }
-    query.schoolId = payload.selectedSchoolId || null
-    query.laboratoryId = payload.selectedLaboratoryId || null
+    query.schoolId = payload.selectedSchoolId || ALL_OPTION_VALUE
+    query.laboratoryId = payload.selectedLaboratoryId || ALL_OPTION_VALUE
     ensureTypeSelection()
     setList(mockProjects, payload.projects)
     setList(mockAchievements, payload.achievements)
@@ -698,50 +760,77 @@ const currentTypeLaboratories = computed(() => {
 
 const ensureTypeSelection = () => {
   if (query.type === 'school') {
-    if (!mockSchools.length || !mockSchools.some(s => s.id === query.schoolId)) {
-      query.schoolId = null
+    if (query.schoolId !== ALL_OPTION_VALUE && (!mockSchools.length || !mockSchools.some(s => s.id === query.schoolId))) {
+      query.schoolId = ALL_OPTION_VALUE
     }
     return
   }
   const options = currentTypeLaboratories.value
-  if (!options.length || !options.some(l => l.id === query.laboratoryId)) {
-    query.laboratoryId = null
+  if (query.laboratoryId !== ALL_OPTION_VALUE && (!options.length || !options.some(l => l.id === query.laboratoryId))) {
+    query.laboratoryId = ALL_OPTION_VALUE
   }
 }
 
 const currentLaboratory = computed(() => {
   if (query.type === 'school') return null
+  if (query.laboratoryId === ALL_OPTION_VALUE) return null
   return mockLaboratories.find(l => l.id === query.laboratoryId) || null
 })
 
 const currentSchool = computed(() => {
+  if (query.type === 'school' && query.schoolId === ALL_OPTION_VALUE) return null
   if (query.type === 'school') return mockSchools.find(s => s.id === query.schoolId) || null
   const lab = currentLaboratory.value
   return mockSchools.find(s => s.id === lab?.schoolId) || null
 })
 
 const headerTitle = computed(() => {
-  if (query.type === 'school') return currentSchool.value ? currentSchool.value.name : '学校'
-  return currentLaboratory.value ? currentLaboratory.value.laboratoryName : typeLabel.value
+  if (query.type === 'school') return currentSchool.value ? currentSchool.value.name : '全部学校'
+  return currentLaboratory.value ? currentLaboratory.value.laboratoryName : `全部${typeLabel.value}`
+})
+
+const countLaboratoriesByHierarchy = (hierarchy, schoolId = null) => {
+  return mockLaboratories.filter(l => {
+    if (schoolId !== null && l.schoolId !== schoolId) return false
+    return l.laboratoryHierarchy === hierarchy
+  }).length
+}
+
+const isAllSelection = computed(() => {
+  return query.type === 'school'
+    ? query.schoolId === ALL_OPTION_VALUE
+    : query.laboratoryId === ALL_OPTION_VALUE
 })
 
 const entityDetailItems = computed(() => {
   if (query.type === 'school') {
     const school = currentSchool.value
-    if (!school) return []
-    const schoolLabs = mockLaboratories.filter(l => l.schoolId === school.id)
+    if (!school) {
+      return [
+        { label: '学校数量', value: mockSchools.length, span: 2 },
+        { label: '实验室数量', value: countLaboratoriesByHierarchy('实验室'), span: 2 },
+        { label: '基地数量', value: countLaboratoriesByHierarchy('基地'), span: 2 },
+        { label: '团队数量', value: countLaboratoriesByHierarchy('团队'), span: 2 }
+      ]
+    }
     return [
       { label: '学校名称', value: school.name, span: 2 },
       { label: '负责人', value: school.principal, span: 2 },
       { label: '负责人联系方式', value: school.principalPhone, span: 2 },
-      { label: '实验室数量', value: schoolLabs.filter(l => l.laboratoryHierarchy === '实验室').length, span: 2 },
-      { label: '基地数量', value: schoolLabs.filter(l => l.laboratoryHierarchy === '基地').length, span: 2 },
-      { label: '团队数量', value: schoolLabs.filter(l => l.laboratoryHierarchy === '团队').length, span: 2 }
+      { label: '实验室数量', value: countLaboratoriesByHierarchy('实验室', school.id), span: 2 },
+      { label: '基地数量', value: countLaboratoriesByHierarchy('基地', school.id), span: 2 },
+      { label: '团队数量', value: countLaboratoriesByHierarchy('团队', school.id), span: 2 }
     ]
   }
 
   const lab = currentLaboratory.value
-  if (!lab) return []
+  if (!lab) {
+    const labs = currentTypeLaboratories.value
+    return [
+      { label: `${typeLabel.value}数量`, value: labs.length, span: 2 },
+      { label: '所属学校数量', value: new Set(labs.map(l => l.schoolId).filter(Boolean)).size, span: 2 }
+    ]
+  }
   return [
     { label: '组织名称', value: lab.laboratoryName, span: 2 },
     { label: '负责人', value: lab.directorName, span: 2 },
@@ -832,28 +921,176 @@ const pagedProjects = computed(() => paginate(filteredProjects.value, projectPag
 const pagedAchievements = computed(() => paginate(filteredAchievements.value, achievementPager.pageNum, achievementPager.pageSize))
 const pagedPhaseReports = computed(() => paginate(filteredPhaseReports.value, phaseReportPager.pageNum, phaseReportPager.pageSize))
 
+const buildKpiBreakdown = (list, statusGetter, pendingStatuses, approvedStatuses, rejectedStatuses) => {
+  let pending = 0
+  let approved = 0
+  let rejected = 0
+  let other = 0
+
+  list.forEach(item => {
+    const status = statusGetter(item)
+    if (pendingStatuses.includes(status)) {
+      pending += 1
+    } else if (approvedStatuses.includes(status)) {
+      approved += 1
+    } else if (rejectedStatuses.includes(status)) {
+      rejected += 1
+    } else {
+      other += 1
+    }
+  })
+
+  const items = [
+    { label: '待审', value: pending, type: 'warning' },
+    { label: '通过', value: approved, type: 'success' }
+  ]
+  if (rejected > 0) items.push({ label: '未通过', value: rejected, type: 'danger' })
+  if (other > 0) items.push({ label: '其他', value: other, type: 'info' })
+
+  return { total: list.length, pending, approved, items }
+}
+
 const kpis = computed(() => {
   const project = filteredProjects.value
   const achievement = filteredAchievements.value
   const phaseReport = filteredPhaseReports.value
   return {
-    project: {
-      total: project.length,
-      pending: project.filter(p => canReviewProjectOrAchievement(p.status)).length,
-      approved: project.filter(p => approvedBusinessStatuses.includes(p.status)).length
-    },
-    achievement: {
-      total: achievement.length,
-      pending: achievement.filter(a => canReviewProjectOrAchievement(a.status)).length,
-      approved: achievement.filter(a => approvedBusinessStatuses.includes(a.status)).length
-    },
-    phaseReport: {
-      total: phaseReport.length,
-      pending: phaseReport.filter(r => canReviewPhaseReport(r)).length,
-      approved: phaseReport.filter(r => approvedPhaseStatuses.includes(r.reviewStatus)).length
-    }
+    project: buildKpiBreakdown(
+      project,
+      item => item.status,
+      pendingBusinessStatuses,
+      finalApprovedBusinessStatuses,
+      rejectedBusinessStatuses
+    ),
+    achievement: buildKpiBreakdown(
+      achievement,
+      item => item.status,
+      pendingBusinessStatuses,
+      finalApprovedBusinessStatuses,
+      rejectedBusinessStatuses
+    ),
+    phaseReport: buildKpiBreakdown(
+      phaseReport,
+      item => item.reviewStatus,
+      pendingPhaseStatuses,
+      approvedPhaseStatuses,
+      rejectedPhaseStatuses
+    )
   }
 })
+
+const formatPercent = (count, total) => {
+  if (!total) return '0%'
+  return `${((count / total) * 100).toFixed(1)}%`
+}
+
+const countItemsBySchool = (list, schoolId) => {
+  return list.filter(item => {
+    if (schoolId === null) {
+      return item.schoolId === null || item.schoolId === undefined || item.schoolId === ''
+    }
+    return sameId(item.schoolId, schoolId)
+  }).length
+}
+
+const researchShareConfig = {
+  project: { title: '科研项目学校占比', totalText: '总数', countText: '项目数量' },
+  achievement: { title: '科研成果学校占比', totalText: '总数', countText: '成果数量' },
+  phaseReport: { title: '阶段报告学校占比', totalText: '总数', countText: '报告数量' }
+}
+
+const canOpenResearchShare = computed(() => isAllSelection.value)
+
+const researchShareTitle = computed(() => researchShareConfig[researchShareDialog.metric]?.title || '学校占比')
+
+const currentResearchShareList = computed(() => {
+  if (researchShareDialog.metric === 'achievement') return filteredAchievements.value
+  if (researchShareDialog.metric === 'phaseReport') return filteredPhaseReports.value
+  return filteredProjects.value
+})
+
+const schoolResearchShareRows = computed(() => {
+  const list = currentResearchShareList.value
+  const total = list.length
+
+  const buildRow = (school) => {
+    const schoolId = school ? school.id : null
+    const count = countItemsBySchool(list, schoolId)
+    return {
+      id: school ? school.id : 'unknown',
+      name: school ? school.name : '未关联学校',
+      count,
+      percent: formatPercent(count, total)
+    }
+  }
+
+  const rows = mockSchools.map(buildRow)
+  const unknownRow = buildRow(null)
+  if (unknownRow.count > 0) rows.push(unknownRow)
+  return rows.sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name), 'zh-Hans-CN'))
+})
+
+const openResearchShareDialog = (metric) => {
+  if (!canOpenResearchShare.value) return
+  researchShareDialog.metric = metric
+  researchShareDialog.visible = true
+  nextTick(() => renderResearchShareChart())
+}
+
+const renderResearchShareChart = async () => {
+  if (!researchShareDialog.visible) return
+  await nextTick()
+  requestAnimationFrame(() => {
+    if (!researchShareDialog.visible || !researchShareChartEl.value) return
+    if (!researchShareChart) researchShareChart = echarts.init(researchShareChartEl.value)
+    const config = researchShareConfig[researchShareDialog.metric] || researchShareConfig.project
+    const rows = schoolResearchShareRows.value.filter(row => row.count > 0)
+    researchShareChart.setOption({
+      color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'],
+      title: rows.length
+        ? {
+            text: `${config.totalText} ${currentResearchShareList.value.length}`,
+            left: 'center',
+            top: 'center',
+            textStyle: { color: '#303133', fontSize: 22, fontWeight: 700 }
+          }
+        : { text: '暂无数据', left: 'center', top: 'middle', textStyle: { color: '#909399', fontSize: 14 } },
+      tooltip: {
+        trigger: 'item',
+        formatter: params => `${params.name}<br/>${config.countText}：${params.value}<br/>占比：${params.percent}%`
+      },
+      legend: {
+        type: 'scroll',
+        bottom: 0,
+        left: 'center'
+      },
+      series: rows.length
+        ? [
+            {
+              type: 'pie',
+              radius: ['38%', '68%'],
+              center: ['50%', '48%'],
+              avoidLabelOverlap: true,
+              itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+              label: {
+                formatter: params => `${params.name}\n${params.value}个 ${params.percent}%`
+              },
+              labelLine: { length: 16, length2: 10 },
+              data: rows.map(row => ({ name: row.name, value: row.count }))
+            }
+          ]
+        : []
+    }, true)
+    researchShareChart.resize()
+  })
+}
+
+const disposeResearchShareChart = () => {
+  if (researchShareChart) {
+    researchShareChart.dispose()
+    researchShareChart = null
+  }
+}
 
 const todos = computed(() => {
   const items = []
@@ -1219,8 +1456,8 @@ const scheduleProfileLoad = () => {
 
 const reset = () => {
   query.type = 'school'
-  query.schoolId = null
-  query.laboratoryId = null
+  query.schoolId = ALL_OPTION_VALUE
+  query.laboratoryId = ALL_OPTION_VALUE
   query.dateRange = defaultDateRange()
   ensureTypeSelection()
 
@@ -1415,6 +1652,7 @@ const renderCharts = () => {
       ]
     })
   }
+  if (researchShareDialog.visible) renderResearchShareChart()
 }
 
 watch(
@@ -1444,7 +1682,10 @@ watch(
 
 watch(
   () => [filters.project, filters.achievement, filters.phaseReport],
-  () => resetPagers(),
+  () => {
+    resetPagers()
+    nextTick(() => renderResearchShareChart())
+  },
   { deep: true }
 )
 
@@ -1476,14 +1717,33 @@ onUnmounted(() => {
     subjectChart.dispose()
     subjectChart = null
   }
+  disposeResearchShareChart()
 })
 </script>
 
 <style scoped>
+.entity-profile-page :deep(.entity-profile-loading-mask .el-loading-spinner) {
+  position: sticky;
+  top: 50vh;
+  margin-top: 0;
+  transform: translateY(-50%);
+}
+
 .kpi-card {
   width: auto;
   min-width: 0;
   padding: 14px 16px;
+}
+
+.kpi-card-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.kpi-card-clickable:hover {
+  border-color: #79bbff;
+  box-shadow: 0 4px 14px rgba(64, 158, 255, 0.18);
+  transform: translateY(-1px);
 }
 
 .kpi-row {
@@ -1546,6 +1806,13 @@ onUnmounted(() => {
 .entity-detail-descriptions :deep(.desc-list) {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.project-share-chart {
+  height: 560px;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  background: #fff;
 }
 
 :deep(.el-descriptions--border .el-descriptions__label) {

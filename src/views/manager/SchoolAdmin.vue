@@ -20,7 +20,7 @@
         <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
         <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
+      <el-table stripe v-loading="data.loading" :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="avatar" label="头像" align="center">
@@ -114,6 +114,7 @@
 <script setup>
 import {reactive, ref, onMounted} from "vue";
 import request from "@/utils/request.js";
+import { getSchools } from '@/utils/dict.js';
 import { usePaginationQuery } from '@/utils/paginationQuery.js';
 import { clearTableQuery, tableQueryParams } from '@/utils/tableQuery.js';
 import {ElMessage, ElMessageBox} from "@/utils/element-plus";
@@ -137,7 +138,8 @@ const data = reactive({
   phone: null,
   email: null,
   schools: [], // List of schools
-  ids: []
+  ids: [],
+  loading: false
 })
 
 const paginationQuery = usePaginationQuery(data)
@@ -165,11 +167,9 @@ const rules = reactive({
 })
 
 const loadSchools = () => {
-  request.get('/school/selectAll').then(res => {
-    if (res.code === '200') {
-      data.schools = res.data || []
-    }
-  })
+  getSchools().then(res => {
+    data.schools = res || []
+  }).catch(() => {})
 }
 
 const getSchoolName = (schoolId) => {
@@ -178,6 +178,7 @@ const getSchoolName = (schoolId) => {
 }
 
 const load = () => {
+  data.loading = true
   paginationQuery.sync()
   request.get('/schoolAdmin/selectPage', {
     params: {
@@ -192,6 +193,8 @@ const load = () => {
     } else {
       ElMessage.error(res.msg)
     }
+  }).finally(() => {
+    data.loading = false
   })
 }
 

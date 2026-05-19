@@ -1,25 +1,31 @@
 <template>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.taskId" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入编号查询" />
-      <el-select v-model="data.type" placeholder="报告对象类型" clearable style="width: 140px; margin-right: 10px">
+      <el-input v-model="data.taskId" :prefix-icon="Search" style="width: 220px; margin-right: 10px" placeholder="请输入编号查询" :disabled="data.loading" />
+      <el-select v-model="data.type" placeholder="报告对象类型" clearable style="width: 140px; margin-right: 10px" :disabled="data.loading">
         <el-option label="教师" value="teacher" />
         <el-option label="组织" value="laboratory" />
       </el-select>
-      <el-select v-model="data.status" placeholder="报告状态" clearable style="width: 130px; margin-right: 10px">
+      <el-select v-model="data.status" placeholder="报告状态" clearable style="width: 130px; margin-right: 10px" :disabled="data.loading">
         <el-option label="排队中" value="CREATING" />
         <el-option label="生成中" value="RUNNING" />
         <el-option label="完成" value="COMPLETED" />
         <el-option label="生成失败" value="FAILED" />
       </el-select>
-      <el-input v-model="data.comment" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入报告类型查询" />
-      <el-button type="info" plain size="small" @click="search">查询</el-button>
-      <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset">重置</el-button>
+      <el-input v-model="data.comment" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入报告类型查询" :disabled="data.loading" />
+      <el-button type="info" plain size="small" @click="search" :loading="data.loading">查询</el-button>
+      <el-button type="warning" plain size="small" style="margin: 0 10px" @click="reset" :disabled="data.loading">重置</el-button>
     </div>
-    <div class="card" style="margin-bottom: 5px">
+    <div 
+      class="card report-table-card" 
+      style="margin-bottom: 5px"
+      v-loading="data.loading"
+      element-loading-text="数据加载中..."
+      element-loading-background="rgba(255, 255, 255, 0.78)"
+    >
       <div style="margin-bottom: 10px; margin-left: 10px;">
-        <el-button type="warning" plain size="small" @click="load">刷新</el-button>
-        <el-button type="primary" plain size="small" v-if="data.user.role !== 'SUPER_ADMIN'" @click="creatMyReport">生成报告</el-button>
-        <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+        <el-button type="warning" plain size="small" @click="load" :disabled="data.loading">刷新</el-button>
+        <el-button type="primary" plain size="small" v-if="data.user.role !== 'SUPER_ADMIN'" @click="creatMyReport" :disabled="data.loading">生成报告</el-button>
+        <el-button type="danger" plain size="small" @click="delBatch" :disabled="data.loading">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
@@ -75,6 +81,7 @@
           v-model:page-size="data.pageSize"
           v-model:current-page="data.pageNum"
           :total="data.total"
+          :disabled="data.loading"
         />
       </div>
     </div>
@@ -146,6 +153,7 @@ const data = reactive({
   comment: null,
   createdAt: null,
   ids: [],
+  loading: false,
 })
 
 const paginationQuery = usePaginationQuery(data)
@@ -177,6 +185,7 @@ const viewReport = (url) => {
 // 加载报告数据
 const load = () => {
   paginationQuery.sync()
+  data.loading = true
   request.get('/report/task/page', {
     params: {
       pageNum: data.pageNum,
@@ -198,6 +207,8 @@ const load = () => {
   }).catch(error => {
     console.error(error)
     ElMessage.error('数据加载失败')
+  }).finally(() => {
+    data.loading = false
   })
 }
 
@@ -359,3 +370,21 @@ onMounted(() => {
   load()
 })
 </script>
+
+<style scoped>
+.report-table-card {
+  position: relative;
+  min-height: 260px;
+}
+
+:deep(.report-table-card .el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+}
+
+:deep(.report-table-card .el-loading-text) {
+  margin-top: 10px;
+  color: #409eff;
+  font-size: 14px;
+}
+</style>

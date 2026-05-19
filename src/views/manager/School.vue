@@ -14,7 +14,7 @@
     </div>
 
     <div class="card" style="margin-bottom: 5px">
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
+      <el-table stripe v-loading="data.loading" :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="name" label="学校名称" />
@@ -79,7 +79,8 @@ const data = reactive({
   total: 0,
   formVisible: false,
   form: {},
-  ids: []
+  ids: [],
+  loading: false
 })
 
 const paginationQuery = usePaginationQuery(data)
@@ -97,6 +98,7 @@ const indexMethod = (index) => {
 }
 
 const load = () => {
+  data.loading = true
   paginationQuery.sync()
   request.get('/school/selectPage', {
     params: {
@@ -111,6 +113,8 @@ const load = () => {
     } else {
       ElMessage.error(res.msg)
     }
+  }).finally(() => {
+    data.loading = false
   })
 }
 

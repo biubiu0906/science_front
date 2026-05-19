@@ -31,6 +31,8 @@ import {
   ElBreadcrumbItem,
   ElDatePicker,
   ElTimeline,
+  ElDescriptions,
+  ElDescriptionsItem,
   
   // 布局组件
   ElRow,
@@ -82,6 +84,8 @@ const components = [
   ElBreadcrumbItem,
   ElDatePicker,
   ElTimeline,
+  ElDescriptions,
+  ElDescriptionsItem,
   ElRow,
   ElCol,
   ElMenu,

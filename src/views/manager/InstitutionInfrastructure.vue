@@ -1,5 +1,23 @@
 <template>
   <div class="institution-infrastructure-page">
+    <InstitutionScopeList v-if="canSelectScope" ref="scopeListRef" module="infrastructure" :columns="scopeColumns" @select="openScope" />
+
+    <InstitutionMaintenanceDialog
+      v-if="shouldShowMaintenance"
+      v-model:visible="data.scopeDialogVisible"
+      :dialog="canSelectScope"
+      :title="scopeDialogTitle"
+      @closed="closeScopeDialog"
+    >
+    <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
+      <div>
+        <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+        <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+        <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+      </div>
+      <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+    </div>
+
     <div
       v-for="section in sections"
       :key="section.key"
@@ -44,27 +62,47 @@
         </div>
       </div>
     </div>
+    </InstitutionMaintenanceDialog>
   </div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, computed, ref } from 'vue'
 import request from '@/utils/request.js'
+import { getSchools } from '@/utils/dict.js'
 import { ElMessage } from '@/utils/element-plus'
 import { DocumentChecked } from '@element-plus/icons-vue'
+import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
+import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
 
 const fieldMap = {
-  officeArea: 'officeArea',
-  officeRooms: 'officeRooms',
-  copierCount: 'copierCount',
-  faxCount: 'faxCount',
-  computerCount: 'computerCount',
-  computerNetworkRate: 'computerNetworkRate',
-  labArea: 'labArea',
-  labRooms: 'labRooms',
-  mainLabEquip: 'mainLabEquip',
-  mainSoftware: 'mainSoftware'
+  institutionType: 'institution_type',
+  schoolId: 'school_id',
+  organizationId: 'organization_id',
+  laboratoryId: 'laboratory_id',
+  officeArea: 'office_area',
+  officeRooms: 'office_rooms',
+  copierCount: 'copier_count',
+  faxCount: 'fax_count',
+  computerCount: 'computer_count',
+  computerNetworkRate: 'computer_network_rate',
+  labArea: 'lab_area',
+  labRooms: 'lab_rooms',
+  mainLabEquip: 'main_lab_equip',
+  mainSoftware: 'main_software'
 }
+
+const institutionTypes = ['学校', '实验室', '基地', '团队']
+const scopeListRef = ref()
+
+const scopeColumns = [
+  { label: '办公面积', prop: 'summary.officeArea', minWidth: 110, suffix: '平米' },
+  { label: '办公用房', prop: 'summary.officeRooms', minWidth: 110, suffix: '间' },
+  { label: '计算机数', prop: 'summary.computerCount', minWidth: 110, suffix: '台' },
+  { label: '联网率', prop: 'summary.computerNetworkRate', minWidth: 100, suffix: '%' },
+  { label: '实验室面积', prop: 'summary.labArea', minWidth: 120, suffix: '平米' },
+  { label: '实验室间数', prop: 'summary.labRooms', minWidth: 120, suffix: '间' }
+]
 
 const sections = [
   {
@@ -101,9 +139,37 @@ const sections = [
 ]
 
 const data = reactive({
+  currentUser: {},
+  schools: [],
+  organizations: [],
+  scope: {
+    institutionType: '学校',
+    schoolId: null,
+    organizationId: null
+  },
+  selectedScope: null,
+  scopeDialogVisible: false,
   info: {},
   editingSectionKey: '',
   editForm: {}
+})
+
+try {
+  data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+} catch (_) {
+  data.currentUser = {}
+}
+
+const canSelectScope = computed(() => ['SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(data.currentUser.role))
+const shouldShowMaintenance = computed(() => !canSelectScope.value || !!data.selectedScope)
+const scopeDialogTitle = computed(() => data.selectedScope ? `维护 ${data.selectedScope.institutionName}` : '机构基础设施维护')
+
+const filteredOrganizations = computed(() => {
+  return (data.organizations || []).filter((organization) => {
+    if (data.scope.schoolId && String(organization.schoolId) !== String(data.scope.schoolId)) return false
+    if (data.scope.institutionType !== '学校' && organization.laboratoryHierarchy !== data.scope.institutionType) return false
+    return true
+  })
 })
 
 const normalizeInfo = (raw = {}) => {
@@ -112,18 +178,112 @@ const normalizeInfo = (raw = {}) => {
     normalized[key] = raw[key] ?? raw[fieldMap[key]] ?? ''
   })
   if (raw.id) normalized.id = raw.id
-  if (raw.laboratoryId || raw.laboratory_id) normalized.laboratoryId = raw.laboratoryId ?? raw.laboratory_id
+  normalized.schoolId = raw.schoolId ?? raw.school_id ?? normalized.schoolId
+  normalized.organizationId = raw.organizationId ?? raw.organization_id ?? normalized.organizationId
+  normalized.laboratoryId = raw.laboratoryId ?? raw.laboratory_id ?? normalized.organizationId
+  normalized.institutionType = raw.institutionType ?? raw.institution_type ?? normalized.institutionType
   return normalized
 }
 
+const getScopeParams = () => {
+  if (!canSelectScope.value) return {}
+  const params = {
+    institutionType: data.scope.institutionType,
+    schoolId: data.scope.schoolId
+  }
+  if (data.scope.institutionType !== '学校') {
+    params.organizationId = data.scope.organizationId
+  }
+  return params
+}
+
 const load = () => {
-  request.get('/infrastructure/current').then(res => {
+  if (canSelectScope.value && data.scope.institutionType !== '学校' && !data.scope.organizationId) {
+    data.info = {}
+    return
+  }
+  request.get('/infrastructure/current', { params: getScopeParams() }).then(res => {
     if (res.code === '200') {
       data.info = normalizeInfo(res.data || {})
+      data.scope.institutionType = data.info.institutionType || data.scope.institutionType
+      data.scope.schoolId = data.info.schoolId || data.scope.schoolId
+      data.scope.organizationId = data.info.organizationId || data.scope.organizationId
     } else {
       ElMessage.error(res.msg || '获取基础设施信息失败')
     }
   })
+}
+
+const initScope = () => {
+  if (!canSelectScope.value) return
+  if (data.currentUser.role === 'SCHOOL_ADMIN') {
+    data.scope.schoolId = data.currentUser.schoolId || data.schools[0]?.id || null
+  } else {
+    data.scope.schoolId = data.schools[0]?.id || null
+  }
+  data.scope.institutionType = '学校'
+  data.scope.organizationId = null
+}
+
+const loadScopeOptions = () => {
+  if (!canSelectScope.value) return Promise.resolve()
+  return Promise.all([
+    getSchools(),
+    request.get('/laboratory/list')
+  ]).then(([schoolsData, organizationRes]) => {
+    data.schools = schoolsData || []
+    if (organizationRes.code === '200') {
+      data.organizations = organizationRes.data || []
+    }
+    initScope()
+  }).catch(() => {})
+}
+
+const selectFirstOrganization = () => {
+  if (data.scope.institutionType === '学校') {
+    data.scope.organizationId = null
+    return true
+  }
+  const first = filteredOrganizations.value[0]
+  data.scope.organizationId = first?.id || null
+  return !!first
+}
+
+const handleScopeTypeChange = () => {
+  selectFirstOrganization()
+  load()
+}
+
+const handleSchoolChange = () => {
+  selectFirstOrganization()
+  load()
+}
+
+const openScope = (scope) => {
+  data.selectedScope = scope
+  data.scopeDialogVisible = true
+  data.scope.institutionType = scope.institutionType
+  data.scope.schoolId = scope.schoolId
+  data.scope.organizationId = scope.organizationId || null
+  data.info = {}
+  data.editingSectionKey = ''
+  data.editForm = {}
+  load()
+}
+
+const returnToScopeList = () => {
+  if (canSelectScope.value) {
+    data.scopeDialogVisible = false
+    return
+  }
+  closeScopeDialog()
+}
+
+const closeScopeDialog = () => {
+  data.selectedScope = null
+  data.info = {}
+  data.editingSectionKey = ''
+  data.editForm = {}
 }
 
 const openEdit = (section) => {
@@ -138,12 +298,17 @@ const cancelEdit = () => {
 
 const saveSection = () => {
   const submitData = { ...data.editForm }
+  submitData.institutionType = data.info.institutionType || data.scope.institutionType
+  submitData.schoolId = data.info.schoolId || data.scope.schoolId
+  submitData.organizationId = data.info.organizationId || data.scope.organizationId
+  submitData.laboratoryId = submitData.organizationId || null
   
-  request.put('/infrastructure/current', submitData).then(res => {
+  request.put('/infrastructure/current', submitData, { params: getScopeParams() }).then(res => {
     if (res.code === '200') {
       data.info = normalizeInfo(res.data || submitData)
       data.editingSectionKey = ''
       data.editForm = {}
+      scopeListRef.value?.load?.()
       ElMessage.success('保存成功')
     } else {
       ElMessage.error(res.msg || '保存失败')
@@ -152,7 +317,9 @@ const saveSection = () => {
 }
 
 onMounted(() => {
-  load()
+  loadScopeOptions().then(() => {
+    if (!canSelectScope.value) load()
+  })
 })
 </script>
 
@@ -161,6 +328,28 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.selected-scope-bar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 0;
+  border: 1px solid #e4e7ed;
+  background: #fff;
+}
+
+.selected-scope-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.selected-scope-school {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #606266;
 }
 
 .info-section {

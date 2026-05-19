@@ -2,13 +2,13 @@
   <div>
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.projectCode" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
-        placeholder="请输入立项编号查询"></el-input>
+        placeholder="请输入立项编号查询" :disabled="data.loading"></el-input>
       <el-input v-model="data.projectName" :prefix-icon="Search" style="width: 240px; margin-right: 10px"
-        placeholder="请输入项目名称查询"></el-input>
+        placeholder="请输入项目名称查询" :disabled="data.loading"></el-input>
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 200px; margin-right: 10px"
-        placeholder="请输入成果名称查询"></el-input>
+        placeholder="请输入成果名称查询" :disabled="data.loading"></el-input>
       <el-input v-model="data.teacherName" :prefix-icon="Search" style="width: 160px; margin-right: 10px"
-        placeholder="请输入教师查询"></el-input>
+        placeholder="请输入教师查询" :disabled="data.loading"></el-input>
       <el-cascader
         v-model="data.typeId"
         :options="data.typeData"
@@ -17,19 +17,26 @@
         clearable
         filterable
         style="width: 220px; margin-right: 10px"
+        :disabled="data.loading"
       />
-      <el-select v-if="data.user.role === 'TEACHER'" v-model="data.visible" placeholder="是否公开" clearable style="width: 130px; margin-right: 10px">
+      <el-select v-if="data.user.role === 'TEACHER'" v-model="data.visible" placeholder="是否公开" clearable style="width: 130px; margin-right: 10px" :disabled="data.loading">
         <el-option label="公开" :value="1" />
         <el-option label="不公开" :value="0" />
       </el-select>
-      <el-button size="small" type="info" plain @click="search">查询</el-button>
-      <el-button size="small" type="warning" plain style="margin: 0 10px" @click="reset">重置</el-button>
+      <el-button size="small" type="info" plain @click="search" :loading="data.loading">查询</el-button>
+      <el-button size="small" type="warning" plain style="margin: 0 10px" @click="reset" :disabled="data.loading">重置</el-button>
     </div>
 
-    <div class="card" style="margin-bottom: 5px">
+    <div
+      class="card achievement-table-card"
+      style="margin-bottom: 5px"
+      v-loading="data.loading"
+      element-loading-text="数据加载中..."
+      element-loading-background="rgba(255, 255, 255, 0.78)"
+    >
       <div style="margin-bottom: 10px; margin-left: 10px;">
-        <el-button v-if="data.user.role === 'TEACHER'" type="primary" plain size="small" @click="handleAdd">新增</el-button>
-        <el-button v-if="data.user.role === 'SUPER_ADMIN'" type="danger" plain size="small" @click="delBatch">批量删除</el-button>
+        <el-button v-if="data.user.role === 'TEACHER'" type="primary" plain size="small" @click="handleAdd" :disabled="data.loading">新增</el-button>
+        <el-button v-if="data.user.role === 'SUPER_ADMIN'" type="danger" plain size="small" @click="delBatch" :disabled="data.loading">批量删除</el-button>
       </div>
       <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" empty-text="暂无数据">
         <el-table-column v-if="data.user.role === 'SUPER_ADMIN'" type="selection" width="55" />
@@ -137,6 +144,7 @@
         v-model:page-size="data.pageSize"
         v-model:current-page="data.pageNum"
         :total="data.total"
+        :disabled="data.loading"
       />
     </div>
 
@@ -304,7 +312,8 @@ const data = reactive({
   fileList: [], // 证明材料文件列表
   ids: [],
   laboratoryLevel: getCachedLaboratoryLevel(getUserLaboratoryId(JSON.parse(localStorage.getItem('xm-user') || '{}'))),
-  showSecurityAlert: false // 控制安全提醒弹窗的显示
+  showSecurityAlert: false, // 控制安全提醒弹窗的显示
+  loading: false
 })
 
 const paginationQuery = usePaginationQuery(data)
@@ -368,21 +377,30 @@ const loadType = () => {
     }
   })
 }
-const load = () => {
+const load = async () => {
   paginationQuery.sync()
   const queryParams = tableQueryParams(data, queryFields)
-  request.get('/achievement/selectPage', {
-    params: {
-      pageNum: data.pageNum,
-      pageSize: data.pageSize,
-      ...queryParams
-    }
-  }).then(res => {
+  data.loading = true
+  try {
+    const res = await request.get('/achievement/selectPage', {
+      params: {
+        pageNum: data.pageNum,
+        pageSize: data.pageSize,
+        ...queryParams
+      }
+    })
     if (res.code === '200') {
       data.tableData = res.data?.list || []
-      data.total = res.data?.total
+      data.total = res.data?.total || 0
+    } else {
+      ElMessage.error(res.msg || '获取科研成果列表失败')
     }
-  })
+  } catch (error) {
+    console.error('获取科研成果列表失败', error)
+    ElMessage.error('获取科研成果列表失败，请稍后再试')
+  } finally {
+    data.loading = false
+  }
 }
 const handleAdd = () => {
   data.form = { visible: 0, projectId: null }
@@ -611,6 +629,22 @@ loadType()
 </script>
 
 <style scoped>
+.achievement-table-card {
+  position: relative;
+  min-height: 260px;
+}
+
+:deep(.achievement-table-card .el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+}
+
+:deep(.achievement-table-card .el-loading-text) {
+  margin-top: 10px;
+  color: #409eff;
+  font-size: 14px;
+}
+
 /* 条件文本对齐样式 */
 .content-center {
   text-align: center;

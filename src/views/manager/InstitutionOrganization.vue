@@ -1,4 +1,12 @@
 <template>
+  <InstitutionScopeList v-if="canSelectScope" ref="scopeListRef" module="organization" :columns="scopeColumns" @select="openScope" />
+  <InstitutionMaintenanceDialog
+    v-if="shouldShowMaintenance"
+    v-model:visible="data.scopeDialogVisible"
+    :dialog="canSelectScope"
+    :title="scopeDialogTitle"
+    @closed="closeScopeDialog"
+  >
   <div class="organization-page">
     <!-- 左侧子菜单 -->
     <div class="org-sidebar">
@@ -13,6 +21,15 @@
 
     <!-- 右侧内容区 -->
     <div class="org-content">
+      <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
+        <div>
+          <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+          <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+          <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+        </div>
+        <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+      </div>
+
       <!-- 标题 & 描述 -->
       <div class="content-header">
         <h2 class="page-title">学术委员会</h2>
@@ -105,6 +122,7 @@
       v-model="data.formVisible"
       :title="data.form.id ? '编辑学术委员会' : '新增学术委员会'"
       width="480px"
+      append-to-body
       destroy-on-close
     >
       <el-form ref="formRef" :model="data.form" :rules="rules" label-width="90px" style="padding: 10px 20px">
@@ -139,12 +157,15 @@
       </template>
     </el-dialog>
   </div>
+  </InstitutionMaintenanceDialog>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted } from 'vue'
 import request from '@/utils/request.js'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
+import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
+import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
 import {
   Plus,
   Delete,
@@ -160,29 +181,60 @@ import {
 const activeMenu = ref('academic_committee')
 
 const formRef = ref()
+const scopeListRef = ref()
+const scopeColumns = [
+  { label: '委员会数量', prop: 'summary.committeeCount', minWidth: 110 },
+  { label: '最新委员会', prop: 'summary.latestCommitteeName', minWidth: 190 },
+  { label: '成立时间', prop: 'summary.foundedDate', minWidth: 120 },
+  { label: '届满时间', prop: 'summary.expiryDate', minWidth: 120 },
+  { label: '附件总数', prop: 'summary.attachmentCount', minWidth: 100 }
+]
 const rules = {
   name: [{ required: true, message: '请输入名称/届次', trigger: 'blur' }],
   foundedDate: [{ required: true, message: '请选择成立时间', trigger: 'change' }]
 }
 
 const data = reactive({
+  currentUser: {},
+  selectedScope: null,
   tableData: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
   searchKeyword: '',
   selectedIds: [],
+  scopeDialogVisible: false,
   formVisible: false,
   form: {}
 })
+
+try {
+  data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+} catch (_) {
+  data.currentUser = {}
+}
+
+const canSelectScope = computed(() => ['SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(data.currentUser.role))
+const shouldShowMaintenance = computed(() => !canSelectScope.value || !!data.selectedScope)
+const scopeDialogTitle = computed(() => data.selectedScope ? `维护 ${data.selectedScope.institutionName}` : '组织建设维护')
 
 const handleMenuSelect = (key) => {
   activeMenu.value = key
 }
 
+const getScopeParams = () => {
+  if (!canSelectScope.value || !data.selectedScope) return {}
+  return {
+    institutionType: data.selectedScope.institutionType,
+    schoolId: data.selectedScope.schoolId,
+    organizationId: data.selectedScope.organizationId
+  }
+}
+
 const load = () => {
   request.get('/academicCommittee/selectPage', {
     params: {
+      ...getScopeParams(),
       pageNum: data.pageNum,
       pageSize: data.pageSize,
       name: data.searchKeyword || undefined
@@ -195,6 +247,33 @@ const load = () => {
       ElMessage.error(res.msg || '加载失败')
     }
   })
+}
+
+const openScope = (scope) => {
+  data.selectedScope = scope
+  data.scopeDialogVisible = true
+  data.pageNum = 1
+  data.tableData = []
+  data.total = 0
+  data.selectedIds = []
+  load()
+}
+
+const returnToScopeList = () => {
+  if (canSelectScope.value) {
+    data.scopeDialogVisible = false
+    return
+  }
+  closeScopeDialog()
+}
+
+const closeScopeDialog = () => {
+  data.selectedScope = null
+  data.tableData = []
+  data.total = 0
+  data.selectedIds = []
+  data.formVisible = false
+  data.form = {}
 }
 
 const handleSearch = () => {
@@ -220,13 +299,14 @@ const save = () => {
   formRef.value.validate(valid => {
     if (!valid) return
     const api = data.form.id
-      ? request.put('/academicCommittee/update', data.form)
-      : request.post('/academicCommittee/add', data.form)
+      ? request.put('/academicCommittee/update', data.form, { params: getScopeParams() })
+      : request.post('/academicCommittee/add', data.form, { params: getScopeParams() })
     api.then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         data.formVisible = false
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '操作失败')
       }
@@ -243,6 +323,7 @@ const handleDelete = (id) => {
       if (res.code === '200') {
         ElMessage.success('删除成功')
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -264,6 +345,7 @@ const handleDeleteBatch = () => {
         ElMessage.success('批量删除成功')
         data.selectedIds = []
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -284,7 +366,7 @@ const handleSelectionChange = (rows) => {
 }
 
 onMounted(() => {
-  load()
+  if (!canSelectScope.value) load()
 })
 </script>
 
@@ -333,6 +415,28 @@ onMounted(() => {
   background: #fff;
   padding: 20px 24px;
   overflow: auto;
+}
+
+.selected-scope-bar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.selected-scope-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.selected-scope-school {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #606266;
 }
 
 /* 标题区 */

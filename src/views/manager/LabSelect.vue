@@ -3,14 +3,19 @@
         <div style="margin-bottom: 15px;">
             <h3 style="margin-left: 20px; margin-bottom: 15px;">重点组织审核</h3>
             <div style="margin-left: 20px;">
-                <el-radio-group v-model="applyType" @change="handleTypeChange" size="small">
+                <el-radio-group v-model="applyType" @change="handleTypeChange" size="small" :disabled="data.loading">
                     <el-radio-button value="LAB">重点实验室申请</el-radio-button>
                     <el-radio-button value="BASE">重点研究基地申请</el-radio-button>
                     <el-radio-button value="TEAM">优秀创新团队申请</el-radio-button>
                 </el-radio-group>
             </div>
         </div>
-        <div class="card">
+        <div
+            class="card lab-select-table-card"
+            v-loading="data.loading"
+            element-loading-text="数据加载中..."
+            element-loading-background="rgba(255, 255, 255, 0.78)"
+        >
             <el-table stripe :data="applyList" :header-cell-style="{ backgroundColor: '#e9edf2' }" class="table-center" border empty-text="暂无数据">
                 <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
                 <el-table-column prop="id" label="申请编号" width="150" sortable />
@@ -87,7 +92,8 @@
                     :page-size="data.pageSize" 
                     :page-sizes="[5, 10, 20, 50, 100]"
                     layout="total, sizes, prev, pager, next, jumper" 
-                    :total="data.total">
+                    :total="data.total"
+                    :disabled="data.loading">
                 </el-pagination>
             </div>
         </div>
@@ -108,7 +114,7 @@
         <template #footer>
             <span class="dialog-footer">
                 <el-button @click="formVisible = false" size="small">取 消</el-button>
-                <el-button type="primary" @click="submitReview" size="small">提 交</el-button>
+                <el-button type="primary" @click="submitReview" size="small" :loading="data.reviewSubmitting" :disabled="data.reviewSubmitting">提 交</el-button>
             </span>
         </template>
     </el-dialog>
@@ -162,7 +168,9 @@ const data = reactive({
     user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
     pageNum: 1,
     pageSize: 5,
-    total: 0
+    total: 0,
+    loading: false,
+    reviewSubmitting: false
 });
 
 const paginationQuery = usePaginationQuery(data);
@@ -211,6 +219,7 @@ const handleTypeChange = (val) => {
 // 定义一个方法来获取数据
 const fetchApplyList = async () => {
     try {
+        data.loading = true;
         syncListQuery();
         let response;
         if (applyType.value === 'LAB') {
@@ -267,6 +276,8 @@ const fetchApplyList = async () => {
         ElMessage.error('获取申请列表失败，请稍后再试');
         applyList.value = [];
         data.total = 0;
+    } finally {
+        data.loading = false;
     }
 };
 
@@ -310,7 +321,8 @@ const reviewApply = (id) => {
     reviewData.value.reviewComments = '';
 };
 
-const submitReview = () => {
+const submitReview = async () => {
+    if (data.reviewSubmitting) return;
     console.log('res', reviewData.value);
     
     let apiEndpoint = '';
@@ -347,7 +359,9 @@ const submitReview = () => {
         method = request.put;
     }
 
-    method(apiEndpoint, payload).then((res) => {
+    data.reviewSubmitting = true;
+    try {
+        const res = await method(apiEndpoint, payload);
         if (res.code === '200' || res.code === 200) {
             ElMessage({
                 message: '审核成功！',
@@ -361,10 +375,12 @@ const submitReview = () => {
         } else {
             ElMessage.error(res.msg || '审核失败，请检查输入内容或联系管理员');
         }
-    }).catch((error) => {
+    } catch (error) {
         ElMessage.error('审核失败，请检查输入内容或联系管理员');
         console.error('审核失败', error);
-    });
+    } finally {
+        data.reviewSubmitting = false;
+    }
 };
 
 // 根据内容长度判断对齐方式的方法
@@ -474,6 +490,22 @@ const getReviewComments = (row) => {
 :deep(.el-card__body) {
     width: 100%;
     padding:0;
+}
+
+.lab-select-table-card {
+    position: relative;
+    min-height: 260px;
+}
+
+:deep(.lab-select-table-card .el-loading-spinner .circular) {
+    width: 42px;
+    height: 42px;
+}
+
+:deep(.lab-select-table-card .el-loading-text) {
+    margin-top: 10px;
+    color: #409eff;
+    font-size: 14px;
 }
 
 .fade-enter-active,

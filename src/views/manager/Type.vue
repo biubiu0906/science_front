@@ -1,15 +1,21 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入类型名称查询"></el-input>
-      <el-button type="info" plain @click="search" size="small">查询</el-button>
-      <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
+      <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入类型名称查询" :disabled="data.loading"></el-input>
+      <el-button type="info" plain @click="search" size="small" :loading="data.loading">查询</el-button>
+      <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small" :disabled="data.loading">重置</el-button>
     </div>
 
-    <div class="card" style="margin-bottom: 5px">
+    <div 
+      class="card type-table-card" 
+      style="margin-bottom: 5px"
+      v-loading="data.loading"
+      element-loading-text="数据加载中..."
+      element-loading-background="rgba(255, 255, 255, 0.78)"
+    >
       <div style="margin-bottom: 10px; margin-left: 10px;">
-        <el-button type="primary" plain @click="handleAdd" size="small">新增</el-button>
-        <el-button type="danger" plain @click="delBatch" size="small">批量删除</el-button>
+        <el-button type="primary" plain @click="handleAdd" size="small" :disabled="data.loading">新增</el-button>
+        <el-button type="danger" plain @click="delBatch" size="small" :disabled="data.loading">批量删除</el-button>
       </div>
       <el-table
         stripe
@@ -108,13 +114,15 @@ const data = reactive({
   total: 0,
   name: null,
   ids: [],
-  parentOptions: []
+  parentOptions: [],
+  loading: false
 })
 
 const paginationQuery = usePaginationQuery(data)
 
 const load = () => {
   paginationQuery.sync()
+  data.loading = true
   request.get('/type/selectTree', {
     params: tableQueryParams(data, queryFields)
   }).then(res => {
@@ -123,6 +131,10 @@ const load = () => {
       data.total = countTree(data.tableData)
       data.parentOptions = data.tableData
     }
+  }).catch(error => {
+    console.error(error)
+  }).finally(() => {
+    data.loading = false
   })
 }
 const handleAdd = () => {
@@ -244,6 +256,22 @@ load()
 </script>
 
 <style scoped>
+.type-table-card {
+  position: relative;
+  min-height: 260px;
+}
+
+:deep(.type-table-card .el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+}
+
+:deep(.type-table-card .el-loading-text) {
+  margin-top: 10px;
+  color: #409eff;
+  font-size: 14px;
+}
+
 :deep(.type-tree-table) {
   --el-table-row-hover-bg-color: #f4f8ff;
   color: #445066;

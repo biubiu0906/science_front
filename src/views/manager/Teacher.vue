@@ -22,7 +22,7 @@
         <el-button type="success" plain size="small" @click="handleBatchAdd" v-if="data.user.role !== 'SUPER_ADMIN'">批量新增</el-button>
         <el-button type="danger" plain size="small" @click="delBatch">批量删除</el-button>
       </div>
-      <el-table stripe :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
+      <el-table stripe v-loading="data.loading" :data="data.tableData" @selection-change="handleSelectionChange" :header-cell-style="{backgroundColor: '#e9edf2'}" class="table-center" empty-text="暂无数据">
         <el-table-column type="selection" width="35" />
         <el-table-column type="index" label="序号" :index="indexMethod" width="60" />
         <el-table-column prop="avatar" label="头像" text-align="center">
@@ -305,6 +305,7 @@ const data = reactive({
   ids: [],
   Password: null,
   showSecurityAlert: false,
+  loading: false,
   // 批量上传文件列表（受控模式，便于在上传成功后清空）
   batchFileList: []
 })
@@ -353,6 +354,7 @@ const reportRules = reactive({
 })
 
 const load = () => {
+  data.loading = true
   paginationQuery.sync()
   if(data.user.role === 'SUPER_ADMIN'){
     request.get('/teacher/selectTeachers', {
@@ -366,6 +368,8 @@ const load = () => {
         data.tableData = res.data?.list || []
         data.total = res.data?.total
       }
+    }).finally(() => {
+      data.loading = false
     })
   }else{
     request.get('/teacher/selectPage', {
@@ -379,6 +383,8 @@ const load = () => {
         data.tableData = res.data?.list || []
         data.total = res.data?.total
       }
+    }).finally(() => {
+      data.loading = false
     })
   }
 }

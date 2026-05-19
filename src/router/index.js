@@ -54,7 +54,6 @@ const router = createRouter({
         { path: 'log', meta: { name: '日志管理', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/Log.vue') },
         { path: 'dashboard', meta: { name: '数据统计', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'KEY_LABORATORY'] }, component: () => import('@/views/manager/Dashboard.vue') },
         { path: 'entityProfile', meta: { name: '学校/组织画像', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/EntityProfile.vue') },
-        { path: 'laboratory', meta: { name: '组织信息', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/Laboratory.vue') },
         { path: 'report', meta: { name: '报告信息' }, component: () => import('@/views/manager/Report.vue') },
         { path: 'notification', meta: { name: '通知管理', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/Notification.vue') },
         { path: 'myNotification', meta: { name: '我的消息', roles: ['TEACHER', 'NORMAL_LABORATORY'] }, component: () => import('@/views/manager/MyNotification.vue') },
@@ -65,20 +64,73 @@ const router = createRouter({
         { path: 'institutionResearchDepartment', meta: { name: '科研管理部门' }, component: () => import('@/views/manager/InstitutionResearchDept.vue') },
         { path: 'verticalTopic', meta: { name: '纵向课题' }, component: () => import('@/views/manager/VerticalTopic.vue') },
         { path: 'horizontalTopic', meta: { name: '横向课题' }, component: () => import('@/views/manager/HorizontalTopic.vue') },
-        { path: 'academicAchievement', meta: { name: '学术成果' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'intellectualProperty', meta: { name: '知识产权' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'advisoryService', meta: { name: '咨政服务' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'academicExchange', meta: { name: '学术交流' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'talentHonor', meta: { name: '人才称号与荣誉' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'achievementAward', meta: { name: '成果获奖' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'labConstructionFund', meta: { name: '实验室建设经费' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'labSummary', meta: { name: '实验室总结' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'labPlan', meta: { name: '实验室规划' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'workAchievementBrief', meta: { name: '工作/成果简报' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'rulesRegulations', meta: { name: '规章制度' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'planningTopicList', meta: { name: '课题列表' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'planningChangeApply', meta: { name: '变更申请' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
-        { path: 'recycleBin', meta: { name: '回收站' }, component: () => import('@/views/manager/InstitutionInfoPlaceholder.vue') },
+        {
+          path: 'academicAchievement/:category?',
+          meta: {
+            name: '学术成果',
+            parent: '成果管理',
+            categoryNames: {
+              journal: '期刊论文',
+              conference: '会议论文',
+              collection: '文集文章',
+              book: '书籍著作',
+              report: '研究报告',
+              software: '软件研发',
+              database: '数据库建设',
+              digital: '音像/数字作品',
+              other: '其他成果'
+            }
+          },
+          component: () => import('@/views/manager/AcademicAchievement.vue')
+        },
+        {
+          path: 'intellectualProperty/:category?',
+          meta: {
+            name: '知识产权',
+            parent: '成果管理',
+            categoryNames: {
+              patent: '专利',
+              copyright: '著作权'
+            }
+          },
+          component: () => import('@/views/manager/IntellectualProperty.vue')
+        },
+        {
+          path: 'academicExchange/:category?',
+          meta: {
+            name: '学术交流',
+            parent: '成果管理',
+            categoryNames: {
+              hostedConference: '主办学术会议',
+              attendedConference: '参加学术会议',
+              internationalActivity: '国际交流活动',
+              publication: '主办刊物',
+              lecture: '学术讲座'
+            }
+          },
+          component: () => import('@/views/manager/AcademicExchange.vue')
+        },
+        { path: 'talentHonor', meta: { name: '人才称号与荣誉', parent: '获奖/荣誉' }, component: () => import('@/views/manager/TalentHonor.vue') },
+        { path: 'achievementAward', meta: { name: '成果获奖', parent: '获奖/荣誉' }, component: () => import('@/views/manager/AchievementAward.vue') },
+        { path: 'labConstructionFund', meta: { name: '实验室建设经费', parent: '机构经费' }, component: () => import('@/views/manager/LabConstructionFund.vue') },
+        { path: 'labSummary', meta: { name: '实验室总结', parent: '管理工作' }, component: () => import('@/views/manager/LabSummary.vue') },
+        { path: 'labPlan', meta: { name: '实验室规划', parent: '管理工作' }, component: () => import('@/views/manager/LabPlan.vue') },
+        { path: 'workAchievementBrief', meta: { name: '成果/工作简报', parent: '管理工作' }, component: () => import('@/views/manager/WorkAchievementBrief.vue') },
+        { path: 'rulesRegulations', meta: { name: '规章制度', parent: '管理工作' }, component: () => import('@/views/manager/RulesRegulations.vue') },
+        { path: 'planningTopicList', meta: { name: '课题列表', parent: '科研规划' }, component: () => import('@/views/manager/PlanningTopicList.vue') },
+        { path: 'planningChangeApply', meta: { name: '变更申请', parent: '科研规划' }, component: () => import('@/views/manager/PlanningChangeApply.vue') },
+        {
+          path: 'recycleBin/:category?',
+          meta: {
+            name: '回收站',
+            parent: '回收站',
+            categoryNames: {
+              topic: '课题',
+              achievement: '成果'
+            }
+          },
+          component: () => import('@/views/manager/RecycleBin.vue')
+        },
         { path: 'labStage', meta: { name: '阶段报告', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/labStage.vue') },
         { path: 'labStageApply', meta: { name: '阶段报告', roles: ['KEY_LABORATORY'] }, component: () => import('@/views/manager/labStageApply.vue') },
         { path: 'school', meta: { name: '学校信息', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/School.vue') },

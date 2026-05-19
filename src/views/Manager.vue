@@ -5,7 +5,7 @@
       <!-- 侧边栏：占满屏幕高度 -->
       <div class="manager-main-left" :class="{ 'collapsed': isCollapse }">
         <el-menu 
-          :default-active="$route.path" 
+          :default-active="activeMenuPath"
           :collapse="isCollapse"
           :default-openeds="[]"
           unique-opened
@@ -54,7 +54,6 @@
               <span>成员管理</span>
             </template>
             <el-menu-item index="/manager/teacher">聘任人员</el-menu-item>
-            <el-menu-item index="/manager/laboratory">组织信息</el-menu-item>
             <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
             <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
             <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">超级管理员信息</el-menu-item>
@@ -134,7 +133,6 @@
             </template>
             <el-menu-item index="/manager/academicAchievement">学术成果</el-menu-item>
             <el-menu-item index="/manager/intellectualProperty">知识产权</el-menu-item>
-            <el-menu-item index="/manager/advisoryService">咨政服务</el-menu-item>
             <el-menu-item index="/manager/academicExchange">学术交流</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="7">
@@ -178,7 +176,7 @@
             <el-menu-item index="/manager/planningTopicList">课题列表</el-menu-item>
             <el-menu-item index="/manager/planningChangeApply">变更申请</el-menu-item>
           </el-sub-menu>
-          <el-menu-item index="/manager/recycleBin">
+          <el-menu-item index="/manager/recycleBin/topic">
             <el-icon>
               <Delete />
             </el-icon>
@@ -204,8 +202,13 @@
           </div>
           <div class="manager-header-center">
             <el-breadcrumb separator="/">
-              <el-breadcrumb-item :to="data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY' ? '/manager/dashboard' : '/manager/myNotification'">首页</el-breadcrumb-item>
-              <el-breadcrumb-item>{{ router.currentRoute.value.meta.name }}</el-breadcrumb-item>
+              <el-breadcrumb-item
+                v-for="(item, index) in headerBreadcrumbItems"
+                :key="`${item.name}-${index}`"
+                :to="index < headerBreadcrumbItems.length - 1 ? item.to : undefined"
+              >
+                {{ item.name }}
+              </el-breadcrumb-item>
             </el-breadcrumb>
           </div>
           <div class="manager-header-right">
@@ -241,7 +244,8 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, onUnmounted, ref } from "vue";
+import { computed, reactive, onMounted, onUnmounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import router from "@/router/index.js";
 import { ElMessage } from "@/utils/element-plus";
 import {
@@ -260,6 +264,7 @@ import PersonDialog from "@/views/manager/Person.vue";
 // 引入修改密码对话框组件
 import PasswordDialog from "@/views/manager/Password.vue";
 
+const route = useRoute()
 const currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
 const currentLaboratoryId = getUserLaboratoryId(currentUser)
 const data = reactive({
@@ -277,6 +282,86 @@ const isCollapse = ref(false)
 const showPersonDialog = ref(false)
 // 修改密码对话框显示状态
 const showPasswordDialog = ref(false)
+
+const routeParentMap = {
+  '/manager/institutionBasic': '机构信息',
+  '/manager/institutionSettings': '机构信息',
+  '/manager/institutionOrganization': '机构信息',
+  '/manager/institutionDigital': '机构信息',
+  '/manager/institutionResearchDepartment': '机构信息',
+  '/manager/teacher': '成员管理',
+  '/manager/school': '成员管理',
+  '/manager/schoolAdmin': '成员管理',
+  '/manager/admin': '成员管理',
+  '/manager/verticalTopic': '科研课题',
+  '/manager/horizontalTopic': '科研课题',
+  '/manager/labApply': '信息管理',
+  '/manager/researchBaseApply': '信息管理',
+  '/manager/innovationTeamApply': '信息管理',
+  '/manager/labStageApply': '信息管理',
+  '/manager/entityProfile': '信息管理',
+  '/manager/labSelect': '信息管理',
+  '/manager/labStage': '信息管理',
+  '/manager/project': '信息管理',
+  '/manager/achievement': '信息管理',
+  '/manager/report': '信息管理',
+  '/manager/type': '信息管理',
+  '/manager/academicAchievement': '成果管理',
+  '/manager/intellectualProperty': '成果管理',
+  '/manager/academicExchange': '成果管理',
+  '/manager/talentHonor': '获奖/荣誉',
+  '/manager/achievementAward': '获奖/荣誉',
+  '/manager/labConstructionFund': '机构经费',
+  '/manager/labSummary': '管理工作',
+  '/manager/labPlan': '管理工作',
+  '/manager/workAchievementBrief': '管理工作',
+  '/manager/rulesRegulations': '管理工作',
+  '/manager/planningTopicList': '科研规划',
+  '/manager/planningChangeApply': '科研规划',
+  '/manager/recycleBin': '回收站',
+  '/manager/notice': '系统管理',
+  '/manager/notification': '系统管理'
+}
+
+const homePath = computed(() => {
+  return data.user.role === 'SUPER_ADMIN' || data.user.role === 'KEY_LABORATORY'
+    ? '/manager/dashboard'
+    : '/manager/myNotification'
+})
+
+const headerBreadcrumbItems = computed(() => {
+  const items = [{ name: '首页', to: homePath.value }]
+  const parentName = route.meta.parent || routeParentMap[route.path]
+  const currentName = route.meta.name || ''
+  if (parentName && parentName !== currentName) {
+    items.push({ name: parentName })
+  }
+  if (currentName) {
+    items.push({ name: currentName })
+  }
+  const categoryKey = route.params.category
+  const categoryName = categoryKey && route.meta.categoryNames ? route.meta.categoryNames[categoryKey] : ''
+  if (categoryName) {
+    items.push({ name: categoryName })
+  }
+  return items
+})
+
+const activeMenuPath = computed(() => {
+  if (route.path.startsWith('/manager/academicAchievement')) {
+    return '/manager/academicAchievement'
+  }
+  if (route.path.startsWith('/manager/intellectualProperty')) {
+    return '/manager/intellectualProperty'
+  }
+  if (route.path.startsWith('/manager/academicExchange')) {
+    return '/manager/academicExchange'
+  }
+  if (route.path.startsWith('/manager/recycleBin')) {
+    return '/manager/recycleBin/topic'
+  }
+  return route.path
+})
 
 const logout = () => {
   localStorage.removeItem('xm-user')
@@ -333,4 +418,8 @@ getLaboratoryLevel()
 
 <style scoped>
 @import "@/assets/css/manager.css";
+
+:deep(.manager-header-center .el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+  font-weight: 400 !important;
+}
 </style>
