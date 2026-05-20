@@ -9,116 +9,208 @@
       :title="scopeDialogTitle"
       @closed="closeScopeDialog"
     >
-    <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
-      <div>
-        <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
-        <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
-        <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
-      </div>
-      <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
-    </div>
+      <div class="basic-maintenance-list">
+        <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
+          <div>
+            <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+            <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+            <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+          </div>
+        </div>
 
-    <div
-      v-for="section in sections"
-      :key="section.key"
-      class="info-section"
-    >
-      <div class="section-header">
-        <div class="section-title">{{ section.title }}</div>
-        <div class="section-actions" v-if="section.editable">
-          <template v-if="data.editingSectionKey === section.key">
-            <el-button type="primary" @click="saveSection">
-              <el-icon><DocumentChecked /></el-icon>
-              <span>保存</span>
-            </el-button>
-            <el-button link type="primary" @click="cancelEdit">取消</el-button>
-          </template>
-          <template v-else>
-            <span v-if="section.key === 'leaders'" class="warning-text">请及时更新负责人及负责人手机号信息</span>
-            <el-button link type="primary" @click="openEdit(section)">编辑</el-button>
-          </template>
-        </div>
-      </div>
-      <div class="section-body">
         <div
-          v-for="item in getVisibleItems(section)"
-          :key="item.prop"
-          class="info-row"
-          :class="{ 'full-row': item.full }"
+          v-for="section in sections"
+          :key="section.key"
+          class="info-section"
         >
-          <div class="info-label">{{ item.label }}：</div>
-          <div v-if="data.editingSectionKey === section.key" class="info-control">
-            <el-select
-              v-if="item.type === 'select'"
-              v-model="data.editForm[item.prop]"
-              clearable
-              style="width: 100%"
-            >
-              <el-option
-              v-for="option in getItemOptions(item)"
-                :key="option"
-                :label="option"
-                :value="option"
-              />
-            </el-select>
-            <el-select
-              v-else-if="item.type === 'school-select'"
-              v-model="data.editForm[item.prop]"
-              filterable
-              clearable
-              style="width: 100%"
-            >
-              <el-option
-                v-for="school in data.schools"
-                :key="school.id"
-                :label="school.name"
-                :value="school.id"
-              />
-            </el-select>
-            <el-radio-group v-else-if="item.type === 'radio'" v-model="data.editForm[item.prop]">
-              <el-radio-button label="是" />
-              <el-radio-button label="否" />
-            </el-radio-group>
-            <el-cascader
-              v-else-if="item.type === 'cascader'"
-              v-model="data.editForm[item.prop]"
-              :options="getItemOptions(item)"
-              :props="{ emitPath: false, label: 'label', value: 'value' }"
-              clearable
-              filterable
-              style="width: 100%"
-            />
-            <el-tree-select
-              v-else-if="item.type === 'tree-select'"
-              v-model="data.editForm[item.prop]"
-              :data="getItemOptions(item)"
-              multiple
-              :props="{ label: 'label', value: 'value' }"
-              clearable
-              filterable
-              style="width: 100%"
-              @change="(val) => handleTreeChange(item.prop, val)"
-            />
-            <el-input
-              v-else
-              v-model="data.editForm[item.prop]"
-              :type="item.full ? 'textarea' : 'text'"
-              :rows="item.full ? 2 : undefined"
-              clearable
-            />
+          <div class="section-header">
+            <div class="section-title">{{ section.title }}</div>
+            <div class="section-actions" v-if="section.editable">
+              <template v-if="data.editingSectionKey === section.key">
+                <el-button type="primary" @click="saveSection">
+                  <el-icon><DocumentChecked /></el-icon>
+                  <span>保存</span>
+                </el-button>
+                <el-button link type="primary" @click="cancelEdit">取消</el-button>
+              </template>
+              <template v-else>
+                <span v-if="section.key === 'leaders'" class="warning-text">请及时更新负责人及负责人手机号信息</span>
+                <el-button link type="primary" @click="openEdit(section)">编辑</el-button>
+              </template>
+            </div>
           </div>
-          <div v-else class="info-value">
-            <template v-if="item.type === 'tree-select'">
-              <el-tag v-for="tag in (data.info[item.prop] || [])" :key="tag" style="margin-right: 5px;">{{ tag }}</el-tag>
-            </template>
-            <template v-else>
-              {{ getDisplayValue(item) }}
-            </template>
+          <div class="section-body">
+            <div
+              v-for="item in getVisibleItems(section)"
+              :key="item.prop"
+              class="info-row"
+              :class="{ 'full-row': item.full }"
+            >
+              <div class="info-label">{{ item.label }}：</div>
+              <div v-if="data.editingSectionKey === section.key" class="info-control">
+                <template v-if="section.key === 'leaders'">
+                  <template v-if="getLeaderControlType(item) === 'person-picker'">
+                    <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
+                      <el-input
+                        v-model="data.editForm[item.prop]"
+                        readonly
+                        placeholder="请点击右侧按钮选择"
+                        style="flex: 1"
+                      >
+                        <template #suffix>
+                          <el-icon
+                            v-if="data.editForm[item.prop]"
+                            style="cursor: pointer"
+                            @click="clearLeaderField(item.prop)"
+                          ><Close /></el-icon>
+                        </template>
+                      </el-input>
+                      <el-button type="primary" plain @click="openPersonPicker(item.prop)">选择</el-button>
+                    </div>
+                  </template>
+                  <el-input
+                    v-else
+                    v-model="data.editForm[item.prop]"
+                    clearable
+                    style="width: 100%"
+                  />
+                </template>
+                <el-select
+                  v-else-if="item.type === 'select'"
+                  v-model="data.editForm[item.prop]"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="option in getItemOptions(item)"
+                    :key="option"
+                    :label="option"
+                    :value="option"
+                  />
+                </el-select>
+                <el-select
+                  v-else-if="item.type === 'school-select'"
+                  v-model="data.editForm[item.prop]"
+                  filterable
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="school in data.schools"
+                    :key="school.id"
+                    :label="school.name"
+                    :value="school.id"
+                  />
+                </el-select>
+                <el-radio-group v-else-if="item.type === 'radio'" v-model="data.editForm[item.prop]">
+                  <el-radio-button label="是" />
+                  <el-radio-button label="否" />
+                </el-radio-group>
+                <el-cascader
+                  v-else-if="item.type === 'cascader'"
+                  v-model="data.editForm[item.prop]"
+                  :options="getItemOptions(item)"
+                  :props="{ emitPath: false, label: 'label', value: 'value' }"
+                  clearable
+                  filterable
+                  style="width: 100%"
+                />
+                <el-tree-select
+                  v-else-if="item.type === 'tree-select'"
+                  v-model="data.editForm[item.prop]"
+                  :data="getItemOptions(item)"
+                  multiple
+                  :props="{ label: 'label', value: 'value' }"
+                  clearable
+                  filterable
+                  style="width: 100%"
+                  @change="(val) => handleTreeChange(item.prop, val)"
+                />
+                <el-input
+                  v-else
+                  v-model="data.editForm[item.prop]"
+                  :type="item.full ? 'textarea' : 'text'"
+                  :rows="item.full ? 2 : undefined"
+                  clearable
+                />
+              </div>
+              <div v-else class="info-value">
+                <template v-if="item.type === 'tree-select'">
+                  <el-tag v-for="tag in (data.info[item.prop] || [])" :key="tag" style="margin-right: 5px;">{{ tag }}</el-tag>
+                </template>
+                <template v-else>
+                  {{ getDisplayValue(item) }}
+                </template>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </InstitutionMaintenanceDialog>
+
+    <el-dialog
+      title="选择负责人"
+      v-model="data.personPickerVisible"
+      width="760px"
+      destroy-on-close
+      append-to-body
+    >
+      <el-tabs v-model="data.personPickerTab">
+        <el-tab-pane label="教师" name="teacher">
+          <el-input
+            v-model="data.personPickerKeyword"
+            placeholder="按姓名搜索"
+            clearable
+            style="margin-bottom: 10px"
+            @input="loadTeacherCandidates"
+          />
+          <el-table
+            :data="data.teacherCandidates"
+            v-loading="data.personPickerLoading"
+            max-height="380"
+            empty-text="暂无数据"
+          >
+            <el-table-column prop="name" label="姓名" width="110" />
+            <el-table-column prop="phone" label="电话" width="140" />
+            <el-table-column prop="schoolName" label="学校" min-width="140" />
+            <el-table-column prop="unit" label="单位" min-width="140">
+              <template v-slot="scope">{{ scope.row.unit || scope.row.ofLab || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="操作" width="90" fixed="right">
+              <template v-slot="scope">
+                <el-button type="primary" link size="small" @click="confirmPerson(scope.row)">选择</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+        <el-tab-pane label="学校管理员" name="admin">
+          <el-input
+            v-model="data.personPickerKeyword"
+            placeholder="按姓名搜索"
+            clearable
+            style="margin-bottom: 10px"
+            @input="loadAdminCandidates"
+          />
+          <el-table
+            :data="data.adminCandidates"
+            v-loading="data.personPickerLoading"
+            max-height="380"
+            empty-text="暂无数据"
+          >
+            <el-table-column prop="name" label="姓名" width="110">
+              <template v-slot="scope">{{ scope.row.name || scope.row.username }}</template>
+            </el-table-column>
+            <el-table-column prop="phone" label="电话" width="140" />
+            <el-table-column prop="username" label="用户名" min-width="140" />
+            <el-table-column label="操作" width="90" fixed="right">
+              <template v-slot="scope">
+                <el-button type="primary" link size="small" @click="confirmPerson(scope.row)">选择</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
+    </el-dialog>
   </div>
 </template>
 
@@ -127,7 +219,7 @@ import { reactive, onMounted, computed, ref } from 'vue'
 import request from '@/utils/request.js'
 import { getSchools } from '@/utils/dict.js'
 import { ElMessage } from '@/utils/element-plus'
-import { DocumentChecked } from '@element-plus/icons-vue'
+import { DocumentChecked, Close } from '@element-plus/icons-vue'
 import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
 import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
 
@@ -137,6 +229,8 @@ const fieldMap = {
   organizationId: 'organization_id',
   laboratoryId: 'laboratory_id',
   institutionName: 'institution_name',
+  laboratoryDescription: 'laboratory_description',
+  laboratoryAddress: 'laboratory_address',
   englishName: 'english_name',
   researchType: 'research_type',
   academicField: 'academic_field',
@@ -168,7 +262,7 @@ const fieldMap = {
   address: 'address'
 }
 
-const institutionTypes = ['学校', '实验室', '基地', '团队']
+const institutionTypes = ['实验室', '基地', '团队']
 const scopeListRef = ref()
 
 const scopeColumns = [
@@ -188,7 +282,7 @@ const data = reactive({
   schools: [],
   organizations: [],
   scope: {
-    institutionType: '学校',
+    institutionType: '实验室',
     schoolId: null,
     organizationId: null
   },
@@ -201,8 +295,18 @@ const data = reactive({
     competentDepartment: [],
     mainDiscipline: [],
     relatedDisciplines: []
-  }
+  },
+  // 负责人选择弹窗
+  personPickerVisible: false,
+  personPickerTab: 'teacher',
+  personPickerKeyword: '',
+  personPickerTargetProp: '',
+  personPickerLoading: false,
+  teacherCandidates: [],
+  adminCandidates: []
 })
+
+const LEADER_PERSON_FIELDS = ['principalName', 'directorAssistant', 'administrativeSecretary', 'dataManager']
 
 try {
   data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
@@ -230,6 +334,8 @@ const sections = computed(() => [
     items: [
       { label: '机构名称', prop: 'institutionName' },
       { label: '机构类型', prop: 'institutionType', type: 'select' },
+      { label: '组织描述', prop: 'laboratoryDescription', full: true, hideForSchool: true },
+      { label: '组织地址', prop: 'laboratoryAddress', full: true, hideForSchool: true },
       { label: '英文名称', prop: 'englishName' },
       { label: '研究类型', prop: 'researchType' },
       { label: '学术片', prop: 'academicField' },
@@ -350,8 +456,8 @@ const initScope = () => {
   } else {
     data.scope.schoolId = data.schools[0]?.id || null
   }
-  data.scope.institutionType = '学校'
-  data.scope.organizationId = null
+  data.scope.institutionType = '实验室'
+  selectFirstOrganization()
 }
 
 const loadScopeOptions = () => {
@@ -490,6 +596,86 @@ const openEdit = (section) => {
   data.editForm = JSON.parse(JSON.stringify(data.info))
 }
 
+const getLeaderControlType = (item) => {
+  if (LEADER_PERSON_FIELDS.includes(item.prop)) {
+    return 'person-picker'
+  }
+  return 'text'
+}
+
+const getEditScopeSchoolId = () => (
+  data.editForm.schoolId || data.info.schoolId || data.scope.schoolId || null
+)
+
+const clearLeaderField = (prop) => {
+  data.editForm[prop] = ''
+  if (prop === 'principalName') {
+    data.editForm.principalPhone = ''
+  }
+}
+
+const openPersonPicker = (targetProp) => {
+  data.personPickerTargetProp = targetProp
+  data.personPickerKeyword = ''
+  data.personPickerTab = 'teacher'
+  data.personPickerVisible = true
+  loadTeacherCandidates()
+  loadAdminCandidates()
+}
+
+const loadTeacherCandidates = () => {
+  data.personPickerLoading = true
+  const params = {
+    pageNum: 1,
+    pageSize: 100,
+    schoolId: getEditScopeSchoolId() || undefined,
+    name: data.personPickerKeyword || undefined
+  }
+  request.get('/teacher/selectPage', { params }).then(res => {
+    if (res.code === '200') {
+      data.teacherCandidates = res.data?.list || []
+    } else {
+      data.teacherCandidates = []
+    }
+  }).catch(() => {
+    data.teacherCandidates = []
+  }).finally(() => {
+    data.personPickerLoading = false
+  })
+}
+
+const loadAdminCandidates = () => {
+  data.personPickerLoading = true
+  const params = {
+    schoolId: getEditScopeSchoolId() || undefined,
+    name: data.personPickerKeyword || undefined
+  }
+  return request.get('/schoolAdmin/listForPrincipal', { params }).then(res => {
+    if (res.code === '200') {
+      data.adminCandidates = res.data || []
+    } else {
+      data.adminCandidates = []
+    }
+  }).catch(() => {
+    data.adminCandidates = []
+  }).finally(() => {
+    data.personPickerLoading = false
+  })
+}
+
+const confirmPerson = (row) => {
+  const prop = data.personPickerTargetProp
+  if (!prop) {
+    data.personPickerVisible = false
+    return
+  }
+  data.editForm[prop] = row.name || row.username || ''
+  if (prop === 'principalName') {
+    data.editForm.principalPhone = row.phone || ''
+  }
+  data.personPickerVisible = false
+}
+
 const cancelEdit = () => {
   data.editingSectionKey = ''
   data.editForm = {}
@@ -541,13 +727,20 @@ onMounted(() => {
   gap: 16px;
 }
 
+.basic-maintenance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .selected-scope-bar {
-  min-height: 52px;
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 0;
+  padding: 0 18px;
   border: 1px solid #e4e7ed;
+  border-radius: 6px;
   background: #fff;
 }
 
@@ -565,20 +758,23 @@ onMounted(() => {
 
 .info-section {
   border: 1px solid #e4e7ed;
+  border-radius: 6px;
   background: #fff;
+  overflow: hidden;
 }
 
 .section-header {
-  min-height: 58px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 18px;
   border-bottom: 1px solid #ebeef5;
+  background: #f8fafc;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #111827;
 }
@@ -595,48 +791,56 @@ onMounted(() => {
 }
 
 .section-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 120px;
-  row-gap: 26px;
-  padding: 28px 72px 30px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
 
 .info-row {
   display: grid;
-  grid-template-columns: 118px 1fr;
-  align-items: center;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: stretch;
   min-width: 0;
+  border-bottom: 1px solid #ebeef5;
 }
 
-.info-row.full-row {
-  grid-column: 1 / -1;
-  grid-template-columns: 118px 1fr;
+.info-row:last-child {
+  border-bottom: 0;
 }
 
 .info-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 46px;
+  padding: 10px 16px;
+  border-right: 1px solid #ebeef5;
+  background: #fafafa;
   font-size: 14px;
-  font-weight: 400;
-  color: #333;
+  font-weight: 600;
+  color: #303133;
   text-align: right;
 }
 
 .info-value {
-  min-height: 30px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  border-bottom: 1px solid #dcdfe6;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px;
   color: #606266;
   font-size: 14px;
   font-weight: 400;
   word-break: break-word;
+  line-height: 1.6;
 }
 
 .info-control {
-  min-height: 32px;
+  min-height: 46px;
   display: flex;
   align-items: center;
+  padding: 7px 12px;
   font-size: 14px;
   font-weight: 400;
 }
@@ -653,16 +857,9 @@ onMounted(() => {
 }
 
 @media (max-width: 900px) {
-  .section-body {
-    grid-template-columns: 1fr;
-    padding: 22px 18px;
-    row-gap: 18px;
-  }
-
   .info-row,
   .info-row.full-row {
-    grid-column: 1;
-    grid-template-columns: 110px 1fr;
+    grid-template-columns: 120px minmax(0, 1fr);
   }
 
   .section-header {

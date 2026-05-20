@@ -3,7 +3,13 @@
     <div class="card" style="margin-bottom: 5px">
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入姓名查询"></el-input>
       <el-input v-model="data.username" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入用户名查询"></el-input>
-      <el-input v-model="data.ofLab" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入实验室查询"></el-input>
+      <el-select v-model="data.schoolId" placeholder="学校" clearable filterable style="width: 180px; margin-right: 10px" @change="search">
+        <el-option v-for="item in data.schools" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="data.unitType" placeholder="单位类型" clearable style="width: 120px; margin-right: 10px" @change="search">
+        <el-option v-for="item in organizationTypes" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-input v-model="data.ofLab" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入单位查询"></el-input>
       <el-select v-model="data.gender" placeholder="性别" clearable style="width: 100px; margin-right: 10px">
         <el-option label="男" value="boy" />
         <el-option label="女" value="girl" />
@@ -57,15 +63,21 @@
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="unit" label="单位" min-width="120" sortable>
+        <el-table-column prop="schoolName" label="学校" min-width="140" sortable>
           <template v-slot="scope">
-            <span v-if="scope.row.unit">{{ scope.row.unit }}</span>
+            <span v-if="scope.row.schoolName">{{ scope.row.schoolName }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
-        <el-table-column prop="ofLab" label="所属实验室" min-width="180" sortable>
+        <el-table-column prop="unitType" label="单位类型" min-width="100" sortable>
           <template v-slot="scope">
-            <span v-if="scope.row.ofLab">{{ scope.row.ofLab }}</span>
+            <span v-if="scope.row.unitType">{{ scope.row.unitType }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="unit" label="单位" min-width="160" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.unit || scope.row.ofLab">{{ scope.row.unit || scope.row.ofLab }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
@@ -130,18 +142,50 @@
         <el-form-item prop="email" label="邮箱">
           <el-input v-model="data.form.email" placeholder="请输入邮箱"></el-input>
         </el-form-item>
-        <el-form-item prop="unit" label="单位">
-          <el-input v-model="data.form.unit" placeholder="请输入单位"></el-input>
+        <el-form-item prop="schoolId" label="学校">
+          <el-select
+            v-model="data.form.schoolId"
+            placeholder="请选择学校"
+            style="width: 100%"
+            clearable
+            filterable
+            :disabled="isOrganizationUser || data.user.role === 'SCHOOL_ADMIN'"
+            @change="handleSchoolChange"
+          >
+            <el-option v-for="item in data.schools" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
         </el-form-item>
-        <el-form-item v-if="data.user.role==='SUPER_ADMIN'" prop="ofLab" label="所属实验室">
-          <el-select v-model="data.form.ofLab" placeholder="请选择所属实验室">
+        <el-form-item prop="unitType" label="单位类型">
+          <el-select
+            v-model="data.form.unitType"
+            placeholder="请选择单位类型"
+            style="width: 100%"
+            :disabled="isOrganizationUser"
+            @change="handleUnitTypeChange"
+          >
+            <el-option v-for="item in organizationTypes" :key="item" :label="item" :value="item" />
+          </el-select>
+        </el-form-item>
+        <el-form-item prop="laboratoryId" :label="organizationLabel">
+          <el-select
+            v-model="data.form.laboratoryId"
+            placeholder="请选择所属单位"
+            style="width: 100%"
+            clearable
+            filterable
+            :disabled="isOrganizationUser || !data.form.schoolId || !data.form.unitType"
+            @change="handleOrganizationChange"
+          >
             <el-option
-              v-for="item in data.labOptions"
+              v-for="item in data.organizationOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item prop="unit" label="单位名称">
+          <el-input v-model="data.form.unit" placeholder="请输入单位名称" clearable></el-input>
         </el-form-item>
         <el-form-item prop="gender" label="性别">
           <el-radio-group v-model="data.form.gender">
@@ -264,6 +308,7 @@ import {Delete, Edit, View, Hide, Collection, UploadFilled, Search} from "@eleme
 import Password from "./Password.vue";
 import SecurityAlert from "@/components/SecurityAlert.vue";
 import { encrypt, getSecurityParams } from '@/utils/rsa.js'
+import { getSchools } from '@/utils/dict.js'
 
 // 表单引用
 const formRef = ref(null)
@@ -271,7 +316,8 @@ const reportFormRef = ref(null)
 // 批量上传组件引用
 const batchUploadRef = ref(null)
 const baseUrl = import.meta.env.VITE_BASE_URL
-const queryFields = ['name', 'username', 'gender', 'phone', 'email', 'unit', 'ofLab', 'employmentType']
+const queryFields = ['name', 'username', 'gender', 'phone', 'email', 'unit', 'ofLab', 'employmentType', 'schoolId', 'unitType']
+const organizationTypes = ['实验室', '基地', '团队']
 
 const uploadHeaders = computed(() => {
   const user = JSON.parse(localStorage.getItem('xm-user') || '{}')
@@ -290,7 +336,8 @@ const data = reactive({
   batchFormVisible: false,  // 批量新增教师信息
   reportForm: {},
   tableData: [],
-  labOptions: [],
+  schools: [],
+  organizationOptions: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
@@ -300,6 +347,8 @@ const data = reactive({
   phone: null,
   email: null,
   unit: null,
+  schoolId: null,
+  unitType: null,
   ofLab: null,
   employmentType: null,
   ids: [],
@@ -309,6 +358,9 @@ const data = reactive({
   // 批量上传文件列表（受控模式，便于在上传成功后清空）
   batchFileList: []
 })
+
+const isOrganizationUser = computed(() => data.user.role === 'NORMAL_LABORATORY' || data.user.role === 'KEY_LABORATORY')
+const organizationLabel = computed(() => data.form.unitType ? `所属${data.form.unitType}` : '所属单位')
 
 const paginationQuery = usePaginationQuery(data)
 
@@ -336,11 +388,14 @@ const rules = reactive({
   employmentType: [
     { required: true, message: '请选择全职/兼职', trigger: 'change' }
   ],
-  unit: [
-    { required: true, message: '请输入单位', trigger: 'blur' },
+  schoolId: [
+    { required: true, message: '请选择学校', trigger: 'change' },
   ],
-  ofLab: [
-    { required: true, message: '请输入所属实验室', trigger: 'blur' },
+  unitType: [
+    { required: true, message: '请选择单位类型', trigger: 'change' },
+  ],
+  laboratoryId: [
+    { required: true, message: '请选择所属单位', trigger: 'change' },
   ],
 })
 
@@ -389,27 +444,107 @@ const load = () => {
   }
 }
 
-const loadLabOptions = () => {
-  request.get('/laboratory/selectAll').then(res => {
-    if (res.code === '200') {
-      // 后端直接返回数组，不是包装在list中
-      data.labOptions = res.data || []
-      data.labOptions.forEach(item => {
-        // 后端返回的字段是userName，不是username
-        item.value = item.userName
-        item.label = item.laboratoryName
-      })
-      console.log('实验室选项加载成功:', data.labOptions)
+const loadSchools = () => {
+  return getSchools().then(res => {
+    data.schools = data.user.role === 'SCHOOL_ADMIN'
+      ? (res || []).filter(item => String(item.id) === String(data.user.schoolId))
+      : (res || [])
+    if (data.user.role === 'SCHOOL_ADMIN' && !data.schoolId) {
+      data.schoolId = data.user.schoolId || data.schools[0]?.id || null
     }
   }).catch(error => {
-    console.error('加载实验室选项失败:', error)
-    ElMessage.error('加载实验室选项失败')
+    console.error('加载学校选项失败:', error)
+    ElMessage.error('加载学校选项失败')
+  })
+}
+
+const normalizeOrganizationOption = (item = {}) => {
+  const organizationId = item.organizationId ?? item.organization_id ?? item.id ?? item.value
+  const organizationName = item.organizationName ?? item.organization_name ?? item.institutionName ?? item.laboratoryName ?? item.label
+  const schoolId = item.schoolId ?? item.school_id
+  return {
+    ...item,
+    value: organizationId,
+    label: organizationName,
+    schoolId,
+    schoolName: item.schoolName ?? item.school_name,
+    unitType: item.institutionType ?? item.institution_type ?? item.laboratoryHierarchy
+  }
+}
+
+const loadOrganizationOptions = (formOnly = false) => {
+  const params = {
+    pageNum: 1,
+    pageSize: 10000,
+    institutionType: data.form.unitType || data.unitType || undefined,
+    schoolId: data.form.schoolId || data.schoolId || undefined
+  }
+  return request.get('/institutionScope/selectPage', { params }).then(res => {
+    if (res.code === '200') {
+      data.organizationOptions = (res.data?.list || [])
+        .filter(item => item.institutionType !== '学校')
+        .map(normalizeOrganizationOption)
+      if (!formOnly && isOrganizationUser.value && data.organizationOptions.length === 1) {
+        applyOrganizationToForm(data.organizationOptions[0])
+      }
+    }
+  }).catch(error => {
+    console.error('加载单位选项失败:', error)
+    ElMessage.error('加载单位选项失败')
+  })
+}
+
+const applyOrganizationToForm = (organization) => {
+  if (!organization) return
+  data.form.schoolId = organization.schoolId || data.form.schoolId
+  data.form.schoolName = organization.schoolName || data.form.schoolName
+  data.form.unitType = organization.unitType || data.form.unitType
+  data.form.laboratoryId = organization.value
+  data.form.unit = organization.label
+  data.form.ofLab = organization.label
+}
+
+const handleSchoolChange = () => {
+  data.form.laboratoryId = null
+  data.form.unit = null
+  data.form.ofLab = null
+  loadOrganizationOptions(true)
+}
+
+const handleUnitTypeChange = () => {
+  data.form.laboratoryId = null
+  data.form.unit = null
+  data.form.ofLab = null
+  loadOrganizationOptions(true)
+}
+
+const handleOrganizationChange = (value) => {
+  const organization = data.organizationOptions.find(item => String(item.value) === String(value))
+  applyOrganizationToForm(organization)
+}
+
+const prepareFormScope = () => {
+  if (data.user.role === 'SCHOOL_ADMIN') {
+    data.form.schoolId = data.user.schoolId || data.form.schoolId || data.schools[0]?.id || null
+  }
+  if (isOrganizationUser.value) {
+    data.form.schoolId = data.user.schoolId || data.form.schoolId
+    data.form.unitType = data.user.laboratoryHierarchy || data.form.unitType || '实验室'
+  }
+  return loadOrganizationOptions(true).then(() => {
+    if (isOrganizationUser.value && data.organizationOptions.length === 1) {
+      applyOrganizationToForm(data.organizationOptions[0])
+    } else if (data.form.laboratoryId) {
+      const organization = data.organizationOptions.find(item => String(item.value) === String(data.form.laboratoryId))
+      if (organization) applyOrganizationToForm(organization)
+    }
   })
 }
 
 const handleAdd = () => {
   data.form = {}
   data.formVisible = true
+  prepareFormScope()
 }
 
 const handleBatchAdd = () => {
@@ -419,6 +554,7 @@ const handleBatchAdd = () => {
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
   data.formVisible = true
+  prepareFormScope()
 }
 const add = async () => {
   try {
@@ -698,7 +834,7 @@ const handleBatchDialogClosed = () => {
 }
 
 load()
-loadLabOptions()
+loadSchools().finally(() => loadOrganizationOptions())
 </script>
 
 

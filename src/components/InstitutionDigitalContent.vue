@@ -1,33 +1,18 @@
 <template>
   <div class="digital-content-inner">
-    <div class="content-header">
-      <h2 class="page-title">{{ currentModule.title }}</h2>
-      <p class="page-desc">{{ currentModule.desc }}</p>
-    </div>
-
     <div class="toolbar">
-      <div class="toolbar-left">
-        <el-button type="primary" @click="$emit('add')">+ 新增</el-button>
-        <el-button :icon="Delete" @click="$emit('delete-batch')" title="删除" />
-        <el-button :icon="RefreshLeft" title="还原" />
-        <el-button :icon="Sort" title="排序" />
-      </div>
-      <div class="toolbar-right">
-        <el-input
-          v-model="keywordModel"
-          placeholder="搜索关键词..."
-          :prefix-icon="Search"
-          clearable
-          style="width: 200px"
-          @keyup.enter="$emit('search')"
-          @clear="$emit('search')"
-        />
-        <el-button>高级查询</el-button>
-        <el-button :icon="Refresh" @click="$emit('load')" circle title="刷新" />
-        <el-button :icon="Grid" circle title="列设置" />
-        <el-button :icon="Download" circle title="导出" />
-        <el-button :icon="Upload" circle title="导入" />
-      </div>
+      <el-button type="primary" @click="$emit('add')">新增</el-button>
+      <el-button :icon="Delete" @click="$emit('delete-batch')" title="批量删除" />
+      <el-input
+        v-model="keywordModel"
+        placeholder="搜索关键词..."
+        :prefix-icon="Search"
+        clearable
+        style="width: 200px; margin-left: auto"
+        @keyup.enter="$emit('search')"
+        @clear="$emit('search')"
+      />
+      <el-button :icon="Refresh" @click="$emit('load')" circle title="刷新" />
     </div>
 
     <el-table
@@ -153,7 +138,7 @@
         <el-pagination
           v-model:current-page="pageNumModel"
           v-model:page-size="pageSizeModel"
-          :page-sizes="[5, 10, 20, 50, 100]"
+          :page-sizes="[15, 30, 50, 100]"
           :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           background
@@ -167,7 +152,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { Delete, Download, Grid, Refresh, RefreshLeft, Search, Sort, Upload } from '@element-plus/icons-vue'
+import { Delete, Refresh, Search } from '@element-plus/icons-vue'
 
 const props = defineProps({
   activeMenu: {
@@ -254,34 +239,7 @@ const handleSizeChange = (size) => {
   background: #fff;
 }
 
-.content-header {
-  margin-bottom: 2px;
-}
-
-.page-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin: 0 0 8px;
-}
-
-.page-desc {
-  font-size: 13px;
-  color: #606266;
-  margin: 0;
-  line-height: 1.6;
-}
-
 .toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.toolbar-left,
-.toolbar-right {
   display: flex;
   align-items: center;
   gap: 8px;

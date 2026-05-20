@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
-      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入用户名查询"></el-input>
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入账号查询"></el-input>
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入姓名查询"></el-input>
       <el-input v-model="data.phone" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入电话查询"></el-input>
       <el-input v-model="data.email" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入邮箱查询"></el-input>
@@ -10,6 +10,9 @@
           <el-icon><Search /></el-icon>
         </template>
         <el-option v-for="item in data.schools" :key="item.id" :label="item.name" :value="item.id"></el-option>
+      </el-select>
+      <el-select v-model="data.role" placeholder="请选择类别查询" style="width: 180px; margin-right: 10px" clearable>
+        <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
       </el-select>
       <el-button type="info" plain @click="search" size="small">查询</el-button>
       <el-button type="warning" plain style="margin: 0 10px" @click="reset" size="small">重置</el-button>
@@ -31,11 +34,22 @@
                       preview-teleported></el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" sortable />
+        <el-table-column prop="username" label="账号" sortable />
         <el-table-column prop="name" label="姓名" sortable />
+        <el-table-column prop="role" label="类别" sortable width="140">
+          <template v-slot="scope">
+            <el-tag :type="roleTagType(scope.row.role)">{{ roleLabel(scope.row.role) }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="schoolId" label="所属学校" sortable>
           <template v-slot="scope">
             {{ getSchoolName(scope.row.schoolId) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="organizationName" label="绑定组织" sortable min-width="150">
+          <template v-slot="scope">
+            <span v-if="scope.row.organizationName">{{ scope.row.organizationName }}</span>
+            <span v-else class="no-data-text">暂无绑定</span>
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="电话" sortable />
@@ -65,19 +79,35 @@
       />
     </div>
 
-    <el-dialog title="学校管理员信息" v-model="data.formVisible" width="40%" destroy-on-close>
-      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="80px" style="padding: 20px">
-        <el-form-item prop="username" label="用户名">
-          <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
+    <el-dialog title="管理员账号信息" v-model="data.formVisible" width="42%" destroy-on-close>
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="90px" style="padding: 20px">
+        <el-form-item prop="username" label="账号">
+          <el-input v-model="data.form.username" placeholder="请输入账号" :disabled="!!data.form.id"></el-input>
         </el-form-item>
         <el-form-item prop="password" label="密码" v-if="!data.form.id">
           <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
+        </el-form-item>
+        <el-form-item prop="role" label="类别">
+          <el-select v-model="data.form.role" placeholder="请选择类别" style="width: 100%" @change="handleRoleChange">
+            <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="isOrganizationRole(data.form.role)" prop="organizationId" label="绑定组织">
+          <el-select v-model="data.form.organizationId" placeholder="请选择绑定组织" style="width: 100%" filterable clearable @change="handleOrganizationChange">
+            <el-option
+              v-for="item in organizationOptions"
+              :key="item.id"
+              :label="organizationLabel(item)"
+              :value="item.id"
+              :disabled="!!item.adminId && String(item.adminId) !== String(data.form.id)"
+            ></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item prop="name" label="姓名">
           <el-input v-model="data.form.name" placeholder="请输入姓名"></el-input>
         </el-form-item>
         <el-form-item prop="schoolId" label="所属学校">
-           <el-select v-model="data.form.schoolId" placeholder="请选择学校" style="width: 100%" filterable>
+           <el-select v-model="data.form.schoolId" placeholder="请选择学校" style="width: 100%" filterable :disabled="isOrganizationRole(data.form.role)">
             <el-option v-for="item in data.schools" :key="item.id" :label="item.name" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
@@ -112,7 +142,7 @@
 </template>
 
 <script setup>
-import {reactive, ref, onMounted} from "vue";
+import {computed, reactive, ref, onMounted} from "vue";
 import request from "@/utils/request.js";
 import { getSchools } from '@/utils/dict.js';
 import { usePaginationQuery } from '@/utils/paginationQuery.js';
@@ -123,18 +153,25 @@ import { encrypt, getSecurityParams } from '@/utils/rsa.js'
 
 const formRef = ref(null)
 const baseUrl = import.meta.env.VITE_BASE_URL
-const queryFields = ['username', 'name', 'schoolId', 'phone', 'email']
+const queryFields = ['username', 'name', 'schoolId', 'role', 'phone', 'email']
+const roleOptions = [
+  { label: '校级管理员', value: 'SCHOOL_ADMIN' },
+  { label: '普通组织管理员', value: 'NORMAL_LABORATORY' },
+  { label: '重点组织管理员', value: 'KEY_LABORATORY' }
+]
 
 const data = reactive({
   formVisible: false,
   form: {},
   tableData: [],
+  organizations: [],
   pageNum: 1,
   pageSize: 10,
   total: 0,
   username: null,
   name: null,
   schoolId: null, // Filter
+  role: null,
   phone: null,
   email: null,
   schools: [], // List of schools
@@ -148,10 +185,20 @@ const indexMethod = (index) => {
   return (data.pageNum - 1) * data.pageSize + index + 1
 }
 
+const isOrganizationRole = (role) => role === 'NORMAL_LABORATORY' || role === 'KEY_LABORATORY'
+
+const validateOrganization = (rule, value, callback) => {
+  if (isOrganizationRole(data.form.role) && !value) {
+    callback(new Error('请选择绑定组织'))
+    return
+  }
+  callback()
+}
+
 const rules = reactive({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '账号长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -163,6 +210,12 @@ const rules = reactive({
   ],
   schoolId: [
     { required: true, message: '请选择所属学校', trigger: 'change' }
+  ],
+  role: [
+    { required: true, message: '请选择类别', trigger: 'change' }
+  ],
+  organizationId: [
+    { validator: validateOrganization, trigger: 'change' }
   ]
 })
 
@@ -172,9 +225,43 @@ const loadSchools = () => {
   }).catch(() => {})
 }
 
+const loadOrganizations = () => {
+  request.get('/laboratory/list').then(res => {
+    if (res.code === '200') {
+      data.organizations = res.data || []
+    }
+  }).catch(() => {})
+}
+
 const getSchoolName = (schoolId) => {
-  const school = data.schools.find(s => s.id === schoolId)
+  const school = data.schools.find(s => String(s.id) === String(schoolId))
   return school ? school.name : schoolId
+}
+
+const organizationOptions = computed(() => {
+  if (isOrganizationRole(data.form.role) || !data.form.schoolId) {
+    return data.organizations
+  }
+  return data.organizations.filter(item => String(item.schoolId) === String(data.form.schoolId))
+})
+
+const organizationLabel = (item) => {
+  const name = item.laboratoryName || item.institutionName || item.organizationName || `组织${item.id}`
+  const type = item.laboratoryHierarchy || item.institutionType
+  const school = getSchoolName(item.schoolId)
+  return [name, type, school].filter(Boolean).join(' / ')
+}
+
+const roleLabel = (role) => {
+  const item = roleOptions.find(v => v.value === role)
+  return item ? item.label : (role || '暂无类别')
+}
+
+const roleTagType = (role) => {
+  if (role === 'SCHOOL_ADMIN') return 'primary'
+  if (role === 'KEY_LABORATORY') return 'success'
+  if (role === 'NORMAL_LABORATORY') return 'info'
+  return 'warning'
 }
 
 const load = () => {
@@ -199,20 +286,44 @@ const load = () => {
 }
 
 const handleAdd = () => {
-  data.form = {}
+  data.form = { role: 'SCHOOL_ADMIN' }
   data.formVisible = true
   loadSchools()
+  loadOrganizations()
 }
 
 const handleEdit = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
+  data.form.role = data.form.role || 'SCHOOL_ADMIN'
   data.formVisible = true
   loadSchools()
+  loadOrganizations()
+}
+
+const handleRoleChange = () => {
+  if (!isOrganizationRole(data.form.role)) {
+    data.form.organizationId = null
+    return
+  }
+  handleOrganizationChange(data.form.organizationId)
+}
+
+const handleOrganizationChange = (organizationId) => {
+  const organization = data.organizations.find(item => String(item.id) === String(organizationId))
+  if (!organization) return
+  data.form.schoolId = organization.schoolId
+  if (!data.form.name) {
+    data.form.name = organization.laboratoryName || organization.institutionName || organization.organizationName
+  }
 }
 
 const add = async () => {
   try {
+    if (isOrganizationRole(data.form.role)) {
+      handleOrganizationChange(data.form.organizationId)
+    }
     const addData = { ...data.form }
+    addData.role = addData.role || 'SCHOOL_ADMIN'
     // 加密密码
     if (addData.password) {
         addData.password = await encrypt(addData.password)
@@ -236,7 +347,12 @@ const add = async () => {
 }
 
 const update = () => {
-  request.put('/schoolAdmin/update', data.form).then(res => {
+  if (isOrganizationRole(data.form.role)) {
+    handleOrganizationChange(data.form.organizationId)
+  }
+  const updateData = { ...data.form }
+  updateData.role = updateData.role || 'SCHOOL_ADMIN'
+  request.put('/schoolAdmin/update', updateData).then(res => {
     if (res.code === '200') {
       ElMessage.success('操作成功')
       data.formVisible = false
@@ -257,7 +373,7 @@ const save = () => {
 }
 
 const del = (id) => {
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
+  ElMessageBox.confirm('删除后账号将无法登录；若是组织管理员，会解除组织绑定但不会删除组织。您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete('/schoolAdmin/delete/' + id).then(res => {
       if (res.code === '200') {
         ElMessage.success("删除成功")
@@ -274,7 +390,7 @@ const delBatch = () => {
     ElMessage.warning("请选择数据")
     return
   }
-  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
+  ElMessageBox.confirm('删除后账号将无法登录；若包含组织管理员，会解除组织绑定但不会删除组织。您确定删除吗？', '删除确认', { type: 'warning', buttonSize: 'small' }).then(res => {
     request.delete("/schoolAdmin/delete/batch", {data: data.ids}).then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
@@ -307,6 +423,7 @@ const reset = () => {
 
 onMounted(() => {
     loadSchools()
+    loadOrganizations()
     load()
 })
 </script>

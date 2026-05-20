@@ -119,6 +119,8 @@ const onCaptchaInput = (val) => {
   if (v !== data.form.captchaCode) data.form.captchaCode = v
 }
 
+const CAPTCHA_AUTO_REFRESH_THRESHOLD = 10 // 剩余秒数 <= 该值时自动刷新
+
 const startCaptchaCountdown = (seconds) => {
   if (captchaTimer) {
     clearInterval(captchaTimer)
@@ -135,6 +137,11 @@ const startCaptchaCountdown = (seconds) => {
       return
     }
     captcha.expireSeconds -= 1
+    if (captcha.expireSeconds <= CAPTCHA_AUTO_REFRESH_THRESHOLD) {
+      clearInterval(captchaTimer)
+      captchaTimer = null
+      loadCaptcha()
+    }
   }, 1000)
 }
 
@@ -231,7 +238,7 @@ const login = (retryOnSecurityError = true) => {
           return
         }
         if (code === '5007') {
-          ElMessage.error('验证码错误或已过期，请重试')
+          ElMessage.error('验证码错误，请重试')
           await refreshCaptchaAndClearInput()
           data.loading = false
           return

@@ -37,12 +37,9 @@
     >
       <div class="digital-maintenance-content">
         <div class="selected-scope-bar">
-          <div>
-            <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
-            <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
-            <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
-          </div>
-          <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+          <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+          <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+          <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
         </div>
         <InstitutionDigitalContent
           :active-menu="activeMenu"
@@ -235,7 +232,7 @@ const data = reactive({
   selectedScope: null,
   tableData: [],
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 15,
   total: 0,
   searchKeyword: '',
   selectedIds: [],
@@ -498,10 +495,9 @@ onMounted(() => {
 }
 
 .selected-scope-bar {
-  min-height: 48px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 4px;
   padding-bottom: 12px;
   border-bottom: 1px solid #ebeef5;
 }

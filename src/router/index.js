@@ -133,7 +133,7 @@ const router = createRouter({
         },
         { path: 'labStage', meta: { name: '阶段报告', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] }, component: () => import('@/views/manager/labStage.vue') },
         { path: 'labStageApply', meta: { name: '阶段报告', roles: ['KEY_LABORATORY'] }, component: () => import('@/views/manager/labStageApply.vue') },
-        { path: 'school', meta: { name: '学校信息', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/School.vue') },
+        { path: 'school', meta: { name: '学校管理', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/School.vue') },
         { path: 'schoolAdmin', meta: { name: '学校管理员信息', roles: ['SUPER_ADMIN'] }, component: () => import('@/views/manager/SchoolAdmin.vue') },
       ]
     },

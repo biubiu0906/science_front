@@ -54,7 +54,7 @@
               <span>成员管理</span>
             </template>
             <el-menu-item index="/manager/teacher">聘任人员</el-menu-item>
-            <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校信息</el-menu-item>
+            <el-menu-item index="/manager/school" v-if="data.user.role === 'SUPER_ADMIN'">学校管理</el-menu-item>
             <el-menu-item index="/manager/schoolAdmin" v-if="data.user.role === 'SUPER_ADMIN'">学校管理员信息</el-menu-item>
             <el-menu-item index="/manager/admin" v-if="data.user.role === 'SUPER_ADMIN'">超级管理员信息</el-menu-item>
           </el-sub-menu>

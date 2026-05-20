@@ -92,7 +92,6 @@ const fieldMap = {
   mainSoftware: 'main_software'
 }
 
-const institutionTypes = ['学校', '实验室', '基地', '团队']
 const scopeListRef = ref()
 
 const scopeColumns = [
@@ -143,7 +142,7 @@ const data = reactive({
   schools: [],
   organizations: [],
   scope: {
-    institutionType: '学校',
+    institutionType: '实验室',
     schoolId: null,
     organizationId: null
   },
@@ -221,8 +220,8 @@ const initScope = () => {
   } else {
     data.scope.schoolId = data.schools[0]?.id || null
   }
-  data.scope.institutionType = '学校'
-  data.scope.organizationId = null
+  data.scope.institutionType = '实验室'
+  selectFirstOrganization()
 }
 
 const loadScopeOptions = () => {
