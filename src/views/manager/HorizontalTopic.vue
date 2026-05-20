@@ -1,130 +1,135 @@
 <template>
   <div class="horizontal-topic-page">
-    <!-- 标题 & 描述 -->
-    <div class="content-header">
-      <h2 class="page-title">横向课题</h2>
-      <p class="page-desc">
-        依托本机构，与各类地方政府、企事业单位或协会等其他社会组织平等协商并正式签订委托合同，以帮助其完成科技攻关、决策论证、设计策划、软件开发等目标的定向研究课题
-      </p>
-    </div>
+    <InstitutionScopeList
+      v-if="canSelectScope"
+      ref="scopeListRef"
+      module="horizontalTopic"
+      action-text="查看课题"
+      :columns="scopeColumns"
+      @select="openScope"
+    />
 
-    <!-- 工具栏 -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-button type="primary" :icon="Plus" @click="handleAdd">+ 新增</el-button>
-        <el-button :icon="CopyDocument" circle title="复制" />
-        <el-button :icon="Delete" circle title="删除" @click="handleDeleteBatch" />
-        <el-button :icon="Sort" circle title="排序" />
-      </div>
-      <div class="toolbar-right">
-        <el-input
-          v-model="data.searchKeyword"
-          placeholder="搜索关键词..."
-          :prefix-icon="Search"
-          clearable
-          style="width: 200px"
-          @keyup.enter="handleSearch"
-          @clear="handleSearch"
-        />
-        <el-button @click="handleAdvancedSearch">高级查询</el-button>
-        <el-button :icon="Refresh" circle title="刷新" @click="load" />
-        <el-button :icon="Grid" circle title="列设置" />
-        <el-button :icon="Download" circle title="导出" />
-        <el-button :icon="Upload" circle title="导入" />
-      </div>
-    </div>
-
-    <!-- 表格 -->
-    <el-table
-      :data="data.tableData"
-      stripe
-      @selection-change="handleSelectionChange"
-      :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#606266', fontWeight: '600' }"
-      class="data-table"
-      empty-text="暂无数据"
+    <InstitutionMaintenanceDialog
+      v-if="shouldShowTopicPanel"
+      v-model:visible="data.scopeDialogVisible"
+      :dialog="canSelectScope"
+      :title="scopeDialogTitle"
+      width="min(1280px, 94vw)"
+      @closed="closeScopeDialog"
     >
-      <el-table-column type="selection" width="50" />
-      <el-table-column prop="serialNumber" label="序号" width="110" />
-      <el-table-column prop="topicName" label="课题名" min-width="200" show-overflow-tooltip>
-        <template #header>
-          课题名 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-        <template #default="{ row }">
-          <span class="topic-name-link" @click="handleEdit(row)">{{ row.topicName }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="contractNumber" label="项目合同号" width="160" show-overflow-tooltip>
-        <template #header>
-          项目合同号 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-        <template #default="{ row }">
-          {{ row.contractNumber || '无' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="establishmentTime" label="立项时间" width="120">
-        <template #header>
-          立项时间 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-      </el-table-column>
-      <el-table-column prop="approvedFunding" label="批准经费" width="110" align="right">
-        <template #header>
-          批准经费 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-        <template #default="{ row }">
-          {{ row.approvedFunding != null ? row.approvedFunding : 0 }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="projectSource" label="项目来源" min-width="150" show-overflow-tooltip>
-        <template #header>
-          项目来源 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-      </el-table-column>
-      <el-table-column prop="topicStatus" label="课题状态" width="100" align="center">
-        <template #header>
-          课题状态 <el-icon style="vertical-align: middle; margin-left: 2px;"><Sort /></el-icon>
-        </template>
-        <template #default="{ row }">
-          <el-tag
-            :type="row.topicStatus === '在研' ? 'success' : row.topicStatus === '结项' ? 'info' : 'warning'"
-            size="small"
-            round
-          >
-            {{ row.topicStatus || '-' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="leaderName" label="负责人" width="90" show-overflow-tooltip />
-      <el-table-column prop="institutionOrder" label="本机构排序" width="110" align="center">
-        <template #default="{ row }">
-          <span v-if="row.institutionOrder != null" class="order-badge">No.{{ row.institutionOrder }}</span>
-          <span v-else style="color: #c0c4cc;">-</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="attachmentCount" label="附件数" width="90" align="center">
-        <template #default="{ row }">
-          <el-badge
-            v-if="row.attachmentCount > 0"
-            :value="row.attachmentCount"
-            class="attach-badge"
-            type="primary"
-          >
-            <el-icon><Paperclip /></el-icon>
-          </el-badge>
-          <span v-else style="color: #c0c4cc;">0</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="120" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <div v-if="canSelectScope && data.selectedScope" class="selected-scope-bar">
+        <div>
+          <span class="selected-scope-name">{{ data.selectedScope.institutionName }}</span>
+          <el-tag size="small" style="margin-left: 8px">{{ data.selectedScope.institutionType }}</el-tag>
+          <span class="selected-scope-school">{{ data.selectedScope.schoolName }}</span>
+        </div>
+        <el-button link type="primary" @click="returnToScopeList">关闭</el-button>
+      </div>
 
-    <!-- 底部：已选 + 分页 -->
-    <div class="table-footer">
-      <div class="selected-info">已选择 {{ data.selectedIds.length }} 项</div>
-      <div class="pagination-wrap">
+      <div class="content-header">
+        <div>
+          <h2 class="page-title">横向课题</h2>
+          <p class="page-desc">
+            依托本机构，与地方政府、企事业单位或协会等社会组织签订委托合同形成的定向研究课题。
+          </p>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-label">课题总数</span>
+          <strong>{{ topicSummary.totalCount }}</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">在研课题</span>
+          <strong>{{ topicSummary.activeCount }}</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">结项课题</span>
+          <strong>{{ topicSummary.finishedCount }}</strong>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">批准经费合计</span>
+          <strong>{{ formatFunding(topicSummary.approvedFundingTotal) }} 万元</strong>
+        </div>
+        <div class="summary-item summary-wide">
+          <span class="summary-label">最新课题</span>
+          <strong>{{ topicSummary.latestTopicName || '-' }}</strong>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-button type="primary" :icon="Plus" @click="handleAdd">新增</el-button>
+          <el-button :icon="Delete" circle title="删除" @click="handleDeleteBatch" />
+          <el-button :icon="Sort" circle title="排序" />
+        </div>
+        <div class="toolbar-right">
+          <el-input
+            v-model="data.searchKeyword"
+            placeholder="搜索课题名/合同号/负责人/来源"
+            :prefix-icon="Search"
+            clearable
+            style="width: 260px"
+            @keyup.enter="handleSearch"
+            @clear="handleSearch"
+          />
+          <el-button :icon="Refresh" circle title="刷新" @click="load" />
+        </div>
+      </div>
+
+      <el-table
+        v-loading="data.loading"
+        :data="data.tableData"
+        stripe
+        @selection-change="handleSelectionChange"
+        :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#606266', fontWeight: '600' }"
+        class="data-table"
+        empty-text="暂无横向课题"
+      >
+        <el-table-column type="selection" width="50" />
+        <el-table-column prop="serialNumber" label="序号" width="110" />
+        <el-table-column prop="topicName" label="课题名" min-width="240" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="topic-name-link" @click="openDetail(row)">{{ row.topicName || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="contractNumber" label="项目合同号" width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.contractNumber || '无' }}</template>
+        </el-table-column>
+        <el-table-column prop="projectSource" label="项目来源" min-width="190" show-overflow-tooltip />
+        <el-table-column prop="establishmentTime" label="立项时间" width="120" />
+        <el-table-column prop="approvedFunding" label="批准经费(万)" width="120" align="right">
+          <template #default="{ row }">{{ formatFunding(row.approvedFunding) }}</template>
+        </el-table-column>
+        <el-table-column prop="topicStatus" label="课题状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.topicStatus)" size="small" round>{{ row.topicStatus || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="leaderName" label="负责人" width="110" show-overflow-tooltip />
+        <el-table-column prop="institutionOrder" label="本机构排序" width="110" align="center">
+          <template #default="{ row }">{{ row.institutionOrder ?? '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="attachmentCount" label="附件数" width="90" align="center">
+          <template #default="{ row }">
+            <el-badge v-if="row.attachmentCount > 0" :value="row.attachmentCount" class="attach-badge" type="primary">
+              <el-icon><Paperclip /></el-icon>
+            </el-badge>
+            <span v-else class="muted">0</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="table-footer">
+        <div class="selected-info">已选择 {{ data.selectedIds.length }} 项</div>
         <el-pagination
           v-model:current-page="data.pageNum"
           v-model:page-size="data.pageSize"
@@ -133,25 +138,50 @@
           layout="total, sizes, prev, pager, next, jumper"
           background
           @current-change="load"
-          @size-change="(size) => (data.pageSize = size, data.pageNum = 1, load())"
+          @size-change="handleSizeChange"
         />
       </div>
-    </div>
+    </InstitutionMaintenanceDialog>
 
-    <!-- 新增/编辑 对话框 -->
+    <el-dialog
+      v-model="data.detailVisible"
+      title="横向课题详情"
+      width="760px"
+      destroy-on-close
+      append-to-body
+    >
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="序号">{{ displayValue(data.currentTopic.serialNumber) }}</el-descriptions-item>
+        <el-descriptions-item label="项目合同号">{{ displayValue(data.currentTopic.contractNumber) }}</el-descriptions-item>
+        <el-descriptions-item label="课题名" :span="2">{{ displayValue(data.currentTopic.topicName) }}</el-descriptions-item>
+        <el-descriptions-item label="项目来源" :span="2">{{ displayValue(data.currentTopic.projectSource) }}</el-descriptions-item>
+        <el-descriptions-item label="立项时间">{{ displayValue(data.currentTopic.establishmentTime) }}</el-descriptions-item>
+        <el-descriptions-item label="批准经费">{{ formatFunding(data.currentTopic.approvedFunding) }} 万元</el-descriptions-item>
+        <el-descriptions-item label="课题状态">
+          <el-tag :type="statusTagType(data.currentTopic.topicStatus)" size="small" round>{{ displayValue(data.currentTopic.topicStatus) }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="负责人">{{ displayValue(data.currentTopic.leaderName) }}</el-descriptions-item>
+        <el-descriptions-item label="本机构排序">{{ displayValue(data.currentTopic.institutionOrder) }}</el-descriptions-item>
+        <el-descriptions-item label="附件数">{{ displayValue(data.currentTopic.attachmentCount) }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ displayValue(data.currentTopic.createTime) }}</el-descriptions-item>
+        <el-descriptions-item label="更新时间">{{ displayValue(data.currentTopic.updateTime) }}</el-descriptions-item>
+        <el-descriptions-item label="所属机构ID">{{ displayValue(data.currentTopic.laboratoryId) }}</el-descriptions-item>
+        <el-descriptions-item label="记录ID">{{ displayValue(data.currentTopic.id) }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <el-button @click="data.detailVisible = false">关闭</el-button>
+        <el-button type="primary" @click="handleEdit(data.currentTopic)">编辑</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog
       v-model="data.formVisible"
       :title="data.form.id ? '编辑横向课题' : '新增横向课题'"
       width="640px"
       destroy-on-close
+      append-to-body
     >
-      <el-form
-        ref="formRef"
-        :model="data.form"
-        :rules="rules"
-        label-width="110px"
-        style="padding: 10px 20px"
-      >
+      <el-form ref="formRef" :model="data.form" :rules="rules" label-width="110px" style="padding: 10px 20px">
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="序号" prop="serialNumber">
@@ -165,13 +195,7 @@
           </el-col>
         </el-row>
         <el-form-item label="课题名" prop="topicName">
-          <el-input
-            v-model="data.form.topicName"
-            placeholder="请输入课题名称"
-            clearable
-            type="textarea"
-            :rows="2"
-          />
+          <el-input v-model="data.form.topicName" placeholder="请输入课题名称" clearable type="textarea" :rows="2" />
         </el-form-item>
         <el-form-item label="项目来源" prop="projectSource">
           <el-input v-model="data.form.projectSource" placeholder="如：南京酷奇信息科技有限公司" clearable />
@@ -190,13 +214,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="批准经费(万)" prop="approvedFunding">
-              <el-input-number
-                v-model="data.form.approvedFunding"
-                :min="0"
-                :precision="2"
-                style="width: 100%"
-                placeholder="0"
-              />
+              <el-input-number v-model="data.form.approvedFunding" :min="0" :precision="2" style="width: 100%" placeholder="0" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -219,21 +237,12 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="本机构排序" prop="institutionOrder">
-              <el-input-number
-                v-model="data.form.institutionOrder"
-                :min="1"
-                style="width: 100%"
-                placeholder="排序号"
-              />
+              <el-input-number v-model="data.form.institutionOrder" :min="1" style="width: 100%" placeholder="排序号" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="附件数" prop="attachmentCount">
-              <el-input-number
-                v-model="data.form.attachmentCount"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="data.form.attachmentCount" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -247,30 +256,43 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { computed, reactive, ref, onMounted } from 'vue'
 import request from '@/utils/request.js'
 import { ElMessage, ElMessageBox } from '@/utils/element-plus'
+import InstitutionScopeList from '@/components/InstitutionScopeList.vue'
+import InstitutionMaintenanceDialog from '@/components/InstitutionMaintenanceDialog.vue'
 import {
   Plus,
   Delete,
   Sort,
   Search,
   Refresh,
-  Grid,
-  Download,
-  Upload,
-  CopyDocument,
   Paperclip
 } from '@element-plus/icons-vue'
 
 const formRef = ref()
+const scopeListRef = ref()
 
 const rules = {
   topicName: [{ required: true, message: '请输入课题名', trigger: 'blur' }],
   topicStatus: [{ required: true, message: '请选择课题状态', trigger: 'change' }]
 }
 
+const scopeColumns = [
+  { label: '课题总数', prop: 'summary.totalCount', width: 100 },
+  { label: '在研', prop: 'summary.activeCount', width: 80 },
+  { label: '结项', prop: 'summary.finishedCount', width: 80 },
+  { label: '批准经费合计', prop: 'summary.approvedFundingTotal', width: 130, suffix: ' 万' },
+  { label: '附件数', prop: 'summary.attachmentCount', width: 90 },
+  { label: '最新课题', prop: 'summary.latestTopicName', minWidth: 220 },
+  { label: '最新项目来源', prop: 'summary.latestProjectSource', minWidth: 180 },
+  { label: '最新立项时间', prop: 'summary.latestEstablishmentTime', width: 130 }
+]
+
 const data = reactive({
+  currentUser: {},
+  selectedScope: null,
+  scopeDialogVisible: false,
   tableData: [],
   pageNum: 1,
   pageSize: 10,
@@ -278,12 +300,59 @@ const data = reactive({
   searchKeyword: '',
   selectedIds: [],
   formVisible: false,
-  form: {}
+  detailVisible: false,
+  loading: false,
+  form: {},
+  currentTopic: {}
 })
 
+try {
+  data.currentUser = JSON.parse(localStorage.getItem('xm-user') || '{}')
+} catch (_) {
+  data.currentUser = {}
+}
+
+const canSelectScope = computed(() => ['SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(data.currentUser.role))
+const shouldShowTopicPanel = computed(() => !canSelectScope.value || !!data.selectedScope)
+const scopeDialogTitle = computed(() => data.selectedScope ? `${data.selectedScope.institutionName} 横向课题` : '横向课题')
+
+const currentLaboratoryId = computed(() => {
+  if (canSelectScope.value) return data.selectedScope?.organizationId || null
+  return data.currentUser.laboratoryId || data.currentUser.id || null
+})
+
+const topicSummary = computed(() => {
+  const rows = data.tableData || []
+  const summary = {
+    totalCount: data.total || rows.length,
+    activeCount: 0,
+    finishedCount: 0,
+    approvedFundingTotal: 0,
+    attachmentCount: 0,
+    latestTopicName: ''
+  }
+  const sorted = [...rows].sort((a, b) => String(b.establishmentTime || b.createTime || '').localeCompare(String(a.establishmentTime || a.createTime || '')))
+  rows.forEach(row => {
+    if (row.topicStatus === '在研') summary.activeCount += 1
+    if (row.topicStatus === '结项') summary.finishedCount += 1
+    summary.approvedFundingTotal += Number(row.approvedFunding || 0)
+    summary.attachmentCount += Number(row.attachmentCount || 0)
+  })
+  summary.latestTopicName = sorted[0]?.topicName || ''
+  return summary
+})
+
+const getScopeParams = () => {
+  const laboratoryId = currentLaboratoryId.value
+  return laboratoryId ? { laboratoryId } : {}
+}
+
 const load = () => {
+  if (canSelectScope.value && !data.selectedScope) return
+  data.loading = true
   request.get('/horizontalTopic/selectPage', {
     params: {
+      ...getScopeParams(),
       pageNum: data.pageNum,
       pageSize: data.pageSize,
       keyword: data.searchKeyword || undefined
@@ -295,7 +364,35 @@ const load = () => {
     } else {
       ElMessage.error(res.msg || '加载失败')
     }
+  }).finally(() => {
+    data.loading = false
   })
+}
+
+const openScope = (scope) => {
+  data.selectedScope = scope
+  data.scopeDialogVisible = true
+  data.searchKeyword = ''
+  data.pageNum = 1
+  data.selectedIds = []
+  load()
+}
+
+const returnToScopeList = () => {
+  if (canSelectScope.value) {
+    data.scopeDialogVisible = false
+    return
+  }
+  closeScopeDialog()
+}
+
+const closeScopeDialog = () => {
+  data.selectedScope = null
+  data.tableData = []
+  data.total = 0
+  data.selectedIds = []
+  data.searchKeyword = ''
+  data.pageNum = 1
 }
 
 const handleSearch = () => {
@@ -303,31 +400,50 @@ const handleSearch = () => {
   load()
 }
 
-const handleAdvancedSearch = () => {
-  ElMessage.info('高级查询功能待完善')
+const handleSizeChange = (size) => {
+  data.pageSize = size
+  data.pageNum = 1
+  load()
 }
 
 const handleAdd = () => {
-  data.form = { attachmentCount: 0 }
+  data.form = {
+    laboratoryId: currentLaboratoryId.value,
+    attachmentCount: 0
+  }
   data.formVisible = true
 }
 
 const handleEdit = (row) => {
+  data.detailVisible = false
   data.form = JSON.parse(JSON.stringify(row))
+  if (!data.form.laboratoryId && currentLaboratoryId.value) {
+    data.form.laboratoryId = currentLaboratoryId.value
+  }
   data.formVisible = true
+}
+
+const openDetail = (row) => {
+  data.currentTopic = JSON.parse(JSON.stringify(row || {}))
+  data.detailVisible = true
 }
 
 const save = () => {
   formRef.value.validate(valid => {
     if (!valid) return
-    const api = data.form.id
-      ? request.put('/horizontalTopic/update', data.form)
-      : request.post('/horizontalTopic/add', data.form)
+    const submitData = { ...data.form }
+    if (!submitData.laboratoryId && currentLaboratoryId.value) {
+      submitData.laboratoryId = currentLaboratoryId.value
+    }
+    const api = submitData.id
+      ? request.put('/horizontalTopic/update', submitData)
+      : request.post('/horizontalTopic/add', submitData)
     api.then(res => {
       if (res.code === '200') {
         ElMessage.success('操作成功')
         data.formVisible = false
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '操作失败')
       }
@@ -344,6 +460,7 @@ const handleDelete = (id) => {
       if (res.code === '200') {
         ElMessage.success('删除成功')
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -365,6 +482,7 @@ const handleDeleteBatch = () => {
         ElMessage.success('批量删除成功')
         data.selectedIds = []
         load()
+        scopeListRef.value?.load?.()
       } else {
         ElMessage.error(res.msg || '删除失败')
       }
@@ -376,8 +494,24 @@ const handleSelectionChange = (rows) => {
   data.selectedIds = rows.map(r => r.id)
 }
 
+const statusTagType = (status) => {
+  if (status === '在研') return 'success'
+  if (status === '结项') return 'info'
+  return 'warning'
+}
+
+const formatFunding = (value) => {
+  const num = Number(value || 0)
+  return Number.isInteger(num) ? String(num) : num.toFixed(2)
+}
+
+const displayValue = (value) => {
+  if (value === null || value === undefined || value === '') return '-'
+  return value
+}
+
 onMounted(() => {
-  load()
+  if (!canSelectScope.value) load()
 })
 </script>
 
@@ -385,15 +519,43 @@ onMounted(() => {
 .horizontal-topic-page {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  gap: 16px;
   min-height: 0;
+}
+
+.selected-scope-bar,
+.summary-grid,
+.toolbar {
   background: #fff;
-  padding: 20px 24px;
-  overflow: auto;
+  border: 1px solid #ebeef5;
+}
+
+.selected-scope-bar {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+}
+
+.selected-scope-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.selected-scope-school {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #606266;
 }
 
 .content-header {
-  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .page-title {
@@ -410,21 +572,53 @@ onMounted(() => {
   line-height: 1.6;
 }
 
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr)) minmax(220px, 2fr);
+  gap: 0;
+  margin-bottom: 14px;
+}
+
+.summary-item {
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-right: 1px solid #ebeef5;
+  min-width: 0;
+}
+
+.summary-item:last-child {
+  border-right: 0;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #909399;
+}
+
+.summary-item strong {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  padding: 12px 14px;
+  margin-bottom: 0;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+.toolbar-left,
 .toolbar-right {
   display: flex;
   align-items: center;
@@ -432,12 +626,7 @@ onMounted(() => {
 }
 
 .data-table {
-  flex: 1;
   width: 100%;
-}
-
-.data-table :deep(.el-table__header th) {
-  background-color: #f5f7fa !important;
 }
 
 .topic-name-link {
@@ -449,18 +638,6 @@ onMounted(() => {
 .topic-name-link:hover {
   color: #0958d9;
   text-decoration: underline;
-}
-
-/* 本机构排序徽章 */
-.order-badge {
-  display: inline-block;
-  background: #e8f4ff;
-  color: #1677ff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 10px;
-  border: 1px solid #bae0ff;
 }
 
 .attach-badge {
@@ -476,11 +653,15 @@ onMounted(() => {
   min-width: 16px;
 }
 
+.muted {
+  color: #c0c4cc;
+}
+
 .table-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 16px;
+  padding: 14px 0 0;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -491,15 +672,28 @@ onMounted(() => {
   cursor: default;
 }
 
-.pagination-wrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+@media (max-width: 1100px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .summary-item {
+    border-bottom: 1px solid #ebeef5;
+  }
 }
 
-.total-info {
-  font-size: 13px;
-  color: #606266;
-  white-space: nowrap;
+@media (max-width: 760px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-item {
+    border-right: 0;
+  }
+
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>

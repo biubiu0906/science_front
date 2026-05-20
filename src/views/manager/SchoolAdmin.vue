@@ -206,7 +206,7 @@ const rules = reactive({
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
-    { min: 2, max: 10, message: '姓名长度在 2 到 10 个字符', trigger: 'blur' }
+    { min: 1, max: 30, message: '姓名长度在 1 到 30 个字符', trigger: 'blur' }
   ],
   schoolId: [
     { required: true, message: '请选择所属学校', trigger: 'change' }

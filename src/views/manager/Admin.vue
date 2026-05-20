@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="card" style="margin-bottom: 5px">
+      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入账号查询"></el-input>
       <el-input v-model="data.name" :prefix-icon="Search" style="width: 240px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
-      <el-input v-model="data.username" :prefix-icon="Search" style="width: 180px; margin-right: 10px" placeholder="请输入用户名查询"></el-input>
       <el-input v-model="data.phone" :prefix-icon="Search" style="width: 160px; margin-right: 10px" placeholder="请输入电话查询"></el-input>
       <el-input v-model="data.email" :prefix-icon="Search" style="width: 200px; margin-right: 10px" placeholder="请输入邮箱查询"></el-input>
       <el-button type="info" plain @click="search" size="small">查询</el-button>
@@ -26,6 +26,12 @@
                       preview-teleported></el-image>
           </template>
         </el-table-column>
+        <el-table-column prop="username" label="账号" sortable>
+          <template v-slot="scope">
+            <span v-if="scope.row.username">{{ scope.row.username }}</span>
+            <span v-else class="no-data-text">暂无数据</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="name" label="姓名" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.name">{{ scope.row.name }}</span>
@@ -41,12 +47,6 @@
         <el-table-column prop="email" label="邮箱" sortable>
           <template v-slot="scope">
             <span v-if="scope.row.email">{{ scope.row.email }}</span>
-            <span v-else class="no-data-text">暂无数据</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="username" label="用户名" sortable>
-          <template v-slot="scope">
-            <span v-if="scope.row.username">{{ scope.row.username }}</span>
             <span v-else class="no-data-text">暂无数据</span>
           </template>
         </el-table-column>
@@ -77,8 +77,8 @@
 
     <el-dialog title="管理员信息" v-model="data.formVisible" width="40%" destroy-on-close @opened="handleDialogOpened">
       <el-form ref="formRef" :model="data.form" :rules="rules" label-width="70px" style="padding: 20px">
-        <el-form-item prop="username" label="用户名">
-          <el-input v-model="data.form.username" placeholder="请输入用户名"></el-input>
+        <el-form-item prop="username" label="账号">
+          <el-input v-model="data.form.username" placeholder="请输入账号"></el-input>
         </el-form-item>
         <el-form-item prop="password" label="密码" v-if="!data.form.id">
           <el-input v-model="data.form.password" type="password" placeholder="请输入密码" show-password></el-input>
@@ -156,8 +156,8 @@ const indexMethod = (index) => {
 
 const rules = reactive({
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度在 3 到 20 个字符', trigger: 'blur' }
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '账号长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
